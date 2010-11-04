@@ -33,6 +33,7 @@
 #include "ppg-menu-tool-item.h"
 #include "ppg-monitor.h"
 #include "ppg-prefs-dialog.h"
+#include "ppg-process-menu.h"
 #include "ppg-restart-task.h"
 #include "ppg-row.h"
 #include "ppg-ruler.h"
@@ -106,6 +107,7 @@ struct _PpgWindowPrivate
 	GtkWidget *settings_dialog;
 	GtkWidget *instrument_popup;
 	GtkWidget *visualizers_menu;
+	GtkWidget *process_menu;
 
 	GtkAdjustment *hadj;
 	GtkAdjustment *vadj;
@@ -1804,6 +1806,8 @@ ppg_window_init (PpgWindow *window)
 	GtkWidget *status_hbox;
 	GtkWidget *visualizers;
 	GtkWidget *mb_visualizers;
+	GtkWidget *target_existing;
+	GtkWidget *mb_target_existing;
 	ClutterLayoutManager *outer_layout;
 	ClutterActor *bottom;
 
@@ -1823,8 +1827,10 @@ ppg_window_init (PpgWindow *window)
 	ppg_util_load_ui(GTK_WIDGET(window), &priv->actions, ppg_window_ui,
 	                 "/menubar", &priv->menubar,
 	                 "/menubar/instrument/visualizers", &mb_visualizers,
+	                 "/menubar/profiler/target/target-existing", &mb_target_existing,
 	                 "/toolbar", &priv->toolbar,
 	                 "/target-popup", &target_menu,
+	                 "/target-popup/target-existing", &target_existing,
 	                 "/instrument-popup", &priv->instrument_popup,
 	                 "/instrument-popup/visualizers", &visualizers,
 	                 NULL);
@@ -2194,6 +2200,16 @@ ppg_window_init (PpgWindow *window)
 	             NULL);
 	g_object_set(mb_visualizers,
 	             "submenu", priv->visualizers_menu,
+	             "visible", TRUE,
+	             NULL);
+
+	priv->process_menu = g_object_new(PPG_TYPE_PROCESS_MENU, NULL);
+	g_object_set(mb_target_existing,
+	             "submenu", priv->process_menu,
+	             "visible", TRUE,
+	             NULL);
+	g_object_set(target_existing,
+	             "submenu", priv->process_menu,
 	             "visible", TRUE,
 	             NULL);
 

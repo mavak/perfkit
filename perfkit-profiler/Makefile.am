@@ -67,6 +67,7 @@ INST_H_FILES =								\
 	ppg-paths.h							\
 	ppg-prefs.h							\
 	ppg-prefs-dialog.h						\
+	ppg-process-menu.h						\
 	ppg-restart-task.h						\
 	ppg-row.h							\
 	ppg-ruler.h							\
@@ -114,6 +115,7 @@ perfkit_profiler_SOURCES =						\
 	ppg-paths.c							\
 	ppg-prefs.c							\
 	ppg-prefs-dialog.c						\
+	ppg-process-menu.c						\
 	ppg-restart-task.c						\
 	ppg-row.c							\
 	ppg-ruler.c							\
