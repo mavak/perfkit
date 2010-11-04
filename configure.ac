@@ -32,7 +32,6 @@ AS_AM_REALLY_SILENT
 # Check for programs
 AC_PROG_CC
 AM_PROG_CC_C_O
-AM_PROG_VALAC([0.9.2])
 
 AM_PATH_GLIB_2_0
 
