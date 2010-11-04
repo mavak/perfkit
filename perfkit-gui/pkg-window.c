@@ -1,17 +1,17 @@
 /* pkg-window.c
  *
  * Copyright (C) 2010 Christian Hergert <chris@dronelabs.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -42,7 +42,7 @@ G_DEFINE_TYPE(PkgWindow, pkg_window, GTK_TYPE_WINDOW)
 /**
  * SECTION:pkg-window
  * @title: PkgWindow
- * @short_description: 
+ * @short_description:
  *
  * Section overview.
  */
@@ -1499,7 +1499,7 @@ pkg_window_init (PkgWindow *window)
 	                                    GTK_SHADOW_IN);
 	gtk_paned_add1(GTK_PANED(hpaned), scroller);
 	gtk_widget_show(scroller);
-	
+
 
 	priv->model = gtk_tree_store_new(5,
 	                                 PK_TYPE_CONNECTION,
@@ -1545,6 +1545,6 @@ pkg_window_init (PkgWindow *window)
 	priv->container = gtk_alignment_new(0.5f, 0.5f, 1.0f, 1.0f);
 	gtk_paned_add2(GTK_PANED(hpaned), priv->container);
 	gtk_widget_show(priv->container);
-	
+
 	EXIT;
 }

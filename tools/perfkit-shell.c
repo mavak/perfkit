@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
- * 
+ *
  * This file is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -205,7 +205,7 @@ pk_shell_channel_add_source_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -280,7 +280,7 @@ pk_shell_channel_get_args_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -361,7 +361,7 @@ pk_shell_channel_get_created_at_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -438,7 +438,7 @@ pk_shell_channel_get_env_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -519,7 +519,7 @@ pk_shell_channel_get_exit_status_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -596,7 +596,7 @@ pk_shell_channel_get_kill_pid_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -670,7 +670,7 @@ pk_shell_channel_get_pid_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -747,7 +747,7 @@ pk_shell_channel_get_pid_set_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -822,7 +822,7 @@ pk_shell_channel_get_sources_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -909,7 +909,7 @@ pk_shell_channel_get_state_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -987,7 +987,7 @@ pk_shell_channel_get_target_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1061,7 +1061,7 @@ pk_shell_channel_get_working_dir_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1134,7 +1134,7 @@ pk_shell_channel_mute_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1203,7 +1203,7 @@ pk_shell_channel_set_args_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1277,7 +1277,7 @@ pk_shell_channel_set_env_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1351,7 +1351,7 @@ pk_shell_channel_set_kill_pid_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1425,7 +1425,7 @@ pk_shell_channel_set_pid_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1499,7 +1499,7 @@ pk_shell_channel_set_target_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1571,7 +1571,7 @@ pk_shell_channel_set_working_dir_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1643,7 +1643,7 @@ pk_shell_channel_start_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1712,7 +1712,7 @@ pk_shell_channel_stop_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1781,7 +1781,7 @@ pk_shell_channel_unmute_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1851,7 +1851,7 @@ pk_shell_encoder_get_plugin_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1925,7 +1925,7 @@ pk_shell_manager_add_channel_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -1996,7 +1996,7 @@ pk_shell_manager_add_source_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2160,7 +2160,7 @@ pk_shell_manager_add_subscription_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2247,7 +2247,7 @@ pk_shell_manager_get_channels_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2329,7 +2329,7 @@ pk_shell_manager_get_hostname_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2397,7 +2397,7 @@ pk_shell_manager_get_plugins_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2473,7 +2473,7 @@ pk_shell_manager_get_sources_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2556,7 +2556,7 @@ pk_shell_manager_get_subscriptions_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2638,7 +2638,7 @@ pk_shell_manager_get_version_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2706,7 +2706,7 @@ pk_shell_manager_ping_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2777,7 +2777,7 @@ pk_shell_manager_remove_channel_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2850,7 +2850,7 @@ pk_shell_manager_remove_source_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2920,7 +2920,7 @@ pk_shell_manager_remove_subscription_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -2994,7 +2994,7 @@ pk_shell_plugin_get_copyright_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3066,7 +3066,7 @@ pk_shell_plugin_get_description_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3138,7 +3138,7 @@ pk_shell_plugin_get_name_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3210,7 +3210,7 @@ pk_shell_plugin_get_plugin_type_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3285,7 +3285,7 @@ pk_shell_plugin_get_version_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3357,7 +3357,7 @@ pk_shell_source_get_plugin_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3430,7 +3430,7 @@ pk_shell_subscription_add_channel_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3509,7 +3509,7 @@ pk_shell_subscription_add_source_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3585,7 +3585,7 @@ pk_shell_subscription_get_buffer_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3668,7 +3668,7 @@ pk_shell_subscription_get_created_at_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3746,7 +3746,7 @@ pk_shell_subscription_get_sources_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3832,7 +3832,7 @@ pk_shell_subscription_mute_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3906,7 +3906,7 @@ pk_shell_subscription_remove_channel_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -3980,7 +3980,7 @@ pk_shell_subscription_remove_source_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -4054,7 +4054,7 @@ pk_shell_subscription_set_buffer_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -4133,7 +4133,7 @@ pk_shell_subscription_set_encoder_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.
@@ -4207,7 +4207,7 @@ pk_shell_subscription_unmute_cb (GObject       *object,    /* IN */
  * @argv: The arguments to the command.
  * @error: A location for #GError, or %NULL.
  *
- * 
+ *
  *
  * Returns: The commands status.
  * Side effects: None.

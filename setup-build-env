@@ -20,7 +20,7 @@ targets=" \
    "
 
 # install required packages
-sudo apt-get install $targets 
+sudo apt-get install $targets
 
 # checkout and install libethos
 #git clone git://git.dronelabs.com/ethos

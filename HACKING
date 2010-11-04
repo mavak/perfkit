@@ -147,7 +147,7 @@ libperfkit-1.0
        |  Proxy for an individual channel found on the remote perfkit-agent.
        |  Provides access to manipulate the channel.  Also can start, stop,
        |  pause, unpause, and receive samplse from the channel.
-    
+
     +--- PkSource
        |
        |  Proxy for an individual source found on the remote perfkit-agent.

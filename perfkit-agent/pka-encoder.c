@@ -347,7 +347,7 @@ pka_encoder_get_type (void)
 	static GType type_id = 0;
 
 	if (g_once_init_enter((gsize *)&type_id)) {
-		const GTypeInfo g_type_info = { 
+		const GTypeInfo g_type_info = {
 			sizeof (PkaEncoderIface),
 			NULL, /* base_init      */
 			NULL, /* base_finalize  */
@@ -358,12 +358,12 @@ pka_encoder_get_type (void)
 			0,    /* n_preallocs    */
 			NULL, /* instance_init  */
 			NULL  /* value_table    */
-		};  
+		};
 
 		GType _type_id = g_type_register_static (G_TYPE_INTERFACE, "PkaEncoder",
-		                                         &g_type_info, 0); 
+		                                         &g_type_info, 0);
 		g_type_interface_add_prerequisite (_type_id, G_TYPE_OBJECT);
 		g_once_init_leave((gsize *)&type_id, _type_id);
-	}   
+	}
 	return type_id;
 }

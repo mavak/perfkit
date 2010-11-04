@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
- * 
+ *
  * This file is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -28,7 +28,7 @@
 /**
  * SECTION:pk-connection:
  * @title: Perfkit client connection
- * @short_description: 
+ * @short_description:
  *
  * #PkConnection provides the client communication for Perfkit.
  * Connections are established through the use of URIs using
@@ -3462,9 +3462,9 @@ pk_connection_manager_add_subscription_cb (GObject      *source,    /* IN */
  * internal buffer in bytes to queue before flushing data to the subscriber.
  * @timeout is the maximum number of milliseconds that should pass before
  * flushing data to the subscriber.
- * 
+ *
  * If @buffer_size and @timeout are 0, then no buffering will occur.
- * 
+ *
  * @encoder is an optional encoder that can be used to encode the data
  * into a particular format the subscriber is expecting.
  *
@@ -3508,9 +3508,9 @@ pk_connection_manager_add_subscription (PkConnection  *connection,   /* IN */
  * internal buffer in bytes to queue before flushing data to the subscriber.
  * @timeout is the maximum number of milliseconds that should pass before
  * flushing data to the subscriber.
- * 
+ *
  * If @buffer_size and @timeout are 0, then no buffering will occur.
- * 
+ *
  * @encoder is an optional encoder that can be used to encode the data
  * into a particular format the subscriber is expecting.
  *
@@ -3548,9 +3548,9 @@ pk_connection_manager_add_subscription_async (PkConnection        *connection,  
  * internal buffer in bytes to queue before flushing data to the subscriber.
  * @timeout is the maximum number of milliseconds that should pass before
  * flushing data to the subscriber.
- * 
+ *
  * If @buffer_size and @timeout are 0, then no buffering will occur.
- * 
+ *
  * @encoder is an optional encoder that can be used to encode the data
  * into a particular format the subscriber is expecting.
  *
@@ -5652,7 +5652,7 @@ pk_connection_subscription_add_channel_cb (GObject      *source,    /* IN */
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -5694,7 +5694,7 @@ pk_connection_subscription_add_channel (PkConnection  *connection,   /* IN */
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -5732,7 +5732,7 @@ pk_connection_subscription_add_channel_async (PkConnection        *connection,  
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -5926,7 +5926,7 @@ pk_connection_subscription_get_buffer_cb (GObject      *source,    /* IN */
  * Retrieves the buffering timeout and maximum buffer size for the
  * subscription.  If @timeout milliseconds pass or @size bytes are
  * consumed buffering, the data will be delivered to the subscriber.
- * 
+ *
  * If @timeout and @size are 0, then no buffering will occur.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
@@ -5968,7 +5968,7 @@ pk_connection_subscription_get_buffer (PkConnection  *connection,   /* IN */
  * Retrieves the buffering timeout and maximum buffer size for the
  * subscription.  If @timeout milliseconds pass or @size bytes are
  * consumed buffering, the data will be delivered to the subscriber.
- * 
+ *
  * If @timeout and @size are 0, then no buffering will occur.
  *
  * Returns: None.
@@ -6002,7 +6002,7 @@ pk_connection_subscription_get_buffer_async (PkConnection        *connection,   
  * Retrieves the buffering timeout and maximum buffer size for the
  * subscription.  If @timeout milliseconds pass or @size bytes are
  * consumed buffering, the data will be delivered to the subscriber.
- * 
+ *
  * If @timeout and @size are 0, then no buffering will occur.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
@@ -6714,7 +6714,7 @@ pk_connection_subscription_set_buffer_cb (GObject      *source,    /* IN */
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
@@ -6756,7 +6756,7 @@ pk_connection_subscription_set_buffer (PkConnection  *connection,   /* IN */
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: None.
@@ -6794,7 +6794,7 @@ pk_connection_subscription_set_buffer_async (PkConnection        *connection,   
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.

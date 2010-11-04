@@ -1,17 +1,17 @@
 /* pka-listener-dbus.c
  *
  * Copyright 2010 Christian Hergert <chris@dronelabs.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -31,7 +31,7 @@
 /**
  * SECTION:pka-listener-dbus
  * @title: PkaListenerDBus
- * @short_description: 
+ * @short_description:
  *
  * Section overview.
  */
@@ -135,7 +135,7 @@ pka_listener_dbus_plugin_get_copyright_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_plugin_get_copyright_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&copyright,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -183,7 +183,7 @@ pka_listener_dbus_plugin_get_description_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_plugin_get_description_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&description,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -231,7 +231,7 @@ pka_listener_dbus_plugin_get_name_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_plugin_get_name_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&name,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -279,7 +279,7 @@ pka_listener_dbus_plugin_get_plugin_type_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_plugin_get_plugin_type_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&type,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -324,7 +324,7 @@ pka_listener_dbus_plugin_get_version_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_plugin_get_version_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&version,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -540,7 +540,7 @@ pka_listener_dbus_encoder_get_plugin_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_encoder_get_plugin_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&plugin,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -674,7 +674,7 @@ pka_listener_dbus_source_get_plugin_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_source_get_plugin_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&plugin,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -882,7 +882,7 @@ pka_listener_dbus_manager_add_channel_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_add_channel_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&channel,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -930,7 +930,7 @@ pka_listener_dbus_manager_add_source_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_add_source_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&source,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -978,7 +978,7 @@ pka_listener_dbus_manager_add_subscription_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_add_subscription_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&subscription,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1028,7 +1028,7 @@ pka_listener_dbus_manager_get_channels_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_get_channels_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&channels,
 			&channels_len,
 			&error)) {
@@ -1043,7 +1043,7 @@ pka_listener_dbus_manager_get_channels_cb (GObject      *listener,  /* IN */
 		reply = dbus_message_new_method_return(message);
 		dbus_message_append_args(reply,
 		                         DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &channels_paths, channels_len,
-		                         
+
 		                         DBUS_TYPE_INVALID);
 		g_free(channels);
 		g_strfreev(channels_paths);
@@ -1081,7 +1081,7 @@ pka_listener_dbus_manager_get_hostname_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_get_hostname_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&hostname,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1132,7 +1132,7 @@ pka_listener_dbus_manager_get_plugins_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_get_plugins_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&plugins,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1187,7 +1187,7 @@ pka_listener_dbus_manager_get_sources_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_get_sources_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&sources,
 			&sources_len,
 			&error)) {
@@ -1202,7 +1202,7 @@ pka_listener_dbus_manager_get_sources_cb (GObject      *listener,  /* IN */
 		reply = dbus_message_new_method_return(message);
 		dbus_message_append_args(reply,
 		                         DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &sources_paths, sources_len,
-		                         
+
 		                         DBUS_TYPE_INVALID);
 		g_free(sources);
 		g_strfreev(sources_paths);
@@ -1243,7 +1243,7 @@ pka_listener_dbus_manager_get_subscriptions_cb (GObject      *listener,  /* IN *
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_get_subscriptions_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&subscriptions,
 			&subscriptions_len,
 			&error)) {
@@ -1258,7 +1258,7 @@ pka_listener_dbus_manager_get_subscriptions_cb (GObject      *listener,  /* IN *
 		reply = dbus_message_new_method_return(message);
 		dbus_message_append_args(reply,
 		                         DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &subscriptions_paths, subscriptions_len,
-		                         
+
 		                         DBUS_TYPE_INVALID);
 		g_free(subscriptions);
 		g_strfreev(subscriptions_paths);
@@ -1296,7 +1296,7 @@ pka_listener_dbus_manager_get_version_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_get_version_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&version,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1345,7 +1345,7 @@ pka_listener_dbus_manager_ping_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_ping_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&tv,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1392,7 +1392,7 @@ pka_listener_dbus_manager_remove_channel_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_remove_channel_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&removed,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1436,7 +1436,7 @@ pka_listener_dbus_manager_remove_source_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_remove_source_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -1479,7 +1479,7 @@ pka_listener_dbus_manager_remove_subscription_cb (GObject      *listener,  /* IN
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_manager_remove_subscription_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&removed,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1892,7 +1892,7 @@ pka_listener_dbus_channel_add_source_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_add_source_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -1935,7 +1935,7 @@ pka_listener_dbus_channel_get_args_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_args_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&args,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -1982,7 +1982,7 @@ pka_listener_dbus_channel_get_created_at_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_created_at_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&tv,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2029,7 +2029,7 @@ pka_listener_dbus_channel_get_env_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_env_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&env,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2075,7 +2075,7 @@ pka_listener_dbus_channel_get_exit_status_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_exit_status_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&exit_status,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2120,7 +2120,7 @@ pka_listener_dbus_channel_get_kill_pid_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_kill_pid_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&kill_pid,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2165,7 +2165,7 @@ pka_listener_dbus_channel_get_pid_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_pid_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&pid,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2210,7 +2210,7 @@ pka_listener_dbus_channel_get_pid_set_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_pid_set_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&pid_set,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2258,7 +2258,7 @@ pka_listener_dbus_channel_get_sources_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_sources_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&sources,
 			&sources_len,
 			&error)) {
@@ -2273,7 +2273,7 @@ pka_listener_dbus_channel_get_sources_cb (GObject      *listener,  /* IN */
 		reply = dbus_message_new_method_return(message);
 		dbus_message_append_args(reply,
 		                         DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &sources_paths, sources_len,
-		                         
+
 		                         DBUS_TYPE_INVALID);
 		g_free(sources);
 		g_strfreev(sources_paths);
@@ -2311,7 +2311,7 @@ pka_listener_dbus_channel_get_state_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_state_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&state,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2356,7 +2356,7 @@ pka_listener_dbus_channel_get_target_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_target_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&target,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2404,7 +2404,7 @@ pka_listener_dbus_channel_get_working_dir_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_get_working_dir_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&working_dir,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -2451,7 +2451,7 @@ pka_listener_dbus_channel_mute_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_mute_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2493,7 +2493,7 @@ pka_listener_dbus_channel_set_args_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_set_args_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2535,7 +2535,7 @@ pka_listener_dbus_channel_set_env_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_set_env_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2577,7 +2577,7 @@ pka_listener_dbus_channel_set_kill_pid_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_set_kill_pid_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2619,7 +2619,7 @@ pka_listener_dbus_channel_set_pid_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_set_pid_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2661,7 +2661,7 @@ pka_listener_dbus_channel_set_target_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_set_target_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2703,7 +2703,7 @@ pka_listener_dbus_channel_set_working_dir_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_set_working_dir_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2745,7 +2745,7 @@ pka_listener_dbus_channel_start_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_start_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2787,7 +2787,7 @@ pka_listener_dbus_channel_stop_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_stop_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -2829,7 +2829,7 @@ pka_listener_dbus_channel_unmute_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_channel_unmute_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3413,7 +3413,7 @@ pka_listener_dbus_subscription_add_channel_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_add_channel_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3455,7 +3455,7 @@ pka_listener_dbus_subscription_add_source_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_add_source_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3499,7 +3499,7 @@ pka_listener_dbus_subscription_get_buffer_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_get_buffer_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&timeout,
 			&size,
 			&error)) {
@@ -3547,7 +3547,7 @@ pka_listener_dbus_subscription_get_created_at_cb (GObject      *listener,  /* IN
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_get_created_at_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&tv,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
@@ -3597,7 +3597,7 @@ pka_listener_dbus_subscription_get_sources_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_get_sources_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&sources,
 			&sources_len,
 			&error)) {
@@ -3612,7 +3612,7 @@ pka_listener_dbus_subscription_get_sources_cb (GObject      *listener,  /* IN */
 		reply = dbus_message_new_method_return(message);
 		dbus_message_append_args(reply,
 		                         DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &sources_paths, sources_len,
-		                         
+
 		                         DBUS_TYPE_INVALID);
 		g_free(sources);
 		g_strfreev(sources_paths);
@@ -3649,7 +3649,7 @@ pka_listener_dbus_subscription_mute_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_mute_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3691,7 +3691,7 @@ pka_listener_dbus_subscription_remove_channel_cb (GObject      *listener,  /* IN
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_remove_channel_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3733,7 +3733,7 @@ pka_listener_dbus_subscription_remove_source_cb (GObject      *listener,  /* IN 
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_remove_source_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3775,7 +3775,7 @@ pka_listener_dbus_subscription_set_buffer_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_set_buffer_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3817,7 +3817,7 @@ pka_listener_dbus_subscription_set_encoder_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_set_encoder_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
@@ -3859,7 +3859,7 @@ pka_listener_dbus_subscription_unmute_cb (GObject      *listener,  /* IN */
 	priv = PKA_LISTENER_DBUS(listener)->priv;
 	if (!pka_listener_subscription_unmute_finish(
 			PKA_LISTENER(listener),
-			result, 
+			result,
 			&error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);

@@ -1,17 +1,17 @@
 /* pk-sample.h
- * 
+ *
  * Copyright (C) 2009 Christian Hergert
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -37,7 +37,7 @@ typedef struct _PkSample PkSample;
  * @manifest: A #PkManifest.
  * @sample: A #PkSample.
  *
- * 
+ *
  *
  * Returns: None.
  */
@@ -51,7 +51,7 @@ typedef void (*PkSampleFunc) (PkManifest  *manifest,
  * @manifest: A location for a #PkManifest.
  * @user_data: user data supplied to pk_sample_new_from_data().
  *
- * 
+ *
  *
  * Returns: %TRUE if successful; otherwise %FALSE.
  * Side effects: None.

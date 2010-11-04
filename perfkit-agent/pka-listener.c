@@ -1,17 +1,17 @@
 /* pka-listener.c
  *
  * Copyright 2010 Christian Hergert <chris@dronelabs.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -33,7 +33,7 @@
 /**
  * SECTION:pka-listener
  * @title: PkaListener
- * @short_description: 
+ * @short_description:
  *
  * Section overview.
  */
@@ -2174,9 +2174,9 @@ pka_listener_manager_add_source_finish (PkaListener    *listener, /* IN */
  * internal buffer in bytes to queue before flushing data to the subscriber.
  * @timeout is the maximum number of milliseconds that should pass before
  * flushing data to the subscriber.
- * 
+ *
  * If @buffer_size and @timeout are 0, then no buffering will occur.
- * 
+ *
  * @encoder is an optional encoder that can be used to encode the data
  * into a particular format the subscriber is expecting.
  *
@@ -2224,9 +2224,9 @@ pka_listener_manager_add_subscription_async (PkaListener           *listener,   
  * internal buffer in bytes to queue before flushing data to the subscriber.
  * @timeout is the maximum number of milliseconds that should pass before
  * flushing data to the subscriber.
- * 
+ *
  * If @buffer_size and @timeout are 0, then no buffering will occur.
- * 
+ *
  * @encoder is an optional encoder that can be used to encode the data
  * into a particular format the subscriber is expecting.
  *
@@ -3520,7 +3520,7 @@ pka_listener_source_get_plugin_finish (PkaListener    *listener, /* IN */
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -3567,7 +3567,7 @@ pka_listener_subscription_add_channel_async (PkaListener           *listener,   
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -3712,7 +3712,7 @@ pka_listener_subscription_add_source_finish (PkaListener    *listener, /* IN */
  * Retrieves the buffering timeout and maximum buffer size for the
  * subscription.  If @timeout milliseconds pass or @size bytes are
  * consumed buffering, the data will be delivered to the subscriber.
- * 
+ *
  * If @timeout and @size are 0, then no buffering will occur.
  *
  * Returns: None.
@@ -3757,7 +3757,7 @@ pka_listener_subscription_get_buffer_async (PkaListener           *listener,    
  * Retrieves the buffering timeout and maximum buffer size for the
  * subscription.  If @timeout milliseconds pass or @size bytes are
  * consumed buffering, the data will be delivered to the subscriber.
- * 
+ *
  * If @timeout and @size are 0, then no buffering will occur.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
@@ -4256,7 +4256,7 @@ pka_listener_subscription_remove_source_finish (PkaListener    *listener, /* IN 
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: None.
@@ -4303,7 +4303,7 @@ pka_listener_subscription_set_buffer_async (PkaListener           *listener,    
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.

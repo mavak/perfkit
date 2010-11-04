@@ -49,7 +49,7 @@ memory_read (Memory *state)
 	gint fd;
 	gchar path[64];
 	gchar buffer[64];
- 
+
  	ENTRY;
 	memset(path, 0, sizeof(path));
 	snprintf(path, sizeof(path), "/proc/%d/statm", state->pid);

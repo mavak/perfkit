@@ -90,7 +90,7 @@ has_decimal (gchar *str)
 	gchar *ptr = str;
 
 	for(; *ptr; ptr++) {
-		if (*ptr == '.') 
+		if (*ptr == '.')
 			return TRUE;
 	}
 
@@ -102,7 +102,7 @@ has_decimal (gchar *str)
  * we either run out of entries or space in the array, which ever one
  * happens first.  Note that if the names and types in the SchedEntry are
  * already filled out we will not fill them out again.  This is done to
- * save time and because the names and value types probably won't change, 
+ * save time and because the names and value types probably won't change,
  * but their values will.
  */
 static gboolean
@@ -143,7 +143,7 @@ sched_parse (Sched      *sched,
 
 			/* Don't populate the names if they already exist */
 			if (!se.name) {
-				se.name = g_match_info_fetch(matchInfo, 1);	
+				se.name = g_match_info_fetch(matchInfo, 1);
 			}
 
 			/* Same practice with the type */

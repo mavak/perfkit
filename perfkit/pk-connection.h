@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
- * 
+ *
  * This file is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -42,8 +42,8 @@ G_BEGIN_DECLS
 
 /**
  * PkConnectionState:
- * @PK_CONNECTION_DISCONNECTED: 
- * @PK_CONNECTION_CONNECTED: 
+ * @PK_CONNECTION_DISCONNECTED:
+ * @PK_CONNECTION_CONNECTED:
  *
  * The #PkConnection state enumeration.
  */
@@ -56,7 +56,7 @@ typedef enum
 
 /**
  * PkConnectionError:
- * @PK_CONNECTION_ERROR_NOT_IMPLEMENTED: 
+ * @PK_CONNECTION_ERROR_NOT_IMPLEMENTED:
  *
  * The #PkConnection error enumeration.
  */

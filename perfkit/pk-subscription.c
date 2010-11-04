@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
- * 
+ *
  * This file is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -23,7 +23,7 @@
 /**
  * SECTION:pk-subscription
  * @title: PkSubscription
- * @short_description: 
+ * @short_description:
  *
  * Section overview.
  */
@@ -84,7 +84,7 @@ pk_subscription_get_connection (PkSubscription *subscription) /* IN */
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -139,7 +139,7 @@ pk_subscription_add_channel_cb (GObject      *object,    /* IN */
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -186,7 +186,7 @@ pk_subscription_add_channel_async (PkSubscription      *subscription, /* IN */
  *
  * Adds all sources of @channel to the list of sources for which manifest
  * and samples are delivered to the subscriber.
- * 
+ *
  * If @monitor is TRUE, then sources added to @channel will automatically
  * be added to the subscription.
  *
@@ -744,7 +744,7 @@ pk_subscription_remove_source_finish (PkSubscription  *subscription, /* IN */
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
@@ -799,7 +799,7 @@ pk_subscription_set_buffer_cb (GObject      *object,    /* IN */
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: None.
@@ -846,7 +846,7 @@ pk_subscription_set_buffer_async (PkSubscription      *subscription, /* IN */
  * Sets the buffering timeout and maximum buffer size for the subscription.
  * If @timeout milliseconds pass or @size bytes are consummed buffering,
  * the data will be delivered to the subscriber.
- * 
+ *
  * Set @timeout and @size to 0 to disable buffering.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
