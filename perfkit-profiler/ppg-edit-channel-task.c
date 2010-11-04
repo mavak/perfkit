@@ -175,9 +175,9 @@ ppg_edit_channel_task_run (PpgTask *task)
 
 	if (priv->args) {
 		pk_connection_channel_set_args_async(conn, channel,
-											 (const gchar **)priv->args, NULL,
-											 ppg_edit_channel_task_args_set,
-											 task);
+		                                     (const gchar **)priv->args, NULL,
+		                                     ppg_edit_channel_task_args_set,
+		                                     task);
 	} else {
 		priv->args_done = TRUE;
 		ppg_edit_channel_task_try_finish(edit);
@@ -185,9 +185,9 @@ ppg_edit_channel_task_run (PpgTask *task)
 
 	if (priv->env) {
 		pk_connection_channel_set_env_async(conn, channel,
-											(const gchar **)priv->env, NULL,
-											ppg_edit_channel_task_env_set,
-											task);
+		                                    (const gchar **)priv->env, NULL,
+		                                    ppg_edit_channel_task_env_set,
+		                                    task);
 	} else {
 		priv->env_done = TRUE;
 		ppg_edit_channel_task_try_finish(edit);
