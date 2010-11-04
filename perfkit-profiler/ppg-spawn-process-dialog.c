@@ -412,6 +412,34 @@ tree_view_key_press (GtkTreeView *tree_view,
 	return FALSE;
 }
 
+static void
+browse_clicked (GtkWidget *widget,
+                PpgSpawnProcessDialog *dialog)
+{
+	PpgSpawnProcessDialogPrivate *priv;
+	GtkWidget *chooser;
+	const gchar *filename;
+	gint ret;
+
+	g_return_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog));
+
+	priv = dialog->priv;
+
+	chooser = gtk_file_chooser_dialog_new(_("Open Target"), GTK_WINDOW(dialog),
+	                                      GTK_FILE_CHOOSER_ACTION_OPEN,
+	                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+	                                      GTK_STOCK_OPEN, GTK_RESPONSE_OK,
+	                                      NULL);
+
+	ret = gtk_dialog_run(GTK_DIALOG(chooser));
+	if (ret == GTK_RESPONSE_OK) {
+		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser));
+		gtk_entry_set_text(GTK_ENTRY(priv->target_entry), filename);
+	}
+
+	gtk_widget_destroy(chooser);
+}
+
 /**
  * ppg_spawn_process_dialog_finalize:
  * @object: (in): A #PpgSpawnProcessDialog.
@@ -538,10 +566,12 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	GtkCellRenderer *cell;
 	GtkWidget *content_area;
 	GtkWidget *vbox;
+	GtkWidget *b;
 	GtkWidget *l;
 	GtkWidget *table;
 	GtkWidget *align;
 	GtkWidget *scroller;
+	GtkWidget *hbox;
 
 	priv = G_TYPE_INSTANCE_GET_PRIVATE(dialog,
 	                                   PPG_TYPE_SPAWN_PROCESS_DIALOG,
@@ -599,17 +629,36 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	                                  "y-options", GTK_FILL,
 	                                  NULL);
 
-	priv->target_entry = g_object_new(GTK_TYPE_ENTRY,
-	                                  "activates-default", TRUE,
-	                                  "visible", TRUE,
-	                                  NULL);
-	gtk_container_add_with_properties(GTK_CONTAINER(table), priv->target_entry,
+	hbox = g_object_new(GTK_TYPE_HBOX,
+	                    "spacing", 3,
+	                    "visible", TRUE,
+	                    NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(table), hbox,
 	                                  "bottom-attach", 2,
 	                                  "left-attach", 1,
 	                                  "right-attach", 2,
 	                                  "top-attach", 1,
 	                                  "y-options", GTK_FILL,
 	                                  NULL);
+
+	priv->target_entry = g_object_new(GTK_TYPE_ENTRY,
+	                                  "activates-default", TRUE,
+	                                  "visible", TRUE,
+	                                  NULL);
+	gtk_container_add(GTK_CONTAINER(hbox), priv->target_entry);
+
+	/*
+	 * FIXME: This will probably need to be hidden on remote profiling.
+	 */
+	b = g_object_new(GTK_TYPE_BUTTON,
+	                 "label", _("..."), /* Is "_Browse" better? */
+	                 "use-underline", TRUE,
+	                 "visible", TRUE,
+	                 NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(hbox), b,
+	                                  "expand", FALSE,
+	                                  NULL);
+	g_signal_connect(b, "clicked", G_CALLBACK(browse_clicked), dialog);
 
 	l = g_object_new(GTK_TYPE_LABEL,
 	                 "label", _("_Executable:"),
