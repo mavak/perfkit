@@ -10,7 +10,7 @@ SUBDIRS =			\
 	tests			\
 	doc
 
-ACLOCAL_AMFLAGS = -I build/m4
+ACLOCAL_AMFLAGS = -I build/m4 ${ACLOCAL_FLAGS}
 DISTCHECK_CONFIGURE_FLAGS = --enable-maintainer-flags --enable-gtk-doc --enable-introspection
 
 perfkitdocdir = ${prefix}/doc/perfkit

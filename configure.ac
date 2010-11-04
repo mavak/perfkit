@@ -17,19 +17,28 @@ m4_define([lt_age], [m4_eval(perfkit_binary_age - perfkit_interface_age)])
 dnl ************************************************************************
 dnl Initialize Automake
 dnl ************************************************************************
-AC_PREREQ(2.62)
-AC_INIT(perfkit, perfkit_version)
-AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AC_PREREQ([2.64])
+AC_INIT([perfkit],[perfkit_version])
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([build/m4])
-AM_MAINTAINER_MODE
-AC_ISC_POSIX
-AC_PROG_CC
-AM_PATH_GLIB_2_0
-AM_PROG_CC_C_O
-AM_PROG_VALAC([0.9.2])
+
+AM_INIT_AUTOMAKE([1.10])
+AM_MAINTAINER_MODE([enable])
+
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 AS_AM_REALLY_SILENT
+
+# Check for programs
+AC_PROG_CC
+AM_PROG_CC_C_O
+AM_PROG_VALAC([0.9.2])
+
+AM_PATH_GLIB_2_0
+
+# Initialize libtool
+LT_PREREQ([2.2])
+LT_INIT
 
 
 dnl ************************************************************************
@@ -87,7 +96,7 @@ m4_define([debug_default],
 	  [m4_if(m4_eval(perfkit_minor_version % 2), [1],
 	  [yes], [minimum])])
 AC_ARG_ENABLE([debug],
-	      [AC_HELP_STRING([--enable-debug=@<:@no/minimum/yes@:>@],
+	      [AS_HELP_STRING([--enable-debug=@<:@no/minimum/yes@:>@],
 	      		      [turn on debugging @<:@default=debug_default@:>@])],
 	      		      [],
 	      		      [enable_debug=debug_default])
@@ -126,8 +135,8 @@ AM_CONDITIONAL(ENABLE_GLIB_TEST, test "x$enable_glibtest" = "xyes")
 dnl ************************************************************************
 dnl Miscellaneous
 dnl ************************************************************************
-AM_PROG_LIBTOOL
 GTK_DOC_CHECK([1.11])
+GOBJECT_INTROSPECTION_CHECK([0.6.7])
 SHAMROCK_EXPAND_LIBDIR
 SHAMROCK_EXPAND_BINDIR
 SHAMROCK_EXPAND_DATADIR
@@ -136,7 +145,7 @@ SHAMROCK_EXPAND_DATADIR
 dnl ************************************************************************
 dnl Output
 dnl ************************************************************************
-AC_OUTPUT([
+AC_CONFIG_FILES([
 	Makefile
 
 	data/Makefile
@@ -182,6 +191,7 @@ AC_OUTPUT([
 	tests/perfkit-agent/Makefile
 	tests/test-suite/Makefile
 ])
+AC_OUTPUT
 
 echo ""
 echo "Perfkit $VERSION"

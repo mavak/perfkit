@@ -18,4 +18,8 @@ fi
 
 autoreconf -v --install || exit $?
 
-./configure --enable-maintainer-mode --enable-introspection --enable-silent-rules "$@" && echo "Now type 'make' to compile perfkit"
+test -n "$NOCONFIGURE" ||
+(
+  "$srcdir/configure" "$@" &&
+  echo "Now type 'make' to compile perfkit"
+)
