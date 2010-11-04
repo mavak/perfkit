@@ -38,7 +38,7 @@ extern void pka_manager_quit     (void);
 extern void pka_manager_run      (void);
 extern void pka_manager_shutdown (void);
 
-static gchar *opt_config = (gchar *)PACKAGE_SYSCONFDIR "/perfkit/agent.conf";
+static gchar *opt_config = NULL;
 static gchar *opt_logfile = NULL;
 static gboolean opt_stdout = FALSE;
 static GOptionEntry options[] = {
@@ -80,6 +80,10 @@ main (gint   argc,   /* IN */
 		g_printerr("%s\n", error->message);
 		g_error_free(error);
 		return EXIT_FAILURE;
+	}
+
+	if (!opt_config) {
+		opt_config = g_strdup(PACKAGE_SYSCONFDIR "/perfkit/agent.conf");
 	}
 
 	/*
