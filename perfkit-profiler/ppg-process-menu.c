@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ppg-edit-channel-task.h"
 #include "ppg-process-menu.h"
 #include "ppg-session.h"
 
@@ -35,12 +36,38 @@ enum
 	PROP_SESSION,
 };
 
+static inline GQuark
+pid_quark (void)
+{
+	return g_quark_from_static_string("ppg-process-menu-pid");
+}
+
 static void
 ppg_process_menu_set_session (PpgProcessMenu *menu,
                               PpgSession *session)
 {
 	g_return_if_fail(PPG_IS_PROCESS_MENU(menu));
 	menu->priv->session = session;
+}
+
+static void
+ppg_process_menu_item_activate (GtkMenuItem *item,
+                                PpgProcessMenu *menu)
+{
+	PpgProcessMenuPrivate *priv;
+	PpgTask *task;
+	GPid pid;
+
+	g_return_if_fail(PPG_IS_PROCESS_MENU(menu));
+
+	priv = menu->priv;
+
+	pid = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(item), pid_quark()));
+	task = g_object_new(PPG_TYPE_EDIT_CHANNEL_TASK,
+	                    "session", priv->session,
+	                    "pid", pid,
+	                    NULL);
+	ppg_task_schedule(task);
 }
 
 static void
@@ -81,6 +108,10 @@ ppg_process_menu_add_item (PpgProcessMenu *menu,
 	                    "tooltip-text", buffer,
 	                    NULL);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), GTK_WIDGET(item));
+	g_object_set_qdata(G_OBJECT(item), pid_quark(), GINT_TO_POINTER(pid));
+	g_signal_connect(item, "activate",
+	                 G_CALLBACK(ppg_process_menu_item_activate),
+	                 menu);
 
   cleanup:
 	g_free(label);
@@ -207,7 +238,7 @@ ppg_process_menu_class_init (PpgProcessMenuClass *klass)
 	                                                    "session",
 	                                                    "session",
 	                                                    PPG_TYPE_SESSION,
-	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	                                                    G_PARAM_READWRITE));
 }
 
 static void

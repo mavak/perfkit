@@ -26,11 +26,13 @@ struct _PpgEditChannelTaskPrivate
 	gchar **env;
 	gchar  *target;
 	gchar  *working_dir;
+	GPid    pid;
 
 	gboolean target_done;
 	gboolean args_done;
 	gboolean env_done;
 	gboolean dir_done;
+	gboolean pid_done;
 };
 
 enum
@@ -38,6 +40,7 @@ enum
 	PROP_0,
 	PROP_ARGS,
 	PROP_ENV,
+	PROP_PID,
 	PROP_TARGET,
 	PROP_WORKING_DIR,
 };
@@ -47,9 +50,35 @@ ppg_edit_channel_task_try_finish (PpgEditChannelTask *task)
 {
 	PpgEditChannelTaskPrivate *priv = task->priv;
 
-	if (priv->target_done && priv->args_done && priv->dir_done && priv->env_done) {
+	if (priv->target_done &&
+	    priv->args_done &&
+	    priv->dir_done &&
+	    priv->env_done &&
+	    priv->pid_done) {
 		ppg_task_finish(PPG_TASK(task));
 	}
+}
+
+static void
+ppg_edit_channel_task_pid_set (GObject      *object,
+                               GAsyncResult *result,
+                               gpointer      user_data)
+{
+	PkConnection *conn = (PkConnection *)object;
+	PpgTask *task = (PpgTask *)user_data;
+	PpgEditChannelTaskPrivate *priv;
+	GError *error = NULL;
+
+	g_return_if_fail(PPG_IS_EDIT_CHANNEL_TASK(task));
+
+	priv = PPG_EDIT_CHANNEL_TASK(task)->priv;
+
+	if (!pk_connection_channel_set_pid_finish(conn, result, &error)) {
+		ppg_task_finish_with_error(task, error);
+	}
+
+	priv->pid_done = TRUE;
+	ppg_edit_channel_task_try_finish(PPG_EDIT_CHANNEL_TASK(task));
 }
 
 static void
@@ -180,7 +209,6 @@ ppg_edit_channel_task_run (PpgTask *task)
 		                                     task);
 	} else {
 		priv->args_done = TRUE;
-		ppg_edit_channel_task_try_finish(edit);
 	}
 
 	if (priv->env) {
@@ -190,7 +218,6 @@ ppg_edit_channel_task_run (PpgTask *task)
 		                                    task);
 	} else {
 		priv->env_done = TRUE;
-		ppg_edit_channel_task_try_finish(edit);
 	}
 
 	if (priv->working_dir) {
@@ -198,12 +225,25 @@ ppg_edit_channel_task_run (PpgTask *task)
 		                                            priv->working_dir, NULL,
 		                                            ppg_edit_channel_task_working_dir_set,
 		                                            task);
+	} else {
+		priv->dir_done = TRUE;
 	}
+
+	if (priv->pid) {
+		pk_connection_channel_set_pid_async(conn, channel, priv->pid, NULL,
+		                                    ppg_edit_channel_task_pid_set,
+		                                    task);
+	} else {
+		priv->pid_done = TRUE;
+	}
+
+	ppg_edit_channel_task_try_finish(edit);
 
 	g_object_set(session,
 	             "args", priv->args,
 	             "env", priv->env,
 	             "target", priv->target,
+	             "pid", priv->pid,
 	             NULL);
 
 	g_object_unref(conn);
@@ -261,6 +301,18 @@ ppg_edit_channel_task_set_env (PpgEditChannelTask  *task,
 	priv->env = g_strdupv(env);
 }
 
+static void	
+ppg_edit_channel_task_set_pid (PpgEditChannelTask *task,
+                               GPid pid)
+{
+	PpgEditChannelTaskPrivate *priv;
+
+	g_return_if_fail(PPG_IS_EDIT_CHANNEL_TASK(task));
+
+	priv = task->priv;
+	priv->pid = pid;
+}
+
 /**
  * ppg_edit_channel_task_finalize:
  * @object: (in): A #PpgEditChannelTask.
@@ -306,6 +358,9 @@ ppg_edit_channel_task_set_property (GObject      *object,
 		break;
 	case PROP_ENV:
 		ppg_edit_channel_task_set_env(task, g_value_get_boxed(value));
+		break;
+	case PROP_PID:
+		ppg_edit_channel_task_set_pid(task, g_value_get_uint(value));
 		break;
 	default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
@@ -365,6 +420,16 @@ ppg_edit_channel_task_class_init (PpgEditChannelTaskClass *klass)
 	                                                   "env",
 	                                                   G_TYPE_STRV,
 	                                                   G_PARAM_WRITABLE));
+
+	g_object_class_install_property(object_class,
+	                                PROP_PID,
+	                                g_param_spec_uint("pid",
+	                                                  "pid",
+	                                                  "pid",
+	                                                  0,
+	                                                  G_MAXSHORT,
+	                                                  0,
+	                                                  G_PARAM_WRITABLE));
 }
 
 /**

@@ -680,38 +680,59 @@ ppg_window_delete_event (GtkWidget   *widget,
 	return ret;
 }
 
-/**
- * ppg_window_notify_target:
- * @session: (in): A #PpgSssion.
- * @pspec: (in): A #GParamSpec.
- * @user_data: (in): A #PpgWindow.
- *
- * Handles the notification that the sessions "target" property has changed.
- * The various widgets are updated to reflect this.
- *
- * Returns: None.
- * Side effects: None.
- */
+static void
+ppg_window_update_target (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	gchar *target;
+	gchar *title;
+	GPid pid;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	g_object_get(priv->session,
+	             "pid", &pid,
+	             "target", &target,
+	             NULL);
+
+	if (pid) {
+		title = g_strdup_printf("Pid %d", (gint)pid);
+	} else {
+		title = g_strdup(target);
+	}
+
+	g_object_set(priv->target_tool_item,
+	             "label", title,
+	             NULL);
+
+	g_free(target);
+	g_free(title);
+}
+
 static void
 ppg_window_notify_target (PpgSession *session,
                           GParamSpec *pspec,
                           gpointer    user_data)
 {
 	PpgWindow *window = (PpgWindow *)user_data;
-	PpgWindowPrivate *priv;
-	gchar *target;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
-	priv = window->priv;
+	ppg_window_update_target(window);
+}
 
-	g_object_get(session,
-	             "target", &target,
-	             NULL);
-	g_object_set(priv->target_tool_item,
-	             "label", target,
-	             NULL);
-	g_free(target);
+static void
+ppg_window_notify_pid (PpgSession *session,
+                       GParamSpec *pspec,
+                       gpointer user_data)
+{
+	PpgWindow *window = (PpgWindow *)user_data;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	ppg_window_update_target(window);
 }
 
 static void
@@ -1381,6 +1402,9 @@ ppg_window_set_uri (PpgWindow   *window,
 	g_signal_connect(priv->session, "notify::target",
 	                 G_CALLBACK(ppg_window_notify_target),
 	                 window);
+	g_signal_connect(priv->session, "notify::pid",
+	                 G_CALLBACK(ppg_window_notify_pid),
+	                 window);
 	g_signal_connect(priv->session, "instrument-added",
 	                 G_CALLBACK(ppg_window_instrument_added),
 	                 window);
@@ -1389,6 +1413,10 @@ ppg_window_set_uri (PpgWindow   *window,
 	                 window);
 
 	g_object_set(priv->timer_tool_item,
+	             "session", priv->session,
+	             NULL);
+
+	g_object_set(priv->process_menu,
 	             "session", priv->session,
 	             NULL);
 

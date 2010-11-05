@@ -28,6 +28,7 @@ struct _PpgSessionPrivate
 	gchar *target;
 	gchar **args;
 	gchar **env;
+	GPid pid;
 	GTimer *timer;
 	guint position_handler;
 	PpgSessionState state;
@@ -43,6 +44,7 @@ enum
 	PROP_POSITION,
 	PROP_TARGET,
 	PROP_URI,
+	PROP_PID,
 };
 
 enum
@@ -151,6 +153,22 @@ ppg_session_get_target (PpgSession *session)
 {
 	g_return_val_if_fail(PPG_IS_SESSION(session), NULL);
 	return session->priv->target;
+}
+
+static GPid
+ppg_session_get_pid (PpgSession *session)
+{
+	g_return_val_if_fail(PPG_IS_SESSION(session), 0);
+	return session->priv->pid;
+}
+
+static void
+ppg_session_set_pid (PpgSession *session,
+                     GPid pid)
+{
+	g_return_if_fail(PPG_IS_SESSION(session));
+	session->priv->pid = pid;
+	g_object_notify(G_OBJECT(session), "pid");
 }
 
 static inline gdouble
@@ -613,6 +631,9 @@ ppg_session_get_property (GObject    *object,  /* IN */
 	case PROP_TARGET:
 		g_value_set_string(value, ppg_session_get_target(session));
 		break;
+	case PROP_PID:
+		g_value_set_uint(value, ppg_session_get_pid(session));
+		break;
 	case PROP_POSITION:
 		g_value_set_double(value, ppg_session_get_position(session));
 		break;
@@ -650,6 +671,9 @@ ppg_session_set_property (GObject      *object,
 		break;
 	case PROP_ENV:
 		ppg_session_set_env(session, g_value_get_boxed(value));
+		break;
+	case PROP_PID:
+		ppg_session_set_pid(session, g_value_get_uint(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -725,6 +749,16 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                                   "env",
 	                                                   G_TYPE_STRV,
 	                                                   G_PARAM_READWRITE));
+
+	g_object_class_install_property(object_class,
+	                                PROP_PID,
+	                                g_param_spec_uint("pid",
+	                                                  "pid",
+	                                                  "pid",
+	                                                  0,
+	                                                  G_MAXSHORT,
+	                                                  0,
+	                                                  G_PARAM_READWRITE));
 
 	g_object_class_install_property(object_class,
 	                                PROP_POSITION,
