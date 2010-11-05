@@ -48,8 +48,11 @@ struct _PpgWindowClass
 	GtkWindowClass parent_class;
 };
 
-GType ppg_window_get_type (void) G_GNUC_CONST;
-guint ppg_window_count    (void);
+GType ppg_window_get_type   (void) G_GNUC_CONST;
+guint ppg_window_count      (void);
+void  ppg_window_show_graph (const gchar *title,
+                             GtkWidget   *graph,
+                             GtkWindow   *parent);
 
 G_END_DECLS
 

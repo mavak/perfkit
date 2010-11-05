@@ -555,7 +555,7 @@ ppg_window_configure_instrument_activate (GtkAction *action,
  * Returns: None.
  * Side effects: A new #GtkWindow is presented to the user.
  */
-static void
+void
 ppg_window_show_graph (const gchar *title,
                        GtkWidget   *graph,
                        GtkWindow   *parent)
