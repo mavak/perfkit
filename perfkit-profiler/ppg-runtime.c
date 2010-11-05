@@ -37,8 +37,14 @@
 static gboolean  use_stdount  = TRUE;
 static gchar    *log_filename = NULL;
 static gint      exit_code    = 0;
+static gboolean  show_cpu     = FALSE;
 
 static GOptionEntry option_entries[] = {
+	{ NULL }
+};
+
+static GOptionEntry hidden_entries[] = {
+	{ "show-cpu", 0, 0, G_OPTION_ARG_NONE, &show_cpu, N_("Show the CPU monitor") },
 	{ NULL }
 };
 
@@ -56,17 +62,22 @@ gboolean
 ppg_runtime_init (gint   *argc,
                   gchar **argv[])
 {
+	GOptionGroup *hidden;
 	GOptionContext *context;
 	GError *error = NULL;
 
 	/*
-	 * FIXME: Move this into ppg-prefs.
+	 * FIXME: Retrieve option group from prefs.
 	 */
+
+	hidden = g_option_group_new("special", "", "", NULL, NULL);
+	g_option_group_add_entries(hidden, hidden_entries);
 
 	context = g_option_context_new(_("- " PRODUCT_NAME));
 	g_option_context_add_main_entries(context, option_entries, GETTEXT_PACKAGE);
 	g_option_context_add_group(context, gtk_get_option_group(TRUE));
 	g_option_context_add_group(context, clutter_get_option_group());
+	g_option_context_add_group(context, hidden);
 	if (!g_option_context_parse(context, argc, argv, &error)) {
 		g_printerr("%s\n", error->message);
 		g_error_free(error);
@@ -83,6 +94,13 @@ ppg_runtime_init (gint   *argc,
 	                                  ppg_paths_get_icon_dir());
 	ppg_instruments_init();
 	ppg_actions_init();
+
+	if (show_cpu) {
+		GtkWidget *graph;
+
+		graph = ppg_monitor_cpu_new();
+		ppg_window_show_graph(_("CPU Usage"), graph, NULL);
+	}
 
 	return TRUE;
 }

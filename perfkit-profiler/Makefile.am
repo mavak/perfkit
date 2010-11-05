@@ -144,7 +144,7 @@ run: perfkit-profiler
 	@PPG_DATA_DIR=$(top_builddir)/data \
 	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs \
 	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings \
-	libtool --mode=execute $(builddir)/perfkit-profiler
+	libtool --mode=execute $(builddir)/perfkit-profiler ${PERFKIT_OPTIONS}
 
 debug: perfkit-profiler
 	@PPG_DATA_DIR=$(top_builddir)/data \
