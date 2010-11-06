@@ -17,6 +17,7 @@
  */
 
 #include "ppg-instrument.h"
+#include "ppg-log.h"
 #include "ppg-session.h"
 
 G_DEFINE_TYPE(PpgSession, ppg_session, G_TYPE_INITIALLY_UNOWNED)
@@ -348,7 +349,7 @@ ppg_session_channel_started (GObject *object,
 
 	ppg_session_start_position_notifier(session);
 
-	g_message("Channel %d started.", priv->channel);
+	DEBUG(Session, "Channel %d started.", priv->channel);
 
 	g_signal_emit(session, signals[STARTED], 0);
 }
@@ -480,7 +481,7 @@ ppg_session_start (PpgSession *session)
 
 	priv = session->priv;
 
-	g_message("Starting channel %d", priv->channel);
+	DEBUG(Session, "Starting channel %d", priv->channel);
 	pk_connection_channel_start_async(priv->conn, priv->channel, NULL,
 	                                  ppg_session_channel_started,
 	                                  session);
