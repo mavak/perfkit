@@ -65,6 +65,10 @@ ppg_line_visualizer_append (PpgLineVisualizer *visualizer,
 	line.fill = fill;
 
 	g_array_append_val(priv->lines, line);
+
+	g_signal_connect_swapped(model, "changed",
+	                         G_CALLBACK(ppg_visualizer_queue_draw),
+	                         visualizer);
 }
 
 static ClutterActor*

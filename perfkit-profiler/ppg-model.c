@@ -66,6 +66,14 @@ struct _PpgModelPrivate
 	GPtrArray  *samples;         /* All samples */
 };
 
+enum
+{
+	CHANGED,
+	LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
+
 static inline void
 _g_value_subtract (GValue *left,
                    GValue *right)
@@ -229,6 +237,16 @@ ppg_model_class_init (PpgModelClass *klass)
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_model_finalize;
 	g_type_class_add_private(object_class, sizeof(PpgModelPrivate));
+
+	signals[CHANGED] = g_signal_new("changed",
+	                                PPG_TYPE_MODEL,
+	                                G_SIGNAL_RUN_FIRST,
+	                                0,
+	                                NULL,
+	                                NULL,
+	                                g_cclosure_marshal_VOID__VOID,
+	                                G_TYPE_NONE,
+	                                0);
 }
 
 /**
@@ -303,6 +321,8 @@ ppg_model_insert_sample (PpgModel   *model,
 	 */
 	priv->sample_count++;
 	g_ptr_array_add(priv->samples, pk_sample_ref(sample));
+
+	g_signal_emit(model, signals[CHANGED], 0);
 }
 
 void
