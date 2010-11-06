@@ -61,6 +61,10 @@ static void ppg_window_monitor_mem_activate          (GtkAction *action,
                                                       PpgWindow *window);
 static void ppg_window_monitor_net_activate          (GtkAction *action,
                                                       PpgWindow *window);
+static void ppg_window_next_activate                 (GtkAction *action,
+                                                      PpgWindow *window);
+static void ppg_window_previous_activate             (GtkAction *action,
+                                                      PpgWindow *window);
 
 static GtkActionEntry ppg_window_action_entries[] = {
 	{ "file", NULL, N_("Per_fkit") },
@@ -82,6 +86,8 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "add-instrument", GTK_STOCK_ADD, N_("_Add Instrument"), "<control><shift>n", N_("Add an instrument to the current profiling session"), G_CALLBACK(ppg_window_add_instrument_activate) },
 	{ "configure-instrument", NULL, N_("_Configure"), NULL, N_("Configure the selected instrument"), G_CALLBACK(ppg_window_configure_instrument_activate) },
 	{ "visualizers", NULL, N_("_Visualizers") },
+	{ "next-instrument", NULL, N_("Next"), "j", NULL, G_CALLBACK(ppg_window_next_activate) },
+	{ "previous-instrument", NULL, N_("Previous"), "k", NULL, G_CALLBACK(ppg_window_previous_activate) },
 
 	{ "target-spawn", NULL, N_("Spawn a new process"), "<control>t", NULL, G_CALLBACK(ppg_window_target_spawn_activate) },
 	{ "target-existing", NULL, N_("Select an existing process"), NULL, NULL, NULL },

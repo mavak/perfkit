@@ -1502,17 +1502,29 @@ ppg_window_select_previous_row (PpgWindow *window)
 	g_list_free(list);
 }
 
+static void
+ppg_window_next_activate (GtkAction *action,
+                          PpgWindow *window)
+{
+	ppg_window_select_next_row(window);
+}
+
+static void
+ppg_window_previous_activate (GtkAction *action,
+                              PpgWindow *window)
+{
+	ppg_window_select_previous_row(window);
+}
+
 static gboolean
 ppg_window_embed_key_press (GtkWidget   *embed,
                             GdkEventKey *key,
                             PpgWindow   *window)
 {
 	switch (key->keyval) {
-	case GDK_KEY_j:
 	case GDK_KEY_Down:
 		ppg_window_select_next_row(window);
 		return TRUE;
-	case GDK_KEY_k:
 	case GDK_KEY_Up:
 		ppg_window_select_previous_row(window);
 		return TRUE;
