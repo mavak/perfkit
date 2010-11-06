@@ -29,7 +29,7 @@ gboolean
 ppg_prefs_init (gint    *argc,
                 gchar ***argv)
 {
-    project_settings = g_settings_new(PROJECT_SCHEMA);
+	project_settings = g_settings_new(PROJECT_SCHEMA);
 
 	return TRUE;
 }
