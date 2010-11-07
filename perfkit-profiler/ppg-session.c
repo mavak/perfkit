@@ -61,8 +61,8 @@ enum
 	LAST_SIGNAL
 };
 
-static guint signals[LAST_SIGNAL] = { 0 };
-static GParamSpec *position_pspec = NULL;
+static guint       signals[LAST_SIGNAL] = { 0 };
+static GParamSpec *position_pspec       = NULL;
 
 static gboolean
 ppg_session_notify_position (gpointer user_data)
@@ -101,7 +101,7 @@ ppg_session_report_error (PpgSession  *session,
                           const gchar *func,
                           GError      *error)
 {
-	g_critical("%s(): %s", func, error->message);
+	CRITICAL(Session, "%s(): %s", func, error->message);
 }
 
 static void
@@ -136,7 +136,7 @@ ppg_session_set_args (PpgSession  *session,
 
 static void
 ppg_session_set_env (PpgSession  *session,
-                      gchar      **env)
+                     gchar      **env)
 {
 	PpgSessionPrivate *priv;
 
@@ -149,7 +149,7 @@ ppg_session_set_env (PpgSession  *session,
 	g_object_notify(G_OBJECT(session), "env");
 }
 
-static const gchar *
+static const gchar*
 ppg_session_get_target (PpgSession *session)
 {
 	g_return_val_if_fail(PPG_IS_SESSION(session), NULL);
@@ -526,6 +526,8 @@ ppg_session_unpause (PpgSession *session)
 {
 	PpgSessionPrivate *priv;
 
+	ENTRY;
+
 	g_return_if_fail(PPG_IS_SESSION(session));
 	g_return_if_fail(session->priv->conn != NULL);
 	g_return_if_fail(session->priv->channel >= 0);
@@ -535,12 +537,17 @@ ppg_session_unpause (PpgSession *session)
 	pk_connection_channel_unmute_async(priv->conn, priv->channel, NULL,
 	                                   ppg_session_channel_unmuted,
 	                                   session);
+
+	EXIT;
 }
 
 void
 ppg_session_add_instrument (PpgSession    *session,
                             PpgInstrument *instrument)
 {
+	g_return_if_fail(PPG_IS_SESSION(session));
+	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
+
 	g_signal_emit(session, signals[INSTRUMENT_ADDED], 0, instrument);
 }
 
@@ -560,6 +567,8 @@ ppg_session_set_uri (PpgSession  *session,
 {
 	PpgSessionPrivate *priv;
 
+	ENTRY;
+
 	g_return_if_fail(PPG_IS_SESSION(session));
 	g_return_if_fail(session->priv->conn == NULL);
 	g_return_if_fail(uri != NULL);
@@ -574,6 +583,8 @@ ppg_session_set_uri (PpgSession  *session,
 	pk_connection_connect_async(priv->conn, NULL,
 	                            ppg_session_connection_connected,
 	                            session);
+
+	EXIT;
 }
 
 gboolean
@@ -583,6 +594,8 @@ ppg_session_save (PpgSession *session,
 {
 	PpgSessionPrivate *priv;
 
+	ENTRY;
+
 	g_return_val_if_fail(PPG_IS_SESSION(session), FALSE);
 
 	priv = session->priv;
@@ -591,7 +604,7 @@ ppg_session_save (PpgSession *session,
 	 * TODO: Implement saving to json.
 	 */
 
-	return TRUE;
+	RETURN(TRUE);
 }
 
 gboolean
@@ -601,6 +614,8 @@ ppg_session_load (PpgSession *session,
 {
 	PpgSessionPrivate *priv;
 
+	ENTRY;
+
 	g_return_val_if_fail(PPG_IS_SESSION(session), FALSE);
 
 	priv = session->priv;
@@ -609,7 +624,7 @@ ppg_session_load (PpgSession *session,
 	 * TODO: Implement loading from json.
 	 */
 
-	return TRUE;
+	RETURN(TRUE);
 }
 
 /**
@@ -627,12 +642,16 @@ ppg_session_finalize (GObject *object)
 {
 	PpgSessionPrivate *priv = PPG_SESSION(object)->priv;
 
+	ENTRY;
+
 	if (priv->timer) {
 		g_timer_destroy(priv->timer);
 		priv->timer = NULL;
 	}
 
 	G_OBJECT_CLASS(ppg_session_parent_class)->finalize(object);
+
+	EXIT;
 }
 
 /**
@@ -902,9 +921,8 @@ ppg_session_class_init (PpgSessionClass *klass)
 static void
 ppg_session_init (PpgSession *session)
 {
-	session->priv = G_TYPE_INSTANCE_GET_PRIVATE(session,
-	                                     PPG_TYPE_SESSION,
-	                                     PpgSessionPrivate);
-
-
+	ENTRY;
+	session->priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
+	                                            PpgSessionPrivate);
+	EXIT;
 }
