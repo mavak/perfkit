@@ -64,6 +64,8 @@ void        ppg_window_show_graph          (const gchar *title,
                                             GtkWindow   *parent);
 void        ppg_window_select_next_row     (PpgWindow   *window);
 void        ppg_window_select_previous_row (PpgWindow   *window);
+void        ppg_window_set_status_label    (PpgWindow   *window,
+                                            const gchar *label);
 void        ppg_window_visualizers_set     (PpgWindow   *window,
                                             const gchar *first_property,
                                             ...);

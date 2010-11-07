@@ -566,6 +566,17 @@ ppg_window_monitor_net_activate (GtkAction *action,
 	ppg_window_show_graph(_("Network Usage"), graph, GTK_WINDOW(window));
 }
 
+/**
+ * ppg_window_close_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "activate" signal for the "close" action.  Closes the window
+ * and attempts to shutdown the application if possible.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_close_activate (GtkAction *action,
                            PpgWindow *window)
@@ -582,6 +593,16 @@ ppg_window_close_activate (GtkAction *action,
 	ppg_runtime_try_quit();
 }
 
+/**
+ * ppg_window_preferences_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handles the "activate" signal for the "preferences" action.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_preferences_activate (GtkAction *action,
                                  PpgWindow *window)
@@ -603,6 +624,17 @@ ppg_window_preferences_activate (GtkAction *action,
 	gtk_window_present(GTK_WINDOW(dialog));
 }
 
+/**
+ * ppg_window_settings_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "activate" signal for the "settings" action. Shows the session
+ * settings dialog.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_settings_activate (GtkAction *action,
                               PpgWindow *window)
@@ -615,6 +647,17 @@ ppg_window_settings_activate (GtkAction *action,
 	gtk_window_present(GTK_WINDOW(priv->settings_dialog));
 }
 
+/**
+ * ppg_window_restart_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "activate" signal for the "restart" action. Restarts the
+ * profiling session.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_restart_activate (GtkAction *action,
                              PpgWindow *window)
@@ -635,6 +678,15 @@ ppg_window_restart_activate (GtkAction *action,
 	}
 }
 
+/**
+ * ppg_window_next_activate:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handles the "activate" signal for the "next" action. Selects the next row.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_next_activate (GtkAction *action,
                           PpgWindow *window)
@@ -642,6 +694,16 @@ ppg_window_next_activate (GtkAction *action,
 	ppg_window_select_next_row(window);
 }
 
+/**
+ * ppg_window_previous_activate:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handles the "activate" signal for the "previous" action. Selects the
+ * previous row.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_previous_activate (GtkAction *action,
                               PpgWindow *window)
@@ -678,6 +740,16 @@ ppg_window_delete_event (GtkWidget   *widget,
 	return ret;
 }
 
+/**
+ * ppg_window_get_visualizers:
+ * @window: (in): A #PpgWindow.
+ *
+ * Retrieves all the visualizers for all instruments in a newly-allocated
+ * #GList. The list should be freed with g_list_free().
+ *
+ * Returns: A newly allocated #GList containing all visualizers.
+ * Side effects: None.
+ */
 static GList*
 ppg_window_get_visualizers (PpgWindow *window)
 {
@@ -702,6 +774,17 @@ ppg_window_get_visualizers (PpgWindow *window)
 	return visualizers;
 }
 
+/**
+ * ppg_window_update_target:
+ * @window: (in): A #PpgWindow.
+ *
+ * Update the label describing the profiling target based on the session.
+ * If the target is an executable to launch, show that. Otherwise, show
+ * the target PID like "Pid #id#".
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_update_target (PpgWindow *window)
 {
@@ -733,30 +816,62 @@ ppg_window_update_target (PpgWindow *window)
 	g_free(title);
 }
 
+/**
+ * ppg_window_notify_target:
+ * @session: (in): A #PpgSession.
+ * @pspec: (in): A #GParamSpec.
+ * @user_data: (in): A #PpgWindow.
+ *
+ * Handle the "notify" signal for the "target" property. Update the
+ * target label.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_notify_target (PpgSession *session,
                           GParamSpec *pspec,
                           gpointer    user_data)
 {
 	PpgWindow *window = (PpgWindow *)user_data;
-
 	g_return_if_fail(PPG_IS_WINDOW(window));
-
 	ppg_window_update_target(window);
 }
 
+/**
+ * ppg_window_notify_pid:
+ * @session: (in): A #PpgSession.
+ * @pspec: (in): A #GParamSpec.
+ * @user_data: (in): A #PpgWindow.
+ *
+ * Handle the "notify" signal for the "pid" property. Update the
+ * target label.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_notify_pid (PpgSession *session,
                        GParamSpec *pspec,
-                       gpointer user_data)
+                       gpointer    user_data)
 {
 	PpgWindow *window = (PpgWindow *)user_data;
-
 	g_return_if_fail(PPG_IS_WINDOW(window));
-
 	ppg_window_update_target(window);
 }
 
+/**
+ * ppg_window_notify_position:
+ * @session: (in): A #PpgSession.
+ * @pspec: (in): A #GParamSpec.
+ * @user_data: (in): A #PpgWindow.
+ *
+ * Handle the "notify" signal for the "position" property. Update the position
+ * of the timer actor.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_notify_position (PpgSession *session,
                             GParamSpec *pspec,
@@ -799,6 +914,18 @@ ppg_window_notify_position (PpgSession *session,
 	             NULL);
 }
 
+/**
+ * ppg_window_ruler_notify_position:
+ * @ruler: (in): A #PpgRuler.
+ * @pspec: (in): A #GParamSpec.
+ * @user_data: (in): A #PpgWindow.
+ *
+ * Handle the "notify" signal for the "position" property of the ruler. Update
+ * the position label in the window.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_ruler_notify_position (PpgRuler   *ruler,
                                   GParamSpec *pspec,
@@ -821,14 +948,26 @@ ppg_window_ruler_notify_position (PpgRuler   *ruler,
 	g_object_get(priv->ruler, "position", &pos, NULL);
 	frac = modf(pos, &dummy);
 	label = g_strdup_printf("%02d:%02d:%02d.%04d",
-	                        (gint)(pos / 3600.0),
-	                        (gint)(((gint)pos % 3600) / 60.0),
-	                        (gint)((gint)pos % 60),
-	                        (gint)(frac * 10000));
+	                        (gint)floor(pos / 3600.0),
+	                        (gint)floor(((gint)pos % 3600) / 60.0),
+	                        (gint)floor((gint)pos % 60),
+	                        (gint)floor(frac * 10000));
 	g_object_set(priv->position_label, "label", label, NULL);
 	g_free(label);
 }
 
+/**
+ * ppg_window_rows_notify_allocation:
+ * @session: (in): A #PpgSession.
+ * @pspec: (in): A #GParamSpec.
+ * @user_data: (in): A #PpgWindow.
+ *
+ * Handle the "notify" signal for the "allocation" property of the rows_box
+ * actor. Update the scrollbar adjustments.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_rows_notify_allocation (ClutterActor *actor,
                                    GParamSpec   *pspec,
@@ -842,48 +981,23 @@ ppg_window_rows_notify_allocation (ClutterActor *actor,
 
 	priv = window->priv;
 
-	g_object_get(actor,
-	             "height", &height,
-	             "y", &y,
-	             NULL);
-
+	g_object_get(actor, "height", &height, "y", &y, NULL);
 	if (height > 0.0) {
-		g_object_set(priv->vadj,
-		             "upper", (gdouble)height,
-		             NULL);
+		g_object_set(priv->vadj, "upper", (gdouble)height, NULL);
 	}
-
-	g_object_set(priv->vadj,
-	             "value", (gdouble)-y,
-	             NULL);
+	g_object_set(priv->vadj, "value", (gdouble)-y, NULL);
 }
 
-void
-ppg_window_action_set (PpgWindow *window,
-                       const gchar *name,
-                       const gchar *first_property,
-                       ...)
-{
-	PpgWindowPrivate *priv;
-	GObject *object;
-	va_list args;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-	g_return_if_fail(name != NULL);
-	g_return_if_fail(first_property != NULL);
-
-	priv = window->priv;
-
-	if (!(object = (GObject *)ppg_window_get_action(window, name))) {
-		CRITICAL(Window, "No action named %s", name);
-		return;
-	}
-
-	va_start(args, first_property);
-	g_object_set_valist(object, first_property, args);
-	va_end(args);
-}
-
+/**
+ * ppg_window_zoom_value_changed:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "value-changed" signal on the zoom adjustment. Update the
+ * visible range within the ruler and all visualizers.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
                                PpgWindow     *window)
@@ -904,6 +1018,7 @@ ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
 
 	gtk_widget_get_allocation(priv->clutter_embed, &alloc);
 	g_object_get(adjustment,
+	             "lower", &lower,
 	             "value", &scale,
 	             NULL);
 
@@ -912,7 +1027,7 @@ ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
 		scale = (scale - 1.0) * 100.0;
 	}
 	scale = CLAMP(scale, 0.001, 100.0);
-	lower = 0.0f; /* FIXME: */
+	//lower = 0.0f; /* FIXME: */
 	upper = lower + ((alloc.width - 200.0) / (scale * PIXELS_PER_SECOND));
 
 	priv->ignore_ruler = TRUE;
@@ -928,10 +1043,20 @@ ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
 
 	g_object_set(priv->hadj,
 	             "page-size", MAX(1.0, upper - lower),
-	             "value", (gdouble)lower,
+	             "value", lower,
 	             NULL);
 }
 
+/**
+ * ppg_window_vadj_value_changed_timeout:
+ * @data: (in): A #PpgWindow.
+ *
+ * Handle a change in the vertical scrollbars adjustment. Update the position
+ * of the actors row.
+ *
+ * Returns: %FALSE always.
+ * Side effects: None.
+ */
 static gboolean
 ppg_window_vadj_value_changed_timeout (gpointer data)
 {
@@ -949,13 +1074,33 @@ ppg_window_vadj_value_changed_timeout (gpointer data)
 	return FALSE;
 }
 
+/**
+ * ppg_window_vadj_value_changed:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "value-changed" signal from the vertical scrollbars adjustment.
+ * Defer the change of the rows box position to a main loop callback.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_vadj_value_changed (GtkAdjustment *adj,
-                               PpgWindow *window)
+                               PpgWindow     *window)
 {
 	g_timeout_add(0, ppg_window_vadj_value_changed_timeout, window);
 }
 
+/**
+ * ppg_window_hadj_value_changed_timeout:
+ * @window: (in): A #PpgWindow.
+ *
+ * Update the horizontal position of the visualizers and ruler based on the
+ * position of the horizontal adjustment.
+ *
+ * Returns: %FALSE always.
+ * Side effects: None.
+ */
 static gboolean
 ppg_window_hadj_value_changed_timeout (gpointer data)
 {
@@ -997,6 +1142,15 @@ ppg_window_hadj_value_changed_timeout (gpointer data)
 	return FALSE;
 }
 
+/**
+ * ppg_window_hadj_value_changed:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "value-changed" signal for the horizontal scrollbars adjustment.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_hadj_value_changed (GtkAdjustment *adj,
                                PpgWindow *window)
@@ -1004,6 +1158,17 @@ ppg_window_hadj_value_changed (GtkAdjustment *adj,
 	g_timeout_add(0, ppg_window_hadj_value_changed_timeout, window);
 }
 
+/**
+ * ppg_window_size_allocate:
+ * @widget: (in): A #PpgWindow.
+ * @alloc: (in): A #GtkAllocation.
+ *
+ * Handle the "size-allocate" signal for the #GtkWidget. Update the position
+ * of the various actors.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_size_allocate (GtkWidget     *widget,
                           GtkAllocation *alloc)
@@ -1056,6 +1221,15 @@ ppg_window_size_allocate (GtkWidget     *widget,
 	priv->last_height = alloc->height;
 }
 
+/**
+ * ppg_window_unselect_row:
+ * @window: (in): A #PpgWindow.
+ *
+ * Unselect the currently selected row.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_unselect_row (PpgWindow *window)
 {
@@ -1077,6 +1251,16 @@ ppg_window_unselect_row (PpgWindow *window)
 	g_object_set(action, "sensitive", FALSE, NULL);
 }
 
+/**
+ * ppg_window_select_row:
+ * @window: (in): A #PpgWindow.
+ * @row: (in): A #PpgRow.
+ *
+ * Select the given row containing an instrument.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_select_row (PpgWindow *window,
                        PpgRow    *row)
@@ -1117,6 +1301,17 @@ ppg_window_select_row (PpgWindow *window,
 	}
 }
 
+/**
+ * ppg_window_row_button_press:
+ * @actor: (in): A #PpgRow.
+ * @event: (in): A #ClutterButtonEvent.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "button-press" event for a #PpgRow in the clutter stage.
+ *
+ * Returns: TRUE if the event was handled; otherwise FALSE.
+ * Side effects: None.
+ */
 static gboolean
 ppg_window_row_button_press (ClutterActor       *actor,
                              ClutterButtonEvent *event,
@@ -1137,6 +1332,7 @@ ppg_window_row_button_press (ClutterActor       *actor,
 			} else {
 				ppg_window_select_row(window, PPG_ROW(actor));
 			}
+			ret = TRUE;
 		}
 		break;
 	case 3:
@@ -1144,6 +1340,7 @@ ppg_window_row_button_press (ClutterActor       *actor,
 			ppg_window_select_row(window, PPG_ROW(actor));
 			gtk_menu_popup(GTK_MENU(priv->instrument_popup), NULL, NULL,
 			               NULL, NULL, 3, event->time);
+			ret = TRUE;
 		}
 		break;
 	default:
@@ -1157,7 +1354,17 @@ ppg_window_row_button_press (ClutterActor       *actor,
 	return ret;
 }
 
-static void
+/**
+ * ppg_window_set_status_label:
+ * @window: (in): A #PpgWindow.
+ * @label: (in): The label text.
+ *
+ * Update the status label text. A %NULL label will hide the label.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
 ppg_window_set_status_label (PpgWindow   *window,
                              const gchar *label)
 {
@@ -1173,6 +1380,16 @@ ppg_window_set_status_label (PpgWindow   *window,
 	             NULL);
 }
 
+/**
+ * ppg_window_add_row:
+ * @window: (in): A #PpgWindow.
+ * @row: (in): A #PpgRow.
+ *
+ * Adds a #PpgRow to the instrument view.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_add_row (PpgWindow *window,
                     PpgRow    *row)
@@ -1244,6 +1461,15 @@ ppg_window_instrument_added (PpgSession *session,
 	}
 }
 
+/**
+ * ppg_window_set_row_style:
+ * @window: (in): A #PpgWindow.
+ *
+ * Sets the #GtkStyle on a particular row.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_set_row_style (ClutterActor *actor,
                           GtkStyle     *style)
@@ -1251,6 +1477,16 @@ ppg_window_set_row_style (ClutterActor *actor,
 	g_object_set(actor, "style", style, NULL);
 }
 
+/**
+ * ppg_window_style_set:
+ * @window: (in): A #PpgWindow.
+ * @style: (in): The previous #GtkStyle.
+ *
+ * Handle the "style-set" signal for the #PpgWindow.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_style_set (GtkWidget *widget,
                       GtkStyle  *old_style)
@@ -1348,6 +1584,15 @@ ppg_window_set_uri (PpgWindow   *window,
 	             NULL);
 }
 
+/**
+ * ppg_window_embed_key_press:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "key-press-event" for the clutter embed #GtkWidget.
+ *
+ * Returns: %TRUE if the key-press was handled; otherwise %FALSE.
+ * Side effects: None.
+ */
 static gboolean
 ppg_window_embed_key_press (GtkWidget   *embed,
                             GdkEventKey *key,
@@ -1367,6 +1612,16 @@ ppg_window_embed_key_press (GtkWidget   *embed,
 	return FALSE;
 }
 
+/**
+ * ppg_window_embed_motion_notify:
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "motion-notify" event for the clutter embed widget. Update the
+ * position of the ruler.
+ *
+ * Returns: %FALSE always.
+ * Side effects: None.
+ */
 static gboolean
 ppg_window_embed_motion_notify (GtkWidget      *embed,
                                 GdkEventMotion *motion,
@@ -1401,6 +1656,15 @@ ppg_window_embed_motion_notify (GtkWidget      *embed,
 	return FALSE;
 }
 
+/**
+ * ppg_window_show:
+ * @widget: (in): A #PpgWindow.
+ *
+ * Handle the "show" event for the #PpgWindow.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_window_show (GtkWidget *widget)
 {
@@ -1428,6 +1692,15 @@ ppg_window_realize (GtkWidget *widget)
 	                              &geom, GDK_HINT_MIN_SIZE);
 }
 
+/**
+ * ppg_window_create_shadow:
+ * @down: (in): Shadow is thick on top, and thin on bottom.
+ *
+ * Create a #ClutterActor for a shadow.
+ *
+ * Returns: A new #ClutterActor.
+ * Side effects: None.
+ */
 static ClutterActor*
 ppg_window_create_shadow (gboolean down)
 {
@@ -1473,6 +1746,11 @@ ppg_window_create_shadow (gboolean down)
 static void
 ppg_window_finalize (GObject *object)
 {
+	PpgWindowPrivate *priv = PPG_WINDOW(object)->priv;
+
+	g_object_unref(priv->session);
+	g_object_unref(priv->actions);
+
 	G_OBJECT_CLASS(ppg_window_parent_class)->finalize(object);
 }
 
@@ -2026,6 +2304,44 @@ ppg_window_init (PpgWindow *window)
 	             NULL);
 
 	gtk_widget_grab_focus(priv->clutter_embed);
+}
+
+/**
+ * ppg_window_action_set:
+ * @window: (in): A #PpgWindow.
+ * @name: (in): The #GtkAction<!-- -->'s name.
+ * @first_property: (in): The name of the first property to set.
+ *
+ * Set properties on a given #GtkAction. The arguments of this function behave
+ * identically to g_object_set().
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_window_action_set (PpgWindow *window,
+                       const gchar *name,
+                       const gchar *first_property,
+                       ...)
+{
+	PpgWindowPrivate *priv;
+	GObject *object;
+	va_list args;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(name != NULL);
+	g_return_if_fail(first_property != NULL);
+
+	priv = window->priv;
+
+	if (!(object = (GObject *)ppg_window_get_action(window, name))) {
+		CRITICAL(Window, "No action named %s", name);
+		return;
+	}
+
+	va_start(args, first_property);
+	g_object_set_valist(object, first_property, args);
+	va_end(args);
 }
 
 /**
