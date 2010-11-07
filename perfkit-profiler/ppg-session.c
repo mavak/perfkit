@@ -24,15 +24,15 @@ G_DEFINE_TYPE(PpgSession, ppg_session, G_TYPE_INITIALLY_UNOWNED)
 
 struct _PpgSessionPrivate
 {
-	PkConnection *conn;
-	gint channel;
-	gchar *target;
-	gchar **args;
-	gchar **env;
-	GPid pid;
-	GTimer *timer;
-	guint position_handler;
-	PpgSessionState state;
+	PkConnection     *conn;
+	gint              channel;
+	gchar            *target;
+	gchar           **args;
+	gchar           **env;
+	GPid              pid;
+	GTimer           *timer;
+	guint             position_handler;
+	PpgSessionState   state;
 };
 
 enum
@@ -64,6 +64,16 @@ enum
 static guint       signals[LAST_SIGNAL] = { 0 };
 static GParamSpec *position_pspec       = NULL;
 
+/**
+ * ppg_session_notify_position:
+ * @user_data: (in): A #PpgSession.
+ *
+ * A #GSourceFunc style function for notifying of a change to the position
+ * property.
+ *
+ * Returns: %TRUE always.
+ * Side effects: None.
+ */
 static gboolean
 ppg_session_notify_position (gpointer user_data)
 {
@@ -71,6 +81,15 @@ ppg_session_notify_position (gpointer user_data)
 	return TRUE;
 }
 
+/**
+ * ppg_session_start_position_notifier:
+ * @session: (in): A #PpgSession.
+ *
+ * Start notifying on a regular interval of the session position.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_start_position_notifier (PpgSession *session)
 {
@@ -85,6 +104,15 @@ ppg_session_start_position_notifier (PpgSession *session)
 	                                       session);
 }
 
+/**
+ * ppg_session_stop_position_notifier:
+ * @session: (in): A #PpgSession.
+ *
+ * Stop the notifier registered with ppg_session_stop_position_notifier().
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_stop_position_notifier (PpgSession *session)
 {
@@ -96,14 +124,37 @@ ppg_session_stop_position_notifier (PpgSession *session)
 	}
 }
 
+/**
+ * ppg_session_report_error:
+ * @session: (in): A #PpgSession.
+ *
+ * Reports an error that has occurred in the session.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_report_error (PpgSession  *session,
                           const gchar *func,
                           GError      *error)
 {
+	/*
+	 * TODO: Store the error around and emit a signal for observers to
+	 *       display to the user.
+	 */
 	CRITICAL(Session, "%s(): %s", func, error->message);
 }
 
+/**
+ * ppg_session_set_target:
+ * @session: (in): A #PpgSession.
+ *
+ * Sets the target property on the session. This does not persist to the
+ * agent.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_set_target (PpgSession  *session,
                         const gchar *target)
@@ -119,6 +170,16 @@ ppg_session_set_target (PpgSession  *session,
 	g_object_notify(G_OBJECT(session), "target");
 }
 
+/**
+ * ppg_session_set_args:
+ * @session: (in): A #PpgSession.
+ *
+ * Sets the args property on the session. This does not persist to the
+ * agent.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_set_args (PpgSession  *session,
                       gchar      **args)
@@ -134,6 +195,16 @@ ppg_session_set_args (PpgSession  *session,
 	g_object_notify(G_OBJECT(session), "args");
 }
 
+/**
+ * ppg_session_set_env:
+ * @session: (in): A #PpgSession.
+ *
+ * Sets the env property on the session. This does not persist to the
+ * agent.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_set_env (PpgSession  *session,
                      gchar      **env)
@@ -149,6 +220,15 @@ ppg_session_set_env (PpgSession  *session,
 	g_object_notify(G_OBJECT(session), "env");
 }
 
+/**
+ * ppg_session_set_target:
+ * @session: (in): A #PpgSession.
+ *
+ * Retrieves the "target" property of the session.
+ *
+ * Returns: A string containing the target or %NULL.
+ * Side effects: None.
+ */
 static const gchar*
 ppg_session_get_target (PpgSession *session)
 {
@@ -156,6 +236,15 @@ ppg_session_get_target (PpgSession *session)
 	return session->priv->target;
 }
 
+/**
+ * ppg_session_get_pid:
+ * @session: (in): A #PpgSession.
+ *
+ * Retrieves the Pid of the target or 0.
+ *
+ * Returns: A #GPid.
+ * Side effects: None.
+ */
 static GPid
 ppg_session_get_pid (PpgSession *session)
 {
@@ -163,6 +252,15 @@ ppg_session_get_pid (PpgSession *session)
 	return session->priv->pid;
 }
 
+/**
+ * ppg_session_set_pid:
+ * @session: (in): A #PpgSession.
+ *
+ * Sets the GPid of the pid.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_session_set_pid (PpgSession *session,
                      GPid pid)
@@ -172,12 +270,30 @@ ppg_session_set_pid (PpgSession *session,
 	g_object_notify(G_OBJECT(session), "pid");
 }
 
+/**
+ * ppg_session_get_position_fast:
+ * @session: (in): A #PpgSession.
+ *
+ * Retrieves the position of the timer since it was started.
+ *
+ * Returns: A double containing the offset in time since start.
+ * Side effects: None.
+ */
 static inline gdouble
 ppg_session_get_position_fast (PpgSession *session)
 {
 	return g_timer_elapsed(session->priv->timer, NULL);
 }
 
+/**
+ * ppg_session_get_position:
+ * @session: (in): A #PpgSession.
+ *
+ * Retrieves the position of the timer since it was started.
+ *
+ * Returns: A double containing the offset in time since start.
+ * Side effects: None.
+ */
 gdouble
 ppg_session_get_position (PpgSession *session)
 {
@@ -194,6 +310,15 @@ ppg_session_get_position (PpgSession *session)
 	return 0.0;
 }
 
+/**
+ * ppg_session_get_state:
+ * @session: (in): A #PpgSession.
+ *
+ * Retrieves the session state.
+ *
+ * Returns: A PpgSessionState.
+ * Side effects: None.
+ */
 PpgSessionState
 ppg_session_get_state (PpgSession *session)
 {
@@ -541,6 +666,16 @@ ppg_session_unpause (PpgSession *session)
 	EXIT;
 }
 
+/**
+ * ppg_session_add_instrument:
+ * @session: (in): A #PpgSession.
+ * @instrument: (in): A #PpgInstrument.
+ *
+ * Adds a new #PpgInstrument to the session.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 void
 ppg_session_add_instrument (PpgSession    *session,
                             PpgInstrument *instrument)
@@ -587,10 +722,21 @@ ppg_session_set_uri (PpgSession  *session,
 	EXIT;
 }
 
+/**
+ * ppg_session_save:
+ * @session: (in): A #PpgSession.
+ * @uri: (in): The URI of the file to save.
+ * @error: (error): A location for a #GError, or %NULL.
+ *
+ * Saves the session to a file found at @uri.
+ *
+ * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
+ * Side effects: None.
+ */
 gboolean
-ppg_session_save (PpgSession *session,
-                  const gchar *uri,
-                  GError **error)
+ppg_session_save (PpgSession   *session,
+                  const gchar  *uri,
+                  GError      **error)
 {
 	PpgSessionPrivate *priv;
 
@@ -607,10 +753,21 @@ ppg_session_save (PpgSession *session,
 	RETURN(TRUE);
 }
 
+/**
+ * ppg_session_load:
+ * @session: (in): A #PpgSession.
+ * @uri: (in): A URI to load the session from.
+ * @error: (error): A location of a #GError, or %NULL.
+ *
+ * Loads a #PpgSession from the file found at @uri.
+ *
+ * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
+ * Side effects: None.
+ */
 gboolean
-ppg_session_load (PpgSession *session,
-                  const gchar *uri,
-                  GError **error)
+ppg_session_load (PpgSession   *session,
+                  const gchar  *uri,
+                  GError      **error)
 {
 	PpgSessionPrivate *priv;
 
@@ -664,10 +821,10 @@ ppg_session_finalize (GObject *object)
  * Get a given #GObject property.
  */
 static void
-ppg_session_get_property (GObject    *object,  /* IN */
-                          guint       prop_id, /* IN */
-                          GValue     *value,   /* OUT */
-                          GParamSpec *pspec)   /* IN */
+ppg_session_get_property (GObject    *object,
+                          guint       prop_id,
+                          GValue     *value,
+                          GParamSpec *pspec)
 {
 	PpgSession *session = PPG_SESSION(object);
 
