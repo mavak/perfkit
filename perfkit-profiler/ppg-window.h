@@ -21,6 +21,8 @@
 
 #include <gtk/gtk.h>
 
+#include "ppg-session.h"
+
 G_BEGIN_DECLS
 
 #define PPG_TYPE_WINDOW            (ppg_window_get_type())
@@ -48,11 +50,23 @@ struct _PpgWindowClass
 	GtkWindowClass parent_class;
 };
 
-GType ppg_window_get_type   (void) G_GNUC_CONST;
-guint ppg_window_count      (void);
-void  ppg_window_show_graph (const gchar *title,
-                             GtkWidget   *graph,
-                             GtkWindow   *parent);
+void        ppg_window_action_set          (PpgWindow   *window,
+                                            const gchar *name,
+                                            const gchar *first_property,
+                                            ...) G_GNUC_NULL_TERMINATED;
+guint       ppg_window_count               (void);
+GtkAction*  ppg_window_get_action          (PpgWindow   *window,
+                                            const gchar *action);
+PpgSession* ppg_window_get_session         (PpgWindow   *window);
+GType       ppg_window_get_type            (void) G_GNUC_CONST;
+void        ppg_window_show_graph          (const gchar *title,
+                                            GtkWidget   *graph,
+                                            GtkWindow   *parent);
+void        ppg_window_select_next_row     (PpgWindow   *window);
+void        ppg_window_select_previous_row (PpgWindow   *window);
+void        ppg_window_visualizers_set     (PpgWindow   *window,
+                                            const gchar *first_property,
+                                            ...);
 
 G_END_DECLS
 

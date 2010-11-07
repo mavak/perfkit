@@ -16,6 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * SECTION:ppg-window
+ * @title: PpgWindow
+ * @short_description: The profiler window.
+ *
+ * #PpgWindow is the window used to visualize a profiling session. It contains
+ * #PpgSession object which can be used to perform various actions on the
+ * Perfkit agent.
+ */
+
 #include <clutter-gtk/clutter-gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <glib/gi18n.h>
@@ -49,38 +59,25 @@
 #include "ppg-window-actions.h"
 #include "ppg-window-ui.h"
 
-#define COLUMN_WIDTH      (200.0f)
-#define COLUMN_WIDTH_INT  ((gint)COLUMN_WIDTH)
-#define PIXELS_PER_SECOND (20.0)
-#define LARGER(_s)        ("<span size=\"larger\">" _s "</span>")
-#define BOLD(_s)          ("<span weight=\"bold\">" _s "</span>")
-#define SHADOW_HEIGHT     (10.0f)
-#define SET_ACTION_INSENSITIVE(n)                        \
-    G_STMT_START {                                       \
-        g_object_set(ppg_window_get_action(window, (n)), \
-                     "sensitive", FALSE,                 \
-                     NULL);                              \
-    } G_STMT_END
-#define SET_ACTION_ACTIVE(n)                             \
-    G_STMT_START {                                       \
-        g_object_set(ppg_window_get_action(window, (n)), \
-                     "active", TRUE,                     \
-                     NULL);                              \
-    } G_STMT_END
-#define BEGIN_ACTION_UPDATE                              \
-	G_STMT_START {                                       \
-		if (window->priv->in_action_update) {            \
-			return;                                      \
-		}                                                \
-		window->priv->in_action_update = TRUE;           \
-	} G_STMT_END
-
-#define END_ACTION_UPDATE                                \
-	G_STMT_START {                                       \
-		window->priv->in_action_update = FALSE;          \
-	} G_STMT_END
-
 G_DEFINE_TYPE(PpgWindow, ppg_window, GTK_TYPE_WINDOW)
+
+#define COLUMN_WIDTH      200.0f
+#define COLUMN_WIDTH_INT  ((gint)COLUMN_WIDTH)
+#define PIXELS_PER_SECOND 20.0
+#define LARGER(_s)        "<span size=\"larger\">" _s "</span>"
+#define BOLD(_s)          "<span weight=\"bold\">" _s "</span>"
+#define SHADOW_HEIGHT     10.0f
+#define BEGIN_ACTION_UPDATE                    \
+	G_STMT_START {                             \
+		if (window->priv->in_action_update) {  \
+			return;                            \
+		}                                      \
+		window->priv->in_action_update = TRUE; \
+	} G_STMT_END
+#define END_ACTION_UPDATE                       \
+	G_STMT_START {                              \
+		window->priv->in_action_update = FALSE; \
+	} G_STMT_END
 
 struct _PpgWindowPrivate
 {
@@ -136,44 +133,6 @@ enum
 };
 
 static guint instances = 0;
-
-/**
- * ppg_window_count:
- *
- * Counts the number of active PpgWindows that are active.
- *
- * Returns: An unsigned intenger.
- * Side effects: None.
- */
-guint
-ppg_window_count (void)
-{
-	return instances;
-}
-
-/**
- * ppg_window_get_action:
- * @window: (in): A #PpgWindow.
- * @name: (in): The actions name.
- *
- * Retrieves the first #GtkAction with a name matching @name. If no action
- * can be found matching @name, then %NULL is returned.
- *
- * Returns: A #GtkAction if successful; otherwise %NULL.
- * Side effects: None.
- */
-GtkAction*
-ppg_window_get_action (PpgWindow   *window,
-                       const gchar *name)
-{
-	PpgWindowPrivate *priv;
-
-	g_return_val_if_fail(PPG_IS_WINDOW(window), NULL);
-	g_return_val_if_fail(name != NULL, NULL);
-
-	priv = window->priv;
-	return gtk_action_group_get_action(priv->actions, name);
-}
 
 /**
  * ppg_window_stop_activate:
@@ -266,10 +225,11 @@ ppg_window_run_activate (GtkAction *action,
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
 	priv = window->priv;
+
+	BEGIN_ACTION_UPDATE;
 	g_object_set(priv->timer_sep,
 	             "visible", TRUE,
 	             NULL);
-	BEGIN_ACTION_UPDATE;
 	g_object_set(ppg_window_get_action(window, "run"),
 	             "sensitive", FALSE,
 	             NULL);
@@ -285,7 +245,9 @@ ppg_window_run_activate (GtkAction *action,
 	             "sensitive", TRUE,
 	             NULL);
 	END_ACTION_UPDATE;
+
 	ppg_session_start(priv->session);
+
 	EXIT;
 }
 
@@ -438,10 +400,7 @@ ppg_window_fullscreen_activate (GtkAction *action,
 
 	priv = window->priv;
 
-	g_object_get(action,
-	             "active", &active,
-	             NULL);
-
+	g_object_get(action, "active", &active, NULL);
 	if (active) {
 		gtk_window_fullscreen(GTK_WINDOW(window));
 	} else {
@@ -496,7 +455,6 @@ ppg_window_add_instrument_activate (GtkAction *action,
 	                      "session", priv->session,
 	                      "transient-for", window,
 	                      NULL);
-
 	gtk_dialog_run(dialog);
 	gtk_widget_destroy(GTK_WIDGET(dialog));
 }
@@ -537,51 +495,9 @@ ppg_window_configure_instrument_activate (GtkAction *action,
 	                      "instrument", instrument,
 	                      "transient-for", window,
 	                      NULL);
-
 	gtk_dialog_run(dialog);
 	gtk_widget_destroy(GTK_WIDGET(dialog));
 	g_object_unref(instrument);
-}
-
-/**
- * ppg_window_show_graph:
- * @title: (in): The title for the created window.
- * @graph: (in): An #UberGraph.
- * @parent: (in): The GtkWindow transient-for parent.
- *
- * Prepares the widgetry and shows a new GtkWindow containing the graph.
- *
- * Returns: None.
- * Side effects: A new #GtkWindow is presented to the user.
- */
-void
-ppg_window_show_graph (const gchar *title,
-                       GtkWidget   *graph,
-                       GtkWindow   *parent)
-{
-	GtkWidget *window;
-	GtkWidget *vbox;
-	GtkWidget *labels;
-
-	window = g_object_new(GTK_TYPE_WINDOW,
-	                      "border-width", 12,
-	                      "default-height", 300,
-	                      "default-width", 640,
-	                      "title", title,
-	                      "transient-for", parent,
-	                      NULL);
-	vbox = g_object_new(GTK_TYPE_VBOX,
-	                    "spacing", 6,
-	                    "visible", TRUE,
-	                    NULL);
-	gtk_container_add(GTK_CONTAINER(window), vbox);
-	gtk_container_add(GTK_CONTAINER(vbox), graph);
-	labels = uber_graph_get_labels(UBER_GRAPH(graph));
-	gtk_container_add_with_properties(GTK_CONTAINER(vbox), labels,
-	                                  "expand", FALSE,
-	                                  NULL);
-	gtk_widget_show(labels);
-	gtk_window_present(GTK_WINDOW(window));
 }
 
 /**
@@ -648,90 +564,6 @@ ppg_window_monitor_net_activate (GtkAction *action,
 
 	graph = ppg_monitor_net_new();
 	ppg_window_show_graph(_("Network Usage"), graph, GTK_WINDOW(window));
-}
-
-/**
- * ppg_window_delete_event:
- * @window: (in): A #PpgWindow.
- * @event: (in): A #GdkEvent.  *
- * Handle the delete event for the window and adjust the active window count.
- *
- * Returns: TRUE if the delete-event should be blocked.
- * Side effects: None.
- */
-static gboolean
-ppg_window_delete_event (GtkWidget   *widget,
-                         GdkEventAny *event)
-{
-	GtkWidgetClass *widget_class;
-	gboolean ret = FALSE;
-
-	widget_class = GTK_WIDGET_CLASS(ppg_window_parent_class);
-	if (widget_class->delete_event) {
-		ret = widget_class->delete_event(widget, event);
-	}
-
-	if (!ret) {
-		instances --;
-		ppg_runtime_try_quit();
-	}
-
-	return ret;
-}
-
-static void
-ppg_window_update_target (PpgWindow *window)
-{
-	PpgWindowPrivate *priv;
-	gchar *target;
-	gchar *title;
-	GPid pid;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
-
-	g_object_get(priv->session,
-	             "pid", &pid,
-	             "target", &target,
-	             NULL);
-
-	if (pid) {
-		title = g_strdup_printf("Pid %d", (gint)pid);
-	} else {
-		title = g_strdup(target);
-	}
-
-	g_object_set(priv->target_tool_item,
-	             "label", title,
-	             NULL);
-
-	g_free(target);
-	g_free(title);
-}
-
-static void
-ppg_window_notify_target (PpgSession *session,
-                          GParamSpec *pspec,
-                          gpointer    user_data)
-{
-	PpgWindow *window = (PpgWindow *)user_data;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	ppg_window_update_target(window);
-}
-
-static void
-ppg_window_notify_pid (PpgSession *session,
-                       GParamSpec *pspec,
-                       gpointer user_data)
-{
-	PpgWindow *window = (PpgWindow *)user_data;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	ppg_window_update_target(window);
 }
 
 static void
@@ -803,6 +635,49 @@ ppg_window_restart_activate (GtkAction *action,
 	}
 }
 
+static void
+ppg_window_next_activate (GtkAction *action,
+                          PpgWindow *window)
+{
+	ppg_window_select_next_row(window);
+}
+
+static void
+ppg_window_previous_activate (GtkAction *action,
+                              PpgWindow *window)
+{
+	ppg_window_select_previous_row(window);
+}
+
+/**
+ * ppg_window_delete_event:
+ * @window: (in): A #PpgWindow.
+ * @event: (in): A #GdkEvent.  *
+ * Handle the delete event for the window and adjust the active window count.
+ *
+ * Returns: TRUE if the delete-event should be blocked.
+ * Side effects: None.
+ */
+static gboolean
+ppg_window_delete_event (GtkWidget   *widget,
+                         GdkEventAny *event)
+{
+	GtkWidgetClass *widget_class;
+	gboolean ret = FALSE;
+
+	widget_class = GTK_WIDGET_CLASS(ppg_window_parent_class);
+	if (widget_class->delete_event) {
+		ret = widget_class->delete_event(widget, event);
+	}
+
+	if (!ret) {
+		instances --;
+		ppg_runtime_try_quit();
+	}
+
+	return ret;
+}
+
 static GList*
 ppg_window_get_visualizers (PpgWindow *window)
 {
@@ -827,68 +702,63 @@ ppg_window_get_visualizers (PpgWindow *window)
 	return visualizers;
 }
 
-/**
- * ppg_window_visualizers_set:
- * @window: (in): A #PpgWindow.
- * @first_property: (in): first property name.
- *
- * Set properties on all visualizers in the window.
- *
- * Returns: None.
- * Side effects: Properties set.
- */
 static void
-ppg_window_visualizers_set (PpgWindow   *window,
-                            const gchar *first_property,
-                            ...)
+ppg_window_update_target (PpgWindow *window)
 {
 	PpgWindowPrivate *priv;
-	const gchar *name = first_property;
-	GObjectClass *klass;
-	GParamSpec *pspec;
-	GValue value = { 0 };
-	va_list args;
-	gchar *error = NULL;
-	GList *list;
-	GList *iter;
+	gchar *target;
+	gchar *title;
+	GPid pid;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
-	g_return_if_fail(first_property != NULL);
 
 	priv = window->priv;
-	list = ppg_window_get_visualizers(window);
-	if (!(klass = g_type_class_peek(PPG_TYPE_VISUALIZER))) {
-		return;
+
+	g_object_get(priv->session,
+	             "pid", &pid,
+	             "target", &target,
+	             NULL);
+
+	if (pid) {
+		title = g_strdup_printf("Pid %d", (gint)pid);
+	} else {
+		title = g_strdup(target);
 	}
 
-	va_start(args, first_property);
+	g_object_set(priv->target_tool_item,
+	             "label", title,
+	             NULL);
 
-	do {
-		pspec = g_object_class_find_property(klass, name);
-		if (!pspec) {
-			g_critical("Failed to find property %s of class %s", name,
-			           g_type_name(G_TYPE_FROM_INSTANCE(iter->data)));
-			return;
-		}
-		G_VALUE_COLLECT_INIT(&value, pspec->value_type, args, 0, &error);
-		if (error != NULL) {
-			g_critical("Failed to extract property %s from var_args: %s",
-			           name, error);
-			g_free(error);
-			goto cleanup;
-		}
-		for (iter = list; iter; iter = iter->next) {
-			g_object_set_property(G_OBJECT(iter->data), name, &value);
-		}
-		g_value_unset(&value);
-	} while ((name = va_arg(args, const gchar*)));
-
-  cleanup:
-	va_end(args);
+	g_free(target);
+	g_free(title);
 }
 
 static void
-ppg_window_position_notify (PpgSession *session,
+ppg_window_notify_target (PpgSession *session,
+                          GParamSpec *pspec,
+                          gpointer    user_data)
+{
+	PpgWindow *window = (PpgWindow *)user_data;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	ppg_window_update_target(window);
+}
+
+static void
+ppg_window_notify_pid (PpgSession *session,
+                       GParamSpec *pspec,
+                       gpointer user_data)
+{
+	PpgWindow *window = (PpgWindow *)user_data;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	ppg_window_update_target(window);
+}
+
+static void
+ppg_window_notify_position (PpgSession *session,
                             GParamSpec *pspec,
                             PpgWindow  *window)
 {
@@ -927,6 +797,91 @@ ppg_window_position_notify (PpgSession *session,
 	g_object_set(priv->hadj,
 	             "upper", MAX(1.0, position),
 	             NULL);
+}
+
+static void
+ppg_window_ruler_notify_position (PpgRuler   *ruler,
+                                  GParamSpec *pspec,
+                                  PpgWindow  *window)
+{
+	PpgWindowPrivate *priv;
+	gdouble pos;
+	gdouble frac;
+	gdouble dummy;
+	gchar *label;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	if (priv->ignore_ruler) {
+		return;
+	}
+
+	g_object_get(priv->ruler, "position", &pos, NULL);
+	frac = modf(pos, &dummy);
+	label = g_strdup_printf("%02d:%02d:%02d.%04d",
+	                        (gint)(pos / 3600.0),
+	                        (gint)(((gint)pos % 3600) / 60.0),
+	                        (gint)((gint)pos % 60),
+	                        (gint)(frac * 10000));
+	g_object_set(priv->position_label, "label", label, NULL);
+	g_free(label);
+}
+
+static void
+ppg_window_rows_notify_allocation (ClutterActor *actor,
+                                   GParamSpec   *pspec,
+                                   PpgWindow    *window)
+{
+	PpgWindowPrivate *priv;
+	gfloat height;
+	gfloat y;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	g_object_get(actor,
+	             "height", &height,
+	             "y", &y,
+	             NULL);
+
+	if (height > 0.0) {
+		g_object_set(priv->vadj,
+		             "upper", (gdouble)height,
+		             NULL);
+	}
+
+	g_object_set(priv->vadj,
+	             "value", (gdouble)-y,
+	             NULL);
+}
+
+void
+ppg_window_action_set (PpgWindow *window,
+                       const gchar *name,
+                       const gchar *first_property,
+                       ...)
+{
+	PpgWindowPrivate *priv;
+	GObject *object;
+	va_list args;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(name != NULL);
+	g_return_if_fail(first_property != NULL);
+
+	priv = window->priv;
+
+	if (!(object = (GObject *)ppg_window_get_action(window, name))) {
+		CRITICAL(Window, "No action named %s", name);
+		return;
+	}
+
+	va_start(args, first_property);
+	g_object_set_valist(object, first_property, args);
+	va_end(args);
 }
 
 static void
@@ -969,7 +924,7 @@ ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
 	                           "end", upper,
 	                           NULL);
 
-	ppg_window_position_notify(priv->session, NULL, window);
+	ppg_window_notify_position(priv->session, NULL, window);
 
 	g_object_set(priv->hadj,
 	             "page-size", MAX(1.0, upper - lower),
@@ -1013,7 +968,6 @@ ppg_window_hadj_value_changed_timeout (gpointer data)
 	g_return_val_if_fail(PPG_IS_WINDOW(window), FALSE);
 
 	priv = window->priv;
-
 	value = gtk_adjustment_get_value(priv->hadj);
 
 	/*
@@ -1292,7 +1246,7 @@ ppg_window_instrument_added (PpgSession *session,
 
 static void
 ppg_window_set_row_style (ClutterActor *actor,
-                          gpointer      style)
+                          GtkStyle     *style)
 {
 	g_object_set(actor, "style", style, NULL);
 }
@@ -1339,7 +1293,7 @@ ppg_window_style_set (GtkWidget *widget,
 	g_object_set(priv->header_sep, "color", &dark, NULL);
 
 	clutter_container_foreach(CLUTTER_CONTAINER(priv->rows_box),
-	                          ppg_window_set_row_style,
+	                          (ClutterCallback)ppg_window_set_row_style,
 	                          gtk_widget_get_style(widget));
 }
 
@@ -1382,7 +1336,7 @@ ppg_window_set_uri (PpgWindow   *window,
 	                 G_CALLBACK(ppg_window_instrument_added),
 	                 window);
 	g_signal_connect(priv->session, "notify::position",
-	                 G_CALLBACK(ppg_window_position_notify),
+	                 G_CALLBACK(ppg_window_notify_position),
 	                 window);
 
 	g_object_set(priv->timer_tool_item,
@@ -1392,99 +1346,6 @@ ppg_window_set_uri (PpgWindow   *window,
 	g_object_set(priv->process_menu,
 	             "session", priv->session,
 	             NULL);
-}
-
-static void
-ppg_window_select_next_row (PpgWindow *window)
-{
-	PpgWindowPrivate *priv;
-	GList *list;
-	GList *iter;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
-
-	/*
-	 * XXX: This is a totally shitty way to do this, because we iterate
-	 *      N children to get to the next pointer in the list. But for
-	 *      now, that is easier than keeping our own array + index.
-	 */
-
-	list = clutter_container_get_children(CLUTTER_CONTAINER(priv->rows_box));
-
-	if (!priv->selected) {
-		if (list) {
-			ppg_window_select_row(window, PPG_ROW(list->data));
-		}
-		goto finish;
-	}
-
-	for (iter = list; iter; iter = iter->next) {
-		if (iter->data == (gpointer)priv->selected) {
-			if (iter->next) {
-				ppg_window_select_row(window, PPG_ROW(iter->next->data));
-			}
-			break;
-		}
-	}
-
-  finish:
-	g_list_free(list);
-}
-
-static void
-ppg_window_select_previous_row (PpgWindow *window)
-{
-	PpgWindowPrivate *priv;
-	GList *list;
-	GList *iter;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
-
-	/*
-	 * XXX: This is a totally shitty way to do this, because we iterate
-	 *      N children to get to the next pointer in the list. But for
-	 *      now, that is easier than keeping our own array + index.
-	 */
-
-	list = clutter_container_get_children(CLUTTER_CONTAINER(priv->rows_box));
-	list = g_list_reverse(list);
-
-	if (!priv->selected) {
-		if (list) {
-			ppg_window_select_row(window, PPG_ROW(list->data));
-		}
-		goto finish;
-	}
-
-	for (iter = list; iter; iter = iter->next) {
-		if (iter->data == (gpointer)priv->selected) {
-			if (iter->next) {
-				ppg_window_select_row(window, PPG_ROW(iter->next->data));
-			}
-			break;
-		}
-	}
-
-  finish:
-	g_list_free(list);
-}
-
-static void
-ppg_window_next_activate (GtkAction *action,
-                          PpgWindow *window)
-{
-	ppg_window_select_next_row(window);
-}
-
-static void
-ppg_window_previous_activate (GtkAction *action,
-                              PpgWindow *window)
-{
-	ppg_window_select_previous_row(window);
 }
 
 static gboolean
@@ -1504,36 +1365,6 @@ ppg_window_embed_key_press (GtkWidget   *embed,
 	}
 
 	return FALSE;
-}
-
-static void
-ppg_window_ruler_position_notify (PpgRuler   *ruler,
-                                  GParamSpec *pspec,
-                                  PpgWindow  *window)
-{
-	PpgWindowPrivate *priv;
-	gdouble pos;
-	gdouble frac;
-	gdouble dummy;
-	gchar *label;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
-
-	if (priv->ignore_ruler) {
-		return;
-	}
-
-	g_object_get(priv->ruler, "position", &pos, NULL);
-	frac = modf(pos, &dummy);
-	label = g_strdup_printf("%02d:%02d:%02d.%04d",
-	                        (gint)(pos / 3600.0),
-	                        (gint)(((gint)pos % 3600) / 60.0),
-	                        (gint)((gint)pos % 60),
-	                        (gint)(frac * 10000));
-	g_object_set(priv->position_label, "label", label, NULL);
-	g_free(label);
 }
 
 static gboolean
@@ -1597,37 +1428,8 @@ ppg_window_realize (GtkWidget *widget)
 	                              &geom, GDK_HINT_MIN_SIZE);
 }
 
-static void
-ppg_window_rows_notify_allocation (ClutterActor *actor,
-                                   GParamSpec *pspec,
-                                   PpgWindow *window)
-{
-	PpgWindowPrivate *priv;
-	gfloat height;
-	gfloat y;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
-
-	g_object_get(actor,
-	             "height", &height,
-	             "y", &y,
-	             NULL);
-
-	if (height > 0.0) {
-		g_object_set(priv->vadj,
-		             "upper", (gdouble)height,
-		             NULL);
-	}
-
-	g_object_set(priv->vadj,
-	             "value", (gdouble)-y,
-	             NULL);
-}
-
 static ClutterActor*
-create_shadow (gboolean down)
+ppg_window_create_shadow (gboolean down)
 {
 	ClutterCairoTexture *texture;
 	cairo_pattern_t *p;
@@ -1693,7 +1495,7 @@ ppg_window_get_property (GObject    *object,
 
 	switch (prop_id) {
 	case PROP_SESSION:
-		g_value_set_object(value, window->priv->session);
+		g_value_set_object(value, ppg_window_get_session(window));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1846,14 +1648,13 @@ ppg_window_init (PpgWindow *window)
 	                 "/instrument-popup/visualizers", &visualizers,
 	                 NULL);
 
-	SET_ACTION_ACTIVE("stop");
-	SET_ACTION_INSENSITIVE("stop");
-	SET_ACTION_INSENSITIVE("pause");
-	SET_ACTION_INSENSITIVE("restart");
-	SET_ACTION_INSENSITIVE("cut");
-	SET_ACTION_INSENSITIVE("copy");
-	SET_ACTION_INSENSITIVE("paste");
-	SET_ACTION_INSENSITIVE("configure-instrument");
+	ppg_window_action_set(window, "stop", "active", FALSE, NULL);
+	ppg_window_action_set(window, "pause", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "restart", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "cut", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "copy", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "paste", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "configure-instrument", "sensitive", FALSE, NULL);
 
 	priv->vadj = g_object_new(GTK_TYPE_ADJUSTMENT,
 	                          "lower", 0.0,
@@ -1971,7 +1772,7 @@ ppg_window_init (PpgWindow *window)
 	                                  NULL);
 	g_signal_connect(priv->ruler,
 	                 "notify::position",
-	                 G_CALLBACK(ppg_window_ruler_position_notify),
+	                 G_CALLBACK(ppg_window_ruler_notify_position),
 	                 window);
 
 	status_vbox = g_object_new(GTK_TYPE_VBOX,
@@ -2154,7 +1955,7 @@ ppg_window_init (PpgWindow *window)
 	                        CLUTTER_ACTOR(priv->rows_box), TRUE, TRUE, FALSE,
 	                        CLUTTER_BOX_ALIGNMENT_START,
 	                        CLUTTER_BOX_ALIGNMENT_START);
-	bottom = create_shadow(TRUE);
+	bottom = ppg_window_create_shadow(TRUE);
 	clutter_box_layout_pack(CLUTTER_BOX_LAYOUT(outer_layout),
 	                        CLUTTER_ACTOR(bottom), TRUE, TRUE, FALSE,
 	                        CLUTTER_BOX_ALIGNMENT_START,
@@ -2179,8 +1980,8 @@ ppg_window_init (PpgWindow *window)
 	                                  "opacity", 0,
 	                                  "y", 200.0f,
 	                                  NULL);
-	priv->top_shadow = create_shadow(TRUE);
-	priv->bottom_shadow = create_shadow(FALSE);
+	priv->top_shadow = ppg_window_create_shadow(TRUE);
+	priv->bottom_shadow = ppg_window_create_shadow(FALSE);
 
 	clutter_container_add(CLUTTER_CONTAINER(priv->stage),
 	                      priv->header_bg,
@@ -2225,4 +2026,237 @@ ppg_window_init (PpgWindow *window)
 	             NULL);
 
 	gtk_widget_grab_focus(priv->clutter_embed);
+}
+
+/**
+ * ppg_window_count:
+ *
+ * Counts the number of active PpgWindows that are active.
+ *
+ * Returns: An unsigned intenger.
+ * Side effects: None.
+ */
+guint
+ppg_window_count (void)
+{
+	return instances;
+}
+
+/**
+ * ppg_window_get_action:
+ * @window: (in): A #PpgWindow.
+ * @name: (in): The actions name.
+ *
+ * Retrieves the first #GtkAction with a name matching @name. If no action
+ * can be found matching @name, then %NULL is returned.
+ *
+ * Returns: A #GtkAction if successful; otherwise %NULL.
+ * Side effects: None.
+ */
+GtkAction*
+ppg_window_get_action (PpgWindow   *window,
+                       const gchar *name)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_val_if_fail(PPG_IS_WINDOW(window), NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+
+	priv = window->priv;
+	return gtk_action_group_get_action(priv->actions, name);
+}
+
+/**
+ * ppg_window_get_session:
+ * @window: (in): A #PpgWindow.
+ *
+ * Retrieves the #PpgSession for the window.
+ *
+ * Returns: A #PpgSession if it has been established; otherwise %NULL.
+ * Side effects: None.
+ */
+PpgSession*
+ppg_window_get_session (PpgWindow *window)
+{
+	g_return_val_if_fail(PPG_IS_WINDOW(window), NULL);
+	return window->priv->session;
+}
+
+void
+ppg_window_select_next_row (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GList *list;
+	GList *iter;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	/*
+	 * XXX: This is a totally shitty way to do this, because we iterate
+	 *      N children to get to the next pointer in the list. But for
+	 *      now, that is easier than keeping our own array + index.
+	 */
+
+	list = clutter_container_get_children(CLUTTER_CONTAINER(priv->rows_box));
+
+	if (!priv->selected) {
+		if (list) {
+			ppg_window_select_row(window, PPG_ROW(list->data));
+		}
+		goto finish;
+	}
+
+	for (iter = list; iter; iter = iter->next) {
+		if (iter->data == (gpointer)priv->selected) {
+			if (iter->next) {
+				ppg_window_select_row(window, PPG_ROW(iter->next->data));
+			}
+			break;
+		}
+	}
+
+  finish:
+	g_list_free(list);
+}
+
+void
+ppg_window_select_previous_row (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GList *list;
+	GList *iter;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	/*
+	 * XXX: This is a totally shitty way to do this, because we iterate
+	 *      N children to get to the next pointer in the list. But for
+	 *      now, that is easier than keeping our own array + index.
+	 */
+
+	list = clutter_container_get_children(CLUTTER_CONTAINER(priv->rows_box));
+	list = g_list_reverse(list);
+
+	if (!priv->selected) {
+		if (list) {
+			ppg_window_select_row(window, PPG_ROW(list->data));
+		}
+		goto finish;
+	}
+
+	for (iter = list; iter; iter = iter->next) {
+		if (iter->data == (gpointer)priv->selected) {
+			if (iter->next) {
+				ppg_window_select_row(window, PPG_ROW(iter->next->data));
+			}
+			break;
+		}
+	}
+
+  finish:
+	g_list_free(list);
+}
+
+/**
+ * ppg_window_show_graph:
+ * @title: (in): The title for the created window.
+ * @graph: (in): An #UberGraph.
+ * @parent: (in): The GtkWindow transient-for parent.
+ *
+ * Prepares the widgetry and shows a new GtkWindow containing the graph.
+ *
+ * Returns: None.
+ * Side effects: A new #GtkWindow is presented to the user.
+ */
+void
+ppg_window_show_graph (const gchar *title,
+                       GtkWidget   *graph,
+                       GtkWindow   *parent)
+{
+	GtkWidget *window;
+	GtkWidget *vbox;
+	GtkWidget *labels;
+
+	window = g_object_new(GTK_TYPE_WINDOW,
+	                      "border-width", 12,
+	                      "default-height", 300,
+	                      "default-width", 640,
+	                      "title", title,
+	                      "transient-for", parent,
+	                      NULL);
+	vbox = g_object_new(GTK_TYPE_VBOX,
+	                    "spacing", 6,
+	                    "visible", TRUE,
+	                    NULL);
+	gtk_container_add(GTK_CONTAINER(window), vbox);
+	gtk_container_add(GTK_CONTAINER(vbox), graph);
+	labels = uber_graph_get_labels(UBER_GRAPH(graph));
+	gtk_container_add_with_properties(GTK_CONTAINER(vbox), labels,
+	                                  "expand", FALSE,
+	                                  NULL);
+	gtk_widget_show(labels);
+	gtk_window_present(GTK_WINDOW(window));
+}
+
+/**
+ * ppg_window_visualizers_set:
+ * @window: (in): A #PpgWindow.
+ * @first_property: (in): First property name.
+ *
+ * Set properties on all visualizers in the window.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_window_visualizers_set (PpgWindow   *window,
+                            const gchar *first_property,
+                            ...)
+{
+	PpgWindowPrivate *priv;
+	const gchar *name = first_property;
+	GObjectClass *klass;
+	GParamSpec *pspec;
+	GValue value = { 0 };
+	va_list args;
+	gchar *error = NULL;
+	GList *list;
+	GList *iter;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(first_property != NULL);
+
+	priv = window->priv;
+
+	list = ppg_window_get_visualizers(window);
+	if (!(klass = g_type_class_peek(PPG_TYPE_VISUALIZER))) {
+		return;
+	}
+
+	va_start(args, first_property);
+	do {
+		pspec = g_object_class_find_property(klass, name);
+		if (!pspec) {
+			g_critical("Failed to find property %s of class %s", name,
+			           g_type_name(G_TYPE_FROM_INSTANCE(iter->data)));
+			return;
+		}
+		G_VALUE_COLLECT_INIT(&value, pspec->value_type, args, 0, &error);
+		if (error != NULL) {
+			g_critical("Failed to extract property %s from var_args: %s",
+			           name, error);
+			g_free(error);
+			goto cleanup;
+		}
+		for (iter = list; iter; iter = iter->next) {
+			g_object_set_property(G_OBJECT(iter->data), name, &value);
+		}
+		g_value_unset(&value);
+	} while ((name = va_arg(args, const gchar*)));
+  cleanup:
+	va_end(args);
 }
