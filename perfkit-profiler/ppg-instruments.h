@@ -35,7 +35,6 @@ typedef enum
 	PPG_INSTRUMENTS_STORE_COLUMN_FULLTEXT,
 } PpgInstrumentsStoreColumn;
 
-void           ppg_instruments_init      (void);
 void           ppg_instruments_register  (const gchar *name,
                                           const gchar *title,
                                           const gchar *icon_name,

@@ -88,6 +88,7 @@ INST_H_FILES =								\
 	$(NULL)
 
 NOINST_H_FILES =							\
+	ppg-private.h							\
 	ppg-window-actions.h						\
 	ppg-window-ui.h							\
 	$(NULL)

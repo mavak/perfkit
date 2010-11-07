@@ -22,6 +22,7 @@
 #include <stdlib.h>
 
 #include "ppg-runtime.h"
+#include "ppg-private.h"
 #include "ppg-welcome-dialog.h"
 
 gint

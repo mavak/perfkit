@@ -33,6 +33,16 @@ ppg_paths_init (void)
 	icon_dir = g_build_filename(data_dir, "icons", NULL);
 }
 
+void
+ppg_paths_shutdown (void)
+{
+	g_free(data_dir);
+	data_dir = NULL;
+
+	g_free(icon_dir);
+	icon_dir = NULL;
+}
+
 const gchar *
 ppg_paths_get_icon_dir (void)
 {

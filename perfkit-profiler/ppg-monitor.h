@@ -23,7 +23,6 @@
 
 G_BEGIN_DECLS
 
-void       ppg_monitor_init    (void);
 GtkWidget* ppg_monitor_cpu_new (void);
 GtkWidget* ppg_monitor_mem_new (void);
 GtkWidget* ppg_monitor_net_new (void);

@@ -34,6 +34,13 @@ ppg_prefs_init (gint    *argc,
 	return TRUE;
 }
 
+void
+ppg_prefs_shutdown (void)
+{
+	g_object_unref(project_settings);
+	project_settings = NULL;
+}
+
 GSettings*
 ppg_prefs_get_project_settings (void)
 {

@@ -52,10 +52,11 @@ typedef struct
 	gdouble last_total_out;
 } NetInfo;
 
-static CpuInfo  cpu_info = { 0 };
-static MemInfo  mem_info = { 0 };
-static NetInfo  net_info = { 0 };
-static gboolean shutdown = FALSE;
+static CpuInfo   cpu_info = { 0 };
+static MemInfo   mem_info = { 0 };
+static NetInfo   net_info = { 0 };
+static GThread  *thread   = NULL;
+static gboolean  shutdown = FALSE;
 
 static void
 ppg_monitor_init_cpu (void)
@@ -313,12 +314,20 @@ ppg_monitor_init (void)
 
 	if (G_UNLIKELY(g_once_init_enter(&initialized))) {
 		ppg_monitor_init_cpu();
-		if (!g_thread_create(ppg_monitor_thread, NULL, FALSE, &error)) {
+		if (!(thread = g_thread_create(ppg_monitor_thread, NULL, TRUE, &error))) {
 			g_critical("Failed to create monitor thread: %s", error->message);
 			g_error_free(error);
 		}
 		g_once_init_leave(&initialized, TRUE);
 	}
+}
+
+void
+ppg_monitor_shutdown (void)
+{
+	g_atomic_int_set(&shutdown, TRUE);
+	g_thread_join(thread);
+	thread = NULL;
 }
 
 static gboolean

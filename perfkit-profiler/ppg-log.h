@@ -118,7 +118,4 @@
 
 #define CASE_RETURN_STR(_l) case _l: return #_l
 
-void ppg_log_init     (gboolean stdout_, const gchar *filename);
-void ppg_log_shutdown (void);
-
 #endif /* __PPG_LOG_H__ */

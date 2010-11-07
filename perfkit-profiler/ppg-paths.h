@@ -23,7 +23,6 @@
 
 G_BEGIN_DECLS
 
-void         ppg_paths_init         (void);
 const gchar* ppg_paths_get_icon_dir (void);
 
 G_END_DECLS

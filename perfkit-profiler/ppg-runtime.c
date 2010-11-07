@@ -26,6 +26,7 @@
 #include "ppg-log.h"
 #include "ppg-monitor.h"
 #include "ppg-paths.h"
+#include "ppg-private.h"
 #include "ppg-prefs.h"
 #include "ppg-runtime.h"
 #include "ppg-welcome-dialog.h"
@@ -59,8 +60,8 @@ static GOptionEntry hidden_entries[] = {
  * Side effects: Everything.
  */
 gboolean
-ppg_runtime_init (gint   *argc,
-                  gchar **argv[])
+ppg_runtime_init (gint    *argc,
+                  gchar ***argv)
 {
 	GOptionGroup *hidden;
 	GOptionContext *context;
@@ -188,4 +189,11 @@ ppg_runtime_quit_fast (gint code)
 void
 ppg_runtime_shutdown (void)
 {
+	ppg_instruments_shutdown();
+	ppg_actions_shutdown();
+	ppg_prefs_shutdown();
+	ppg_monitor_shutdown();
+	ppg_color_shutdown();
+	ppg_paths_shutdown();
+	ppg_log_shutdown();
 }

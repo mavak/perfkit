@@ -57,10 +57,29 @@ ppg_instruments_init (void)
 	                         _("CPU"),
 	                         NULL,
 	                         PPG_TYPE_CPU_INSTRUMENT);
+	/*
 	ppg_instruments_register("perfkit-network",
 	                         _("Network"),
 	                         "network-wired",
 	                         G_TYPE_NONE);
+	*/
+}
+
+void
+ppg_instruments_shutdown (void)
+{
+	PpgInstrumentFactory *factory;
+	gint i;
+
+	for (i = 0; i < factories->len; i++) {
+		factory = &g_array_index(factories, PpgInstrumentFactory, i);
+		g_free(factory->name);
+		g_free(factory->title);
+		g_free(factory->icon_name);
+	}
+
+	g_array_unref(factories);
+	factories = NULL;
 }
 
 void
@@ -72,9 +91,7 @@ ppg_instruments_register (const gchar *name,
 	PpgInstrumentFactory factory;
 
 	g_return_if_fail(factories != NULL);
-	/*
 	g_return_if_fail(g_type_is_a(type, PPG_TYPE_INSTRUMENT));
-	*/
 
 	memset(&factory, 0, sizeof(factory));
 	factory.name = g_strdup(name);

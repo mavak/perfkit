@@ -23,7 +23,6 @@
 
 G_BEGIN_DECLS
 
-gboolean   ppg_prefs_init                    (gint *argc, gchar ***argv);
 GSettings* ppg_prefs_get_project_settings    (void);
 gchar*     ppg_prefs_get_project_default_dir (void);
 void       ppg_prefs_set_project_default_dir (const gchar *default_dir);

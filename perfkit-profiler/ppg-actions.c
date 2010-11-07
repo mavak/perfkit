@@ -32,10 +32,33 @@ typedef struct
 
 static GArray *factories = NULL;
 
+/**
+ * ppg_actions_init:
+ *
+ * Initialize the actions subsystem.
+ *
+ * Returns: None.
+ * Side effects: Factory resources are allocated.
+ */
 void
 ppg_actions_init (void)
 {
 	factories = g_array_new(FALSE, FALSE, sizeof(PpgActionFactory));
+}
+
+/**
+ * ppg_actions_shutdown:
+ *
+ * Shuts down the actions subsystem and frees resources.
+ *
+ * Returns: None.
+ * Side effects: Factory resources are released.
+ */
+void
+ppg_actions_shutdown (void)
+{
+	g_array_unref(factories);
+	factories = NULL;
 }
 
 void

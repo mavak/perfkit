@@ -45,6 +45,13 @@ ppg_color_init (void)
 }
 
 void
+ppg_color_shutdown (void)
+{
+	g_strfreev(colors);
+	colors = NULL;
+}
+
+void
 ppg_color_iter_init (PpgColorIter *iter)
 {
 	g_return_if_fail(iter != NULL);

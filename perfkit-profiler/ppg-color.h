@@ -31,7 +31,6 @@ typedef struct
 	ClutterColor clutter_color;
 } PpgColorIter;
 
-void ppg_color_init      (void);
 void ppg_color_iter_init (PpgColorIter *iter);
 void ppg_color_iter_next (PpgColorIter *iter);
 

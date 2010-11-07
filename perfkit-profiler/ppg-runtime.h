@@ -23,12 +23,8 @@
 
 G_BEGIN_DECLS
 
-gboolean ppg_runtime_init      (gint   *argc,
-                                gchar **argv[]);
 void     ppg_runtime_quit      (void);
 void     ppg_runtime_quit_fast (gint    code);
-gint     ppg_runtime_run       (void);
-void     ppg_runtime_shutdown  (void);
 gboolean ppg_runtime_try_quit  (void);
 
 G_END_DECLS

@@ -25,7 +25,6 @@ G_BEGIN_DECLS
 
 typedef GtkAction* (*PpgActionFunc) (GtkWidget *widget);
 
-void ppg_actions_init                    (void);
 void ppg_actions_register                (GType                 widget_type,
                                           GType                 action_type);
 void ppg_actions_register_func           (GType                 widget_type,
