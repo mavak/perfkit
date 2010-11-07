@@ -2401,6 +2401,15 @@ ppg_window_get_session (PpgWindow *window)
 	return window->priv->session;
 }
 
+/**
+ * ppg_window_select_next_row:
+ * @window: (in): A #PpgWindow.
+ *
+ * Select the next row in the instruments view.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 void
 ppg_window_select_next_row (PpgWindow *window)
 {
@@ -2440,6 +2449,15 @@ ppg_window_select_next_row (PpgWindow *window)
 	g_list_free(list);
 }
 
+/**
+ * ppg_window_select_previous_row:
+ * @window: (in): A #PpgWindow.
+ *
+ * Select the previous row in the instrument view.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 void
 ppg_window_select_previous_row (PpgWindow *window)
 {
