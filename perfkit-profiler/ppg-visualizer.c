@@ -77,7 +77,7 @@ ppg_visualizer_queue_draw (PpgVisualizer *visualizer)
 
 	if (!priv->draw_handler) {
 		priv->draw_handler =
-			g_timeout_add(0, ppg_visualizer_draw_timeout, visualizer);
+			g_timeout_add(100, ppg_visualizer_draw_timeout, visualizer);
 	}
 }
 
