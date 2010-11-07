@@ -37,6 +37,15 @@ static const gchar *default_colors[] = {
 static gchar **colors   = NULL;
 static guint   n_colors = 0;
 
+/**
+ * ppg_color_init:
+ *
+ * Initialize the color subsystem. This is used by visualizers to get themed
+ * colors.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 void
 ppg_color_init (void)
 {
@@ -44,6 +53,14 @@ ppg_color_init (void)
 	n_colors = g_strv_length(colors);
 }
 
+/**
+ * ppg_color_shutdown:
+ *
+ * Cleanup after the color system. Free resources.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 void
 ppg_color_shutdown (void)
 {
@@ -51,6 +68,15 @@ ppg_color_shutdown (void)
 	colors = NULL;
 }
 
+/**
+ * ppg_color_iter_init:
+ * @iter: (out): A #PpgColorIter.
+ *
+ * Initialize a color iterator.
+ *
+ * Returns: None.
+ * Side effects: @iter is initialized.
+ */
 void
 ppg_color_iter_init (PpgColorIter *iter)
 {
@@ -61,6 +87,15 @@ ppg_color_iter_init (PpgColorIter *iter)
 	clutter_color_from_string(&iter->clutter_color, colors[0]);
 }
 
+/**
+ * ppg_color_iter_next:
+ * @iter: (out): A #PpgColorIter.
+ *
+ * Move the iterator to the next position.
+ *
+ * Returns: None.
+ * Side effects: @iter is incrememnted.
+ */
 void
 ppg_color_iter_next (PpgColorIter *iter)
 {
