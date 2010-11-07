@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This file is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -59,14 +59,12 @@ G_BEGIN_DECLS
                             ((ring)->pos - 1 - (i)) :                 \
                             ((ring)->len + ((ring)->pos - 1 - (i)))])
 
-typedef struct _GRing GRing;
-
-struct _GRing
+typedef struct
 {
 	guint8 *data;
 	guint   len;
 	guint   pos;
-};
+} GRing;
 
 GType  g_ring_get_type    (void) G_GNUC_CONST;
 GRing* g_ring_sized_new   (guint           element_size,
