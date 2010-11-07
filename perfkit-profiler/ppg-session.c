@@ -576,6 +576,42 @@ ppg_session_set_uri (PpgSession  *session,
 	                            session);
 }
 
+gboolean
+ppg_session_save (PpgSession *session,
+                  const gchar *uri,
+                  GError **error)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_val_if_fail(PPG_IS_SESSION(session), FALSE);
+
+	priv = session->priv;
+
+	/*
+	 * TODO: Implement saving to json.
+	 */
+
+	return TRUE;
+}
+
+gboolean
+ppg_session_load (PpgSession *session,
+                  const gchar *uri,
+                  GError **error)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_val_if_fail(PPG_IS_SESSION(session), FALSE);
+
+	priv = session->priv;
+
+	/*
+	 * TODO: Implement loading from json.
+	 */
+
+	return TRUE;
+}
+
 /**
  * ppg_session_finalize:
  * @object: (in): A #PpgSession.

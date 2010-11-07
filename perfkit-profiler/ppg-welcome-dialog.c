@@ -19,6 +19,7 @@
 #include <glib/gi18n.h>
 
 #include "ppg-runtime.h"
+#include "ppg-session.h"
 #include "ppg-sessions-store.h"
 #include "ppg-welcome-dialog.h"
 #include "ppg-window.h"
@@ -151,6 +152,69 @@ ppg_welcome_dialog_local_clicked (GtkWidget        *button,
 	                      NULL);
 	gtk_widget_destroy(GTK_WIDGET(dialog));
 	gtk_window_present(GTK_WINDOW(window));
+}
+
+static void
+ppg_welcome_dialog_open_clicked (GtkWidget        *button,
+                                 PpgWelcomeDialog *dialog)
+{
+	PpgWelcomeDialogPrivate *priv;
+	GtkDialog *load;
+	GtkWidget *window;
+	GtkDialog *message;
+	GtkFileFilter *filter;
+	PpgSession *session;
+	const gchar *filename;
+	GError *error = NULL;
+
+	g_return_if_fail(PPG_IS_WELCOME_DIALOG(dialog));
+
+	priv = dialog->priv;
+
+	load = g_object_new(GTK_TYPE_FILE_CHOOSER_DIALOG,
+	                    "action", GTK_FILE_CHOOSER_ACTION_OPEN,
+	                    "title", _("Open Session"),
+	                    NULL);
+	filter = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter, _("Perfkit Session (*.perfkit)"));
+	gtk_file_filter_add_pattern(filter, "*.perfkit");
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(load), filter);
+
+	gtk_dialog_add_button(load, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+	gtk_dialog_add_button(load, GTK_STOCK_OPEN, GTK_RESPONSE_OK);
+	gtk_dialog_set_default_response(load, GTK_RESPONSE_OK);
+
+	if (gtk_dialog_run(load) == GTK_RESPONSE_OK) {
+		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(load));
+
+		/*
+		 * FIXME: Get the desired host if not localhost.
+		 */
+		window = g_object_new(PPG_TYPE_WINDOW,
+		                      "uri", "dbus:///",
+		                      NULL);
+		g_object_get(window,
+		             "session", &session,
+		             NULL);
+
+		if (!ppg_session_load(session, filename, &error)) {
+			message = g_object_new(GTK_TYPE_MESSAGE_DIALOG,
+			                       "buttons", GTK_BUTTONS_CLOSE,
+			                       "message-type", GTK_MESSAGE_ERROR,
+			                       "text", _("There was an error loading the session"),
+			                       "secondary-text", error->message,
+			                       NULL);
+			g_error_free(error);
+			gtk_dialog_run(message);
+			gtk_widget_destroy(GTK_WIDGET(message));
+		}
+
+		gtk_widget_destroy(GTK_WIDGET(dialog));
+		gtk_window_present(GTK_WINDOW(window));
+		g_object_unref(session);
+	}
+
+	gtk_widget_destroy(GTK_WIDGET(load));
 }
 
 /**
@@ -378,6 +442,9 @@ ppg_welcome_dialog_init (PpgWelcomeDialog *dialog)
 	gtk_container_add_with_properties(GTK_CONTAINER(vbox2), b,
 	                                  "expand", FALSE,
 	                                  NULL);
+	g_signal_connect(b, "clicked",
+	                 G_CALLBACK(ppg_welcome_dialog_open_clicked),
+	                 dialog);
 
 	l = g_object_new(GTK_TYPE_LABEL,
 	                 "visible", TRUE,

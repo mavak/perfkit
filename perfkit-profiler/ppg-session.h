@@ -64,6 +64,13 @@ void            ppg_session_stop           (PpgSession    *session);
 void            ppg_session_unpause        (PpgSession    *session);
 gdouble         ppg_session_get_position   (PpgSession    *session);
 PpgSessionState ppg_session_get_state      (PpgSession    *session);
+gboolean        ppg_session_save           (PpgSession    *session,
+                                            const gchar   *uri,
+                                            GError       **error);
+gboolean        ppg_session_load           (PpgSession    *session,
+                                            const gchar   *uri,
+                                            GError       **error);
+
 
 G_END_DECLS
 
