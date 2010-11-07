@@ -1926,7 +1926,10 @@ ppg_window_init (PpgWindow *window)
 	                 "/instrument-popup/visualizers", &visualizers,
 	                 NULL);
 
-	ppg_window_action_set(window, "stop", "active", FALSE, NULL);
+	ppg_window_action_set(window, "stop",
+	                      "active", TRUE,
+	                      "sensitive", FALSE,
+	                      NULL);
 	ppg_window_action_set(window, "pause", "sensitive", FALSE, NULL);
 	ppg_window_action_set(window, "restart", "sensitive", FALSE, NULL);
 	ppg_window_action_set(window, "cut", "sensitive", FALSE, NULL);
