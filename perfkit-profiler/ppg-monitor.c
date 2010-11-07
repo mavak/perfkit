@@ -57,6 +57,8 @@ static MemInfo   mem_info = { 0 };
 static NetInfo   net_info = { 0 };
 static GThread  *thread   = NULL;
 static gboolean  shutdown = FALSE;
+static GMutex   *mutex    = NULL;
+static GCond    *cond     = NULL;
 
 static void
 ppg_monitor_init_cpu (void)
@@ -296,13 +298,31 @@ ppg_monitor_next_net (void)
 static gpointer
 ppg_monitor_thread (gpointer data)
 {
-	while (!g_atomic_int_get((gint *)&shutdown)) {
+	GTimeVal timeout;
+
+    #define BREAK_ON_SHUTDOWN          \
+        G_STMT_START {                 \
+            if (shutdown) {            \
+                g_mutex_unlock(mutex); \
+                break;                 \
+            }                          \
+        } G_STMT_END
+
+	while (!shutdown) {
 		ppg_monitor_next_cpu();
 		ppg_monitor_next_cpu_freq();
 		ppg_monitor_next_mem();
 		ppg_monitor_next_net();
-		g_usleep(G_USEC_PER_SEC);
+
+		g_mutex_lock(mutex);
+		BREAK_ON_SHUTDOWN;
+		g_get_current_time(&timeout);
+		g_time_val_add(&timeout, G_USEC_PER_SEC);
+		g_cond_timed_wait(cond, mutex, &timeout);
+		BREAK_ON_SHUTDOWN;
+		g_mutex_unlock(mutex);
 	}
+
 	return NULL;
 }
 
@@ -313,6 +333,8 @@ ppg_monitor_init (void)
 	GError *error = NULL;
 
 	if (G_UNLIKELY(g_once_init_enter(&initialized))) {
+		mutex = g_mutex_new();
+		cond = g_cond_new();
 		ppg_monitor_init_cpu();
 		if (!(thread = g_thread_create(ppg_monitor_thread, NULL, TRUE, &error))) {
 			g_critical("Failed to create monitor thread: %s", error->message);
@@ -325,7 +347,10 @@ ppg_monitor_init (void)
 void
 ppg_monitor_shutdown (void)
 {
-	g_atomic_int_set(&shutdown, TRUE);
+	g_mutex_lock(mutex);
+	shutdown = TRUE;
+	g_cond_signal(cond);
+	g_mutex_unlock(mutex);
 	g_thread_join(thread);
 	thread = NULL;
 }
