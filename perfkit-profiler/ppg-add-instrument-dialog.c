@@ -42,8 +42,19 @@ enum
 	PROP_SESSION,
 };
 
+/**
+ * ppg_add_instrument_dialog_entry_changed:
+ * @entry: (in): A #GtkEntry.
+ * @dialog: (in): A #PpgAddInstrumentDialog.
+ *
+ * Handles the "changed" signal of @entry. The filter model used in the
+ * icon-view is refiltered to match the search text.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_add_instrument_dialog_entry_changed (GtkWidget *entry,
+ppg_add_instrument_dialog_entry_changed (GtkWidget              *entry,
                                          PpgAddInstrumentDialog *dialog)
 {
 	PpgAddInstrumentDialogPrivate *priv;
@@ -63,6 +74,17 @@ ppg_add_instrument_dialog_entry_changed (GtkWidget *entry,
 	}
 }
 
+/**
+ * ppg_add_instrument_dialog_item_activated:
+ * @icon_view: (in): A #GtkIconView.
+ * @path: (in): #GtkTreePath of item activated.
+ * @dialog: (in): A #PpgAddInstrumentDialog.
+ *
+ * Handle the "item-activated" signal. Add a new instrument to the session.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_add_instrument_dialog_item_activated (GtkWidget *icon_view,
                                           GtkTreePath *path,
@@ -80,10 +102,6 @@ ppg_add_instrument_dialog_item_activated (GtkWidget *icon_view,
 	priv = dialog->priv;
 	model = GTK_TREE_MODEL(priv->filter);
 
-	/*
-	 * FIXME: Add instrument.
-	 */
-
 	gtk_tree_model_get_iter(model, &iter, path);
 	gtk_tree_model_get(model, &iter,
 	                   PPG_INSTRUMENTS_STORE_COLUMN_NAME, &name,
@@ -92,8 +110,18 @@ ppg_add_instrument_dialog_item_activated (GtkWidget *icon_view,
 	g_free(name);
 }
 
+/**
+ * ppg_add_instrument_dialog_selection_changed:
+ * @dialog: (in): A #PpgAddInstrumentDialog.
+ *
+ * Handle the "selection-changed" signal of @icon_view. If there is only one
+ * item available in the model, then it is selected.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_add_instrument_dialog_selection_changed (GtkWidget *icon_view,
+ppg_add_instrument_dialog_selection_changed (GtkWidget              *icon_view,
                                              PpgAddInstrumentDialog *dialog)
 {
 	PpgAddInstrumentDialogPrivate *priv;
@@ -109,9 +137,18 @@ ppg_add_instrument_dialog_selection_changed (GtkWidget *icon_view,
 	g_list_free(list);
 }
 
+/**
+ * ppg_add_instrument_dialog_set_session:
+ * @dialog: (in): A #PpgAddInstrumentDialog.
+ *
+ * Set the #PpgSession for the dialog.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_add_instrument_dialog_set_session (PpgAddInstrumentDialog *dialog,
-                                       PpgSession *session)
+                                       PpgSession             *session)
 {
 	PpgAddInstrumentDialogPrivate *priv;
 
@@ -129,10 +166,23 @@ ppg_add_instrument_dialog_set_session (PpgAddInstrumentDialog *dialog,
 	}
 }
 
+/**
+ * ppg_add_instrument_dialog_response:
+ * @dialog: (in): A #PpgAddInstrumentDialog.
+ * @response_id: (in): The dialog response id.
+ *
+ * Handle the "response" signal for the dialog. If @response_id is
+ * GTK_RESPONSE_OK, then the currently selected item is added to the session.
+ *
+ * The signal is also blocked if it was handled.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_add_instrument_dialog_response (PpgAddInstrumentDialog *dialog,
-                                    gint response_id,
-                                    gpointer user_data)
+                                    gint                    response_id,
+                                    gpointer                user_data)
 {
 	PpgAddInstrumentDialogPrivate *priv;
 	GList *list;
@@ -154,10 +204,22 @@ ppg_add_instrument_dialog_response (PpgAddInstrumentDialog *dialog,
 	}
 }
 
+/**
+ * ppg_add_instrument_dialog_filter_func:
+ * @filter: (in): A #GtkTreeModel.
+ * @iter: (in): A #GtkTreeIter.
+ * @user_data: (in): A #PpgAddInstrumentDialog.
+ *
+ * A #GtkTreeModelFilterVisibleFunc to check to see if the row matches the
+ * current search text.
+ *
+ * Returns: %TRUE if the search text matches; otherwise %FALSE.
+ * Side effects: None.
+ */
 static gboolean
 ppg_add_instrument_dialog_filter_func (GtkTreeModel *filter,
-                                       GtkTreeIter *iter,
-                                       gpointer user_data)
+                                       GtkTreeIter  *iter,
+                                       gpointer      user_data)
 {
 	PpgAddInstrumentDialog *dialog = (PpgAddInstrumentDialog *)user_data;
 	PpgAddInstrumentDialogPrivate *priv = dialog->priv;
@@ -192,7 +254,7 @@ ppg_add_instrument_dialog_filter_func (GtkTreeModel *filter,
  * Side effects: Plenty.
  */
 static void
-ppg_add_instrument_dialog_dispose (GObject *object) /* IN */
+ppg_add_instrument_dialog_dispose (GObject *object)
 {
 	PpgAddInstrumentDialog *dialog = PPG_ADD_INSTRUMENT_DIALOG(object);
 
@@ -201,16 +263,6 @@ ppg_add_instrument_dialog_dispose (GObject *object) /* IN */
 	G_OBJECT_CLASS(ppg_add_instrument_dialog_parent_class)->dispose(object);
 }
 
-/**
- * ppg_add_instrument_dialog_finalize:
- * @object: (in): A #PpgAddInstrumentDialog.
- *
- * Finalizer for a #PpgAddInstrumentDialog instance.  Frees any resources held by
- * the instance.
- *
- * Returns: None.
- * Side effects: None.
- */
 static void
 ppg_add_instrument_dialog_finalize (GObject *object)
 {
@@ -235,15 +287,6 @@ ppg_add_instrument_dialog_set_property (GObject      *object,
 	}
 }
 
-/**
- * ppg_add_instrument_dialog_class_init:
- * @klass: (in): A #PpgAddInstrumentDialogClass.
- *
- * Initializes the #PpgAddInstrumentDialogClass and prepares the vtable.
- *
- * Returns: None.
- * Side effects: None.
- */
 static void
 ppg_add_instrument_dialog_class_init (PpgAddInstrumentDialogClass *klass)
 {
@@ -264,15 +307,6 @@ ppg_add_instrument_dialog_class_init (PpgAddInstrumentDialogClass *klass)
 	                                                    G_PARAM_WRITABLE));
 }
 
-/**
- * ppg_add_instrument_dialog_init:
- * @dialog: (in): A #PpgAddInstrumentDialog.
- *
- * Initializes the newly created #PpgAddInstrumentDialog instance.
- *
- * Returns: None.
- * Side effects: None.
- */
 static void
 ppg_add_instrument_dialog_init (PpgAddInstrumentDialog *dialog)
 {
