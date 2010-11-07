@@ -25,9 +25,9 @@
 #include "ppg-about-dialog.h"
 #include "ppg-util.h"
 
-#define BOLD(_s) ("<span weight=\"bold\">" _s "</span>")
-
 G_DEFINE_TYPE(PpgAboutDialog, ppg_about_dialog, GTK_TYPE_WINDOW)
+
+#define BOLD(_s) "<span weight=\"bold\">" _s "</span>"
 
 static void
 ppg_about_dialog_class_init (PpgAboutDialogClass *klass)
