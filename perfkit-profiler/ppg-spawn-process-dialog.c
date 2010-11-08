@@ -419,6 +419,7 @@ browse_clicked (GtkWidget *widget,
 	PpgSpawnProcessDialogPrivate *priv;
 	GtkWidget *chooser;
 	const gchar *filename;
+	gchar *dir;
 	gint ret;
 
 	g_return_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog));
@@ -433,8 +434,18 @@ browse_clicked (GtkWidget *widget,
 
 	ret = gtk_dialog_run(GTK_DIALOG(chooser));
 	if (ret == GTK_RESPONSE_OK) {
+		/*
+		 * Set the entry to the filename path.
+		 */
 		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser));
 		gtk_entry_set_text(GTK_ENTRY(priv->target_entry), filename);
+
+		/*
+		 * Set the working-dir to the directory containing the file.
+		 */
+		dir = g_path_get_dirname(filename);
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(priv->dir_button), dir);
+		g_free(dir);
 	}
 
 	gtk_widget_destroy(chooser);
