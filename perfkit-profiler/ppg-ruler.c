@@ -161,9 +161,14 @@ static void
 ppg_ruler_set_lower (PpgRuler *ruler,
                      gdouble   lower)
 {
+	PpgRulerPrivate *priv;
+
 	g_return_if_fail(PPG_IS_RULER(ruler));
 
-	ruler->priv->lower = lower;
+	priv = ruler->priv;
+	priv->lower = lower;
+	priv->dirty = TRUE;
+
 	gtk_widget_queue_draw(GTK_WIDGET(ruler));
 	g_object_notify(G_OBJECT(ruler), "lower");
 }
@@ -182,9 +187,14 @@ static void
 ppg_ruler_set_upper (PpgRuler *ruler,
                      gdouble   upper)
 {
+	PpgRulerPrivate *priv;
+
 	g_return_if_fail(PPG_IS_RULER(ruler));
 
-	ruler->priv->upper = upper;
+	priv = ruler->priv;
+	priv->upper = upper;
+	priv->dirty = TRUE;
+
 	gtk_widget_queue_draw(GTK_WIDGET(ruler));
 	g_object_notify(G_OBJECT(ruler), "upper");
 }
