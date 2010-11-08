@@ -160,6 +160,8 @@ AC_CONFIG_FILES([
 	doc/reference/perfkit-agent/version.xml
 	doc/reference/perfkit-gui/Makefile
 	doc/reference/perfkit-gui/version.xml
+	doc/reference/perfkit-profiler/Makefile
+	doc/reference/perfkit-profiler/version.xml
 
 	tools/Makefile
 
