@@ -596,11 +596,12 @@ ppg_window_check_close (PpgWindow *window)
 	action = gtk_action_group_get_action(priv->actions, "stop");
 	if (gtk_action_get_sensitive(action)) {
 		dialog = g_object_new(GTK_TYPE_MESSAGE_DIALOG,
-		                      "message-type", GTK_MESSAGE_QUESTION,
 		                      "buttons", GTK_BUTTONS_OK_CANCEL,
+		                      "message-type", GTK_MESSAGE_QUESTION,
 		                      "text", _("The current profiling session is "
 		                                "active. Would you still like to "
 		                                "close this session?"),
+		                      "transient-for", window,
 		                      NULL);
 		if (gtk_dialog_run(GTK_DIALOG(dialog)) != GTK_RESPONSE_OK) {
 			ret = FALSE;
@@ -804,6 +805,10 @@ ppg_window_delete_event (GtkWidget   *widget,
 {
 	GtkWidgetClass *widget_class;
 	gboolean ret = FALSE;
+
+	if (!ppg_window_check_close(PPG_WINDOW(widget))) {
+		return TRUE;
+	}
 
 	widget_class = GTK_WIDGET_CLASS(ppg_window_parent_class);
 	if (widget_class->delete_event) {
