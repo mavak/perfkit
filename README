@@ -15,7 +15,7 @@ administrators.  It can be used for both profiling systems software and
 applications as well as monitoring servers and remote devices.
 
 ----------------------------------------------------------------------------
- II.    Installation
+ II.    Installation and Running
 ----------------------------------------------------------------------------
 
 Perfkit is packaged in the standard format for most GNU/Linux-based software.
@@ -25,8 +25,15 @@ Perfkit.
 Perfkit contains a runtime agent that manages profiling and systems
 monitoring.  It can be run using `perfkit-agent'.
 
-In the near future, a GUI will be provided to manage Perfkit recording
-sessions.
+Perfkit contains a basic gui for adminstration of the agent. It is called
+perfkit-gui and lives in the directory of the same name.
+
+The profiler gui, perfkit-profiler, contains a Gtk and Clutter based
+interface into the same perfkit-agent. It is found in the perfkit-profiler
+directory.
+
+A command line interface to the perfkit-agent can be found in the tools
+directory, and is named perfkit-shell.
 
 ----------------------------------------------------------------------------
 III.	Contributing
@@ -38,6 +45,4 @@ and add collection data sources.
 You can find more information on the architecture of Perfkit and a layout
 of the codebase in HACKING which can be found in the same directory as this
 file.
-
-Perfkit was brought to you by Christian Hergert and Shapor Naghibzadeh.
 
