@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+static void ppg_window_quit_activate                 (GtkAction *action,
+                                                      PpgWindow *window);
 static void ppg_window_close_activate                (GtkAction *action,
                                                       PpgWindow *window);
 static void ppg_window_restart_activate              (GtkAction *action,
@@ -68,7 +70,7 @@ static void ppg_window_previous_activate             (GtkAction *action,
 
 static GtkActionEntry ppg_window_action_entries[] = {
 	{ "file", NULL, N_("Per_fkit") },
-	{ "quit", GTK_STOCK_QUIT, NULL, NULL, NULL, ppg_runtime_quit },
+	{ "quit", GTK_STOCK_QUIT, NULL, NULL, NULL, G_CALLBACK(ppg_window_quit_activate) },
 	{ "close", GTK_STOCK_CLOSE, N_("_Close Window"), NULL, NULL, G_CALLBACK(ppg_window_close_activate) },
 
 	{ "edit", NULL, N_("_Edit") },

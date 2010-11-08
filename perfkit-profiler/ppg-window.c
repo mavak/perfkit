@@ -567,6 +567,51 @@ ppg_window_monitor_net_activate (GtkAction *action,
 }
 
 /**
+ * ppg_window_check_close:
+ * @window: (in): A #PpgWindow.
+ *
+ * Checks to see if the window is in a state that can be closed. If the session
+ * is active, then the user will be prompted to confirm.
+ *
+ * Returns: %TRUE if the window can be closed; otherwise %FALSE.
+ * Side effects: None.
+ */
+static gboolean
+ppg_window_check_close (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GtkAction *action;
+	GtkWidget *dialog;
+	gboolean ret = TRUE;
+
+	g_return_val_if_fail(PPG_IS_WINDOW(window), FALSE);
+
+	priv = window->priv;
+
+	/*
+	 * If the stop action is sensitive, then the session is likely running
+	 * and we should ask the user if we should close.
+	 */
+
+	action = gtk_action_group_get_action(priv->actions, "stop");
+	if (gtk_action_get_sensitive(action)) {
+		dialog = g_object_new(GTK_TYPE_MESSAGE_DIALOG,
+		                      "message-type", GTK_MESSAGE_QUESTION,
+		                      "buttons", GTK_BUTTONS_OK_CANCEL,
+		                      "text", _("The current profiling session is "
+		                                "active. Would you still like to "
+		                                "close this session?"),
+		                      NULL);
+		if (gtk_dialog_run(GTK_DIALOG(dialog)) != GTK_RESPONSE_OK) {
+			ret = FALSE;
+		}
+		gtk_widget_destroy(dialog);
+	}
+
+	return ret;
+}
+
+/**
  * ppg_window_close_activate:
  * @action: (in): A #GtkAction.
  * @window: (in): A #PpgWindow.
@@ -588,9 +633,42 @@ ppg_window_close_activate (GtkAction *action,
 
 	priv = window->priv;
 
+	if (!ppg_window_check_close(window)) {
+		return;
+	}
+
 	instances--;
 	gtk_widget_destroy(GTK_WIDGET(window));
 	ppg_runtime_try_quit();
+}
+
+/**
+ * ppg_window_quit_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "activate" signal for the "quit" action.  Quits the application
+ * if possible.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_window_quit_activate (GtkAction *action,
+                          PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(GTK_IS_ACTION(action));
+
+	priv = window->priv;
+
+	if (!ppg_window_check_close(window)) {
+		return;
+	}
+
+	ppg_runtime_quit();
 }
 
 /**
