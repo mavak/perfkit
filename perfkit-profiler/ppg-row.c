@@ -46,6 +46,8 @@ struct _PpgRowPrivate
 	GPtrArray *rows;
 	GtkStyle *style;
 
+	guint paint_handler;
+
 	ClutterActor *hbox;
 	ClutterActor *header_bg;
 	ClutterActor *header_text;
@@ -110,14 +112,31 @@ ppg_row_paint_header (PpgRow *row)
 static gboolean
 ppg_row_paint (PpgRow *row)
 {
+	PpgRowPrivate *priv;
+
+	g_return_val_if_fail(PPG_IS_ROW(row), FALSE);
+
+	priv = row->priv;
+
+	priv->paint_handler = 0;
 	ppg_row_paint_header(row);
+
 	return FALSE;
 }
 
 static void
 ppg_row_queue_paint (PpgRow *row)
 {
-	g_timeout_add(0, (GSourceFunc)ppg_row_paint, row);
+	PpgRowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_ROW(row));
+
+	priv = row->priv;
+
+	if (!priv->paint_handler) {
+		priv->paint_handler =
+			g_timeout_add(0, (GSourceFunc)ppg_row_paint_timeout, row);
+	}
 }
 
 static void
