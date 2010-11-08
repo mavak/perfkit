@@ -1198,15 +1198,6 @@ ppg_window_hadj_value_changed_timeout (gpointer data)
 	priv = window->priv;
 	value = gtk_adjustment_get_value(priv->hadj);
 
-	/*
-	 * TODO:
-	 *
-	 *   Get range of ruler.
-	 *   Add it to value.
-	 *   Update ruler.
-	 *   Update vizualizers.
-	 */
-
 	g_object_get(priv->ruler,
 	             "lower", &lower,
 	             "upper", &upper,
