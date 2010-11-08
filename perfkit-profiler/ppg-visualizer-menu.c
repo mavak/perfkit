@@ -35,6 +35,15 @@ enum
 	PROP_INSTRUMENT,
 };
 
+/**
+ * ppg_visualizer_menu_add_dummy:
+ * @menu: (in): A #PpgVisualizerMenu.
+ *
+ * Adds a dummy row to the menu so that it doesn't appear empty.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_visualizer_menu_add_dummy (PpgVisualizerMenu *menu)
 {
@@ -50,6 +59,16 @@ ppg_visualizer_menu_add_dummy (PpgVisualizerMenu *menu)
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
 }
 
+/**
+ * ppg_visualizer_menu_get_active:
+ * @menu: (in): A #PpgVisualizerMenu.
+ *
+ * Determines if a given #PpgVisualizerEntry is the selected item in the
+ * #PpgVisualizerMenu.
+ *
+ * Returns: %TRUE if @entry represents the active menu item; otherwise %FALSE.
+ * Side effects: None.
+ */
 static gboolean
 ppg_visualizer_menu_get_active (PpgVisualizerMenu  *menu,
                                 PpgVisualizerEntry *entry)
@@ -78,6 +97,16 @@ ppg_visualizer_menu_get_active (PpgVisualizerMenu  *menu,
 	return FALSE;
 }
 
+/**
+ * ppg_visualizer_menu_activate:
+ * @menu: (in): A #PpgVisualizerMenu.
+ *
+ * Handle the "activate" signal for a particular #GtkMenuItem. The proper
+ * visualizer is created or destroyed.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_visualizer_menu_activate (GtkCheckMenuItem  *item,
                               PpgVisualizerMenu *menu)
@@ -100,6 +129,15 @@ ppg_visualizer_menu_activate (GtkCheckMenuItem  *item,
 	}
 }
 
+/**
+ * ppg_visualizer_menu_set_instrument:
+ * @menu: (in): A #PpgVisualizerMenu.
+ *
+ * Set the #PpgInstrument for the #PpgVisualizerMenu to represent.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_visualizer_menu_set_instrument (PpgVisualizerMenu *menu,
                                     PpgInstrument     *instrument)
