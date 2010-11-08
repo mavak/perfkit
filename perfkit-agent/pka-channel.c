@@ -751,6 +751,7 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 		 * Determine the working directory.
 		 */
 		if (pka_str_empty0(spawn_info.working_dir)) {
+			g_free(spawn_info.working_dir);
 			spawn_info.working_dir = g_strdup(g_get_tmp_dir());
 		}
 
