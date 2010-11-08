@@ -80,12 +80,23 @@ ppg_ruler_update_layout_text (PpgRuler    *ruler,
                               PangoLayout *layout,
                               gdouble      t)
 {
+	gdouble fraction;
+	gdouble iptr;
 	gchar *markup;
 
-	markup = g_strdup_printf("%02d:%02d:%02d",
-	                         (gint)(t / 3600.0),
-	                         (gint)(((gint)t % 3600) / 60.0),
-	                         (gint)((gint)t % 60));
+	fraction = modf(t, &iptr);
+	if (fraction == 0.0) {
+		markup = g_strdup_printf("%02d:%02d:%02d",
+		                         (gint)(t / 3600.0),
+		                         (gint)(((gint)t % 3600) / 60.0),
+		                         (gint)((gint)t % 60));
+	} else {
+		markup = g_strdup_printf("%02d:%02d:%02d.%03d",
+		                         (gint)(t / 3600.0),
+		                         (gint)(((gint)t % 3600) / 60.0),
+		                         (gint)((gint)t % 60),
+		                         (gint)(fraction * 1000.0));
+	}
 	pango_layout_set_text(layout, markup, -1);
 	g_free(markup);
 }
@@ -388,6 +399,8 @@ ppg_ruler_draw_ruler (PpgRuler *ruler)
 	gdouble n_seconds;
 	gdouble v;
 	gdouble p;
+	gint pw;
+	gint ph;
 	gint x;
 	gint xx;
 	gint n;
@@ -422,7 +435,7 @@ ppg_ruler_draw_ruler (PpgRuler *ruler)
 		every = ceil(text_width / (alloc.width / n_seconds));
 	}
 
-	for (v = ceil(priv->lower); v < priv->upper; v += every) {
+	for (v = floor(priv->lower); v < priv->upper; v += every) {
 		gdk_cairo_set_source_color(cr, &text_color);
 		x = get_x_offset(priv, &alloc, v);
 		cairo_move_to(cr, x + 0.5, alloc.height - 1.5);
@@ -451,8 +464,17 @@ ppg_ruler_draw_ruler (PpgRuler *ruler)
 		cairo_stroke(cr);
 
 		cairo_move_to(cr, x + 1.5, 1.5);
-		ppg_ruler_update_layout_text(ruler, layout, v);
-		pango_cairo_show_layout(cr, layout);
+		ppg_ruler_update_layout_text(ruler, layout,
+		                             CLAMP(v, priv->lower, priv->upper));
+
+		/*
+		 * If there is enough room to draw this layout before we get to the
+		 * next layout, then draw it.
+		 */
+		pango_layout_get_pixel_size(layout, &pw, &ph);
+		if ((x + pw) < get_x_offset(priv, &alloc, floor(v) + every)) {
+			pango_cairo_show_layout(cr, layout);
+		}
 	}
 
 	g_object_unref(layout);
