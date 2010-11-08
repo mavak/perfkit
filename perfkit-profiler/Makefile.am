@@ -1,4 +1,5 @@
 bin_PROGRAMS = perfkit-profiler
+noinst_LTLIBRARIES = libprofiler.la
 
 headerdir = $(prefix)/include/perfkit-1.0/perfkit-profiler
 header_DATA = $(INST_H_FILES)
@@ -26,8 +27,6 @@ WARNINGS =								\
 	-Wshadow
 
 AM_CFLAGS =								\
-	$(PERFKIT_DEBUG_CFLAGS)						\
-	$(PERFKIT_PROFILER_CFLAGS)					\
 	-DPRODUCT_NAME="\"Perfkit Profiler\""				\
 	-DGETTEXT_PACKAGE="\"Perfkit\""					\
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)s/locale"\"	\
@@ -36,6 +35,8 @@ AM_CFLAGS =								\
 	-I$(top_srcdir)/perfkit-profiler/				\
 	-I$(top_srcdir)/cut-n-paste/					\
 	-I$(top_srcdir)/uber/						\
+	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(PERFKIT_PROFILER_CFLAGS)					\
 	$(WARNINGS)							\
 	$(NULL)
 
@@ -93,10 +94,9 @@ NOINST_H_FILES =							\
 	ppg-window-ui.h							\
 	$(NULL)
 
-perfkit_profiler_SOURCES =						\
+libprofiler_la_SOURCES =						\
 	$(NOINST_H_FILES)						\
 	$(INST_H_FILES)							\
-	main.c								\
 	ppg-about-dialog.c						\
 	ppg-actions.c							\
 	ppg-color.c							\
@@ -136,19 +136,28 @@ perfkit_profiler_SOURCES =						\
 	ppg-window.c							\
 	$(NULL)
 
-perfkit_profiler_LDADD =						\
+libprofiler_la_LIBADD =							\
 	$(top_builddir)/perfkit/libperfkit-1.0.la			\
 	$(top_builddir)/uber/libuber.la					\
-	$(NULL);
+	$(NULL)
+
+perfkit_profiler_SOURCES = main.c
+
+perfkit_profiler_LDADD =						\
+	$(top_builddir)/perfkit/libperfkit-1.0.la			\
+	$(top_builddir)/perfkit-profiler/libprofiler.la \
+	$(NULL)
 
 run: perfkit-profiler
-	@PPG_DATA_DIR=$(top_builddir)/data \
-	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs \
-	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings \
-	libtool --mode=execute $(builddir)/perfkit-profiler ${PERFKIT_OPTIONS}
+	@PPG_DATA_DIR=$(top_builddir)/data					\
+	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs	\
+	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings			\
+	libtool --mode=execute $(builddir)/perfkit-profiler			\
+	$(PERFKIT_OPTIONS)
 
 debug: perfkit-profiler
-	@PPG_DATA_DIR=$(top_builddir)/data \
-	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs \
-	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings \
-	libtool --mode=execute gdb $(builddir)/perfkit-profiler
+	@PPG_DATA_DIR=$(top_builddir)/data					\
+	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs	\
+	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings			\
+	libtool --mode=execute gdb $(builddir)/perfkit-profiler			\
+	$(PERFKIT_OPTIONS)
