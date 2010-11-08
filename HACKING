@@ -14,10 +14,9 @@ Source Overview
   |
   +- perfkit-agent/
   |
-  |  The agent which runs on the target machine to manage perfkit plugins
+  |  The agent which runs on the target host to manage perfkit plugins
   |  and child processes.  The agent orchestrates *how* things happen on
-  |  the target (as opposted to *what*).  This could also be called the
-  |  Agent.
+  |  the target (as opposted to *what*).
   |
   +- perfkit-agent/encoders/
   |
@@ -46,6 +45,18 @@ Source Overview
   |
   |  The shared library provides proxy objects that represent the objects
   |  available on the connected agent.
+  |
+  +- perfkit-gui/
+  |
+  |  This directory contains a simple gui administration tool to control a
+  |  perfkit-agent. It allows the user to peer into the status and execute
+  |  various commands on the agent.
+  |
+  +- perfkit-profiler/
+  |
+  |  This directory contains the profiler GUI for Perfkit. It is written
+  |  using both the Gtk+ and Clutter libraries. The GUI talks to a
+  |  profiling agent via libperfkit.
   |
   +- tools/
   |
