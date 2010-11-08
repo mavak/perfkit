@@ -51,8 +51,6 @@ AM_CPPFLAGS =								\
 	$(PERFKIT_DEBUG_CFLAGS)						\
 	$(NULL)
 
-# AM_CPPFLAGS += -DDISABLE_TRACE
-
 INST_H_FILES =								\
 	pka-channel.h							\
 	pka-config.h							\
@@ -105,8 +103,7 @@ libperfkit_agent_la_SOURCES =						\
 
 libperfkit_agent_la_LIBADD = $(PERFKIT_AGENT_LIBS)
 libperfkit_agent_la_LDFLAGS =						\
-	-export-dynamic							\
-	-export-symbols-regex "^pka_.*"					\
+	--export-all-symbols						\
 	$(NULL)
 
 perfkit_agent_SOURCES = main.c

@@ -2,7 +2,6 @@ version.xml
 html
 xml
 tmpl
-perfkit.*
+perfkit-profiler.*
 *.stamp
 *.txt
-*.c

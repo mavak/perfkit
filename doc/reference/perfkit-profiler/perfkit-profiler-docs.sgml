@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<book id="index">
+  <bookinfo>
+    <title>perfkit-profiler Reference Manual</title>
+    <releaseinfo>
+      for perfkit-profiler [VERSION].
+      The latest version of this documentation can be found on-line at
+      <ulink role="online-location" url="http://[SERVER]/perfkit-profiler/index.html">http://[SERVER]/perfkit-profiler/</ulink>.
+    </releaseinfo>
+  </bookinfo>
+
+  <chapter>
+    <title>[Insert title here]</title>
+        <xi:include href="xml/ppg-spawn-process-dialog.xml"/>
+    <xi:include href="xml/ppg-prefs-dialog.xml"/>
+    <xi:include href="xml/ppg-visualizer.xml"/>
+    <xi:include href="xml/ppg-header.xml"/>
+    <xi:include href="xml/ppg-session.xml"/>
+    <xi:include href="xml/ppg-add-instrument-dialog.xml"/>
+    <xi:include href="xml/ppg-instrument.xml"/>
+    <xi:include href="xml/ppg-about-dialog.xml"/>
+    <xi:include href="xml/ppg-model.xml"/>
+    <xi:include href="xml/ppg-welcome-dialog.xml"/>
+    <xi:include href="xml/ppg-line-visualizer.xml"/>
+    <xi:include href="xml/ppg-edit-channel-task.xml"/>
+    <xi:include href="xml/ppg-settings-dialog.xml"/>
+    <xi:include href="xml/ppg-restart-task.xml"/>
+    <xi:include href="xml/ppg-cpu-instrument.xml"/>
+    <xi:include href="xml/ppg-process-menu.xml"/>
+    <xi:include href="xml/ppg-configure-instrument-dialog.xml"/>
+    <xi:include href="xml/ppg-menu-tool-item.xml"/>
+    <xi:include href="xml/ppg-row.xml"/>
+    <xi:include href="xml/ppg-window.xml"/>
+    <xi:include href="xml/ppg-timer-tool-item.xml"/>
+    <xi:include href="xml/ppg-ruler.xml"/>
+    <xi:include href="xml/ppg-memory-instrument.xml"/>
+    <xi:include href="xml/ppg-session-task.xml"/>
+    <xi:include href="xml/ppg-task.xml"/>
+    <xi:include href="xml/ppg-visualizer-menu.xml"/>
+    <xi:include href="xml/ppg-status-actor.xml"/>
+    <xi:include href="xml/ppg-util.xml"/>
+    <xi:include href="xml/ppg-version.xml"/>
+    <xi:include href="xml/ppg-private.xml"/>
+    <xi:include href="xml/ppg-sessions-store.xml"/>
+    <xi:include href="xml/ppg-log.xml"/>
+    <xi:include href="xml/ppg-runtime.xml"/>
+    <xi:include href="xml/ppg-paths.xml"/>
+    <xi:include href="xml/ppg-prefs.xml"/>
+    <xi:include href="xml/ppg-actions.xml"/>
+    <xi:include href="xml/ppg-color.xml"/>
+    <xi:include href="xml/ppg-monitor.xml"/>
+    <xi:include href="xml/ppg-instruments.xml"/>
+
+  </chapter>
+  <chapter id="object-tree">
+    <title>Object Hierarchy</title>
+     <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+</book>

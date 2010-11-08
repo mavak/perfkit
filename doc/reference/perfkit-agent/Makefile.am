@@ -50,6 +50,7 @@ CFILE_GLOB=$(top_srcdir)/perfkit-agent/pka-*.c
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
 IGNORE_HFILES=							\
 	perfkit-agent.h						\
+	pka-listener-dbus.h					\
 	$(NULL)
 
 EXTRA_HFILES=

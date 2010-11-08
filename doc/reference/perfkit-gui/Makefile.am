@@ -75,6 +75,7 @@ expand_content_files=
 INCLUDES=-I$(top_srcdir) $(PERFKIT_GUI_CFLAGS)
 GTKDOC_LIBS=							\
 	$(top_builddir)/perfkit-gui/libperfkit-gui.la		\
+	$(top_builddir)/perfkit/libperfkit-1.0.la		\
 	$(PERFKIT_GUI_LIBS)					\
 	$(NULL)
 
