@@ -197,3 +197,26 @@ pka_context_error_quark (void)
 {
 	return g_quark_from_static_string("pka-context-error-quark");
 }
+
+/**
+ * pka_context_get_type:
+ *
+ * Retrieves the #GType for the #PkaContext.
+ *
+ * Returns: A #GType.
+ */
+GType
+pka_context_get_type (void)
+{
+	static gsize initialized = FALSE;
+	static GType type_id = 0;
+
+	if (g_once_init_enter(&initialized)) {
+		type_id = g_boxed_type_register_static("PkaContext",
+		                                       (GBoxedCopyFunc)pka_context_ref,
+		                                       (GBoxedFreeFunc)pka_context_unref);
+		g_once_init_leave(&initialized, TRUE);
+	}
+
+	return type_id;
+}
