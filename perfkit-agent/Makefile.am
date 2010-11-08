@@ -67,6 +67,7 @@ INST_H_FILES =								\
 	pka-source-simple.h						\
 	pka-spawn-info.h						\
 	pka-subscription.h						\
+	pka-util.h							\
 	pka-version.h							\
 	perfkit-agent.h							\
 	$(NULL)

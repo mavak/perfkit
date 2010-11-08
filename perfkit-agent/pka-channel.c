@@ -32,6 +32,7 @@
 #include "pka-channel.h"
 #include "pka-log.h"
 #include "pka-source.h"
+#include "pka-util.h"
 
 #define ENSURE_STATE(_c, _s, _l)                                            \
     G_STMT_START {                                                          \
@@ -749,7 +750,7 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 		/*
 		 * Determine the working directory.
 		 */
-		if (!spawn_info.working_dir || strlen(spawn_info.working_dir) == 0) {
+		if (pka_str_empty0(spawn_info.working_dir)) {
 			spawn_info.working_dir = g_strdup(g_get_tmp_dir());
 		}
 
