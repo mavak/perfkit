@@ -442,6 +442,17 @@ ppg_ruler_finalize (GObject *object)
 	PpgRulerPrivate *priv = PPG_RULER(object)->priv;
 
 	pango_font_description_free(priv->font_desc);
+	priv->font_desc = NULL;
+
+	if (priv->ruler) {
+		g_object_unref(priv->ruler);
+		priv->ruler = NULL;
+	}
+
+	if (priv->arrow) {
+		g_object_unref(priv->arrow);
+		priv->arrow = NULL;
+	}
 
 	G_OBJECT_CLASS(ppg_ruler_parent_class)->finalize(object);
 }
