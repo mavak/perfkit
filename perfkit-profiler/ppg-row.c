@@ -582,7 +582,11 @@ ppg_row_parent_set (PpgRow       *row,
 	g_return_if_fail(PPG_IS_ROW(row));
 
 	priv = row->priv;
+
 	parent = clutter_actor_get_parent(CLUTTER_ACTOR(row));
+	if (!parent) {
+		return;
+	}
 
 	g_object_get(parent,
 	             "width", &width,
