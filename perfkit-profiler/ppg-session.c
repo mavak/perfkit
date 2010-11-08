@@ -1078,8 +1078,24 @@ ppg_session_class_init (PpgSessionClass *klass)
 static void
 ppg_session_init (PpgSession *session)
 {
+	PpgSessionPrivate *priv;
+	gchar *env[3] = { 0 };
+
 	ENTRY;
-	session->priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
-	                                            PpgSessionPrivate);
+
+	priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION, PpgSessionPrivate);
+	session->priv = priv;
+
+	/*
+	 * By default, include DISPLAY and DBUS_SESSION_BUS_ADDRESS in environment
+	 * variables. This doesn't propagate to the agent, which is what we want.
+	 * It will be sent when the user sets their target.
+	 */
+	env[0] = g_strdup_printf("DISPLAY=%s", g_getenv("DISPLAY"));
+	env[1] = g_strdup_printf("DBUS_SESSION_BUS_ADDRESS=%s", g_getenv("DBUS_SESSION_BUS_ADDRESS"));
+	ppg_session_set_env(session, env);
+	g_free(env[0]);
+	g_free(env[1]);
+
 	EXIT;
 }
