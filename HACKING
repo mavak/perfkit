@@ -2,6 +2,12 @@
                               Hacking Perfkit
 ----------------------------------------------------------------------------
 
+TL;DR Overview
+==============
+
+  cd perfkit-agent && make run
+  cd perfkit-profiler && make run
+
 Source Overview
 ===============
 
@@ -62,7 +68,7 @@ Source Overview
   |
   |  The tools directory contains various tools to help manage or interact
   |  with a target running perfkit.  The perfkit-shell provides an
-  |  interactive, readline-based, shell for controlling a agent.  A
+  |  interactive, readline-based, shell for controlling an agent.  A
   |  support script is also provided that will eventually dump a significant
   |  amount of data on the target machine for someone to debug any problems
   |  that are occuring.
@@ -174,7 +180,7 @@ libperfkit-1.0
 perfkit-shell
 =============
 
-  Perfkit-shell is an interactive, readline-based shell.  It is pretty strait
+  Perfkit-shell is an interactive, readline-based shell.  It is pretty straight
   forward and uses EggLine to provide the shell interaction.  EmtFmt is used
   to format console based text where appropriate so that it is easy to read.
 
@@ -190,43 +196,4 @@ perfkit-support
   Ideally, it will include any necessary core-dumps, information about
   running processes, their children, loaded libraries, logs, and other
   troubleshooting information.
-
-----------------------------------------------------------------------------
-                                 Roadmap
-----------------------------------------------------------------------------
-
-Milestone I.
-============
-
- * Spawning a new process with arguments. [DONE]
- * Ability for data sources to alter environment variables prior to process
-   spawning.
- * Data sources for:
-   - System Memory [DONE]
-   - System CPU
-   - GLib Memory Allocations
-   - GLib signal emissions
- * Ability to set sampling frequencies. This is done per source.
- * Console shell to manipulate commands and monitor on the fly.
- * Start on user interface using Gtk with plugins using Ethos.
- * Initial libperfkit API [MOSTLY DONE].
-
-Milestone II.
-=============
-
- * Export input/output stream for spawned processes over DBUS.
- * Data sources for:
-   - Power consumption
-   - Network traffic
-   - Gtk/Gdk events
- * API Review.
- * Security Review.
- * Python bindings.
- * Lots more data sources.
-
-Milestone III.
-==============
-
- * Start stablizing API.
- * Start implementing security.
 
