@@ -128,10 +128,8 @@ ppg_welcome_dialog_create_button (PpgWelcomeDialog *dialog,
 static void
 ppg_welcome_dialog_tutorials_clicked (GtkWidget *button)
 {
-	GdkScreen *screen;
-
-	screen = gtk_widget_get_screen(button);
-	gtk_show_uri(screen, "http://perfkit.org/tutorials",
+	gtk_show_uri(gtk_widget_get_screen(button),
+	             "http://wiki.perfkit.org/index.php?title=Video_Tutorials",
 	             gtk_get_current_event_time(), NULL);
 }
 
