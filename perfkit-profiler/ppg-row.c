@@ -68,6 +68,16 @@ enum
 	PROP_WINDOW,
 };
 
+/**
+ * ppg_row_paint_header:
+ * @row: (in): A #PpgRow.
+ *
+ * Paints the header column background. This draws a vertical gradient using
+ * the current #GtkStyle.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_paint_header (PpgRow *row)
 {
@@ -109,8 +119,18 @@ ppg_row_paint_header (PpgRow *row)
 	cairo_destroy(cr);
 }
 
+/**
+ * ppg_row_paint:
+ * @row: (in): A #PpgRow.
+ *
+ * GSourceFunc style callback to paint the row and then complete the
+ * idle callback.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static gboolean
-ppg_row_paint (PpgRow *row)
+ppg_row_paint_timeout (PpgRow *row)
 {
 	PpgRowPrivate *priv;
 
@@ -124,6 +144,15 @@ ppg_row_paint (PpgRow *row)
 	return FALSE;
 }
 
+/**
+ * ppg_row_queue_paint:
+ * @row: (in): A #PpgRow.
+ *
+ * Queues a paint operation on the row.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_queue_paint (PpgRow *row)
 {
@@ -139,6 +168,15 @@ ppg_row_queue_paint (PpgRow *row)
 	}
 }
 
+/**
+ * ppg_row_set_style:
+ * @row: (in): A #PpgRow.
+ *
+ * Set the #GtkStyle for the row. The rows colors are taken from the style.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_set_style (PpgRow   *row,
                    GtkStyle *style)
@@ -151,7 +189,7 @@ ppg_row_set_style (PpgRow   *row,
 
 	priv = row->priv;
 
-	row->priv->style = style;
+	priv->style = style;
 	GDK_TO_CLUTTER(style->bg[priv->state], color);
 	GDK_TO_CLUTTER(style->text[priv->state], text);
 	g_object_set(priv->data_bg, "color", &color, NULL);
@@ -161,8 +199,17 @@ ppg_row_set_style (PpgRow   *row,
 	g_object_notify(G_OBJECT(row), "style");
 }
 
+/**
+ * ppg_row_notify_allocation_timeout:
+ * @row: (in): A #PpgRow.
+ *
+ * A GSourceFunc that Updates the allocations of the actors.
+ *
+ * Returns: FALSE always.
+ * Side effects: None.
+ */
 static gboolean
-ppg_row_update_allocation (PpgRow *row)
+ppg_row_notify_allocation_timeout (PpgRow *row)
 {
 	PpgRowPrivate *priv;
 	gfloat width;
@@ -181,16 +228,35 @@ ppg_row_update_allocation (PpgRow *row)
 	return FALSE;
 }
 
+/**
+ * ppg_row_notify_allocation:
+ * @row: (in): A #PpgRow.
+ *
+ * Handle the "notify::allocation" signal of the @row. Updating the children
+ * actors will happen in an idle timeout.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_notify_allocation (PpgRow     *row,
                            GParamSpec *pspec,
                            gpointer    user_data)
 {
-	g_timeout_add(0, (GSourceFunc)ppg_row_update_allocation, row);
+	g_timeout_add(0, (GSourceFunc)ppg_row_notify_allocation_timeout, row);
 }
 
+/**
+ * ppg_row_resize_timeout:
+ * @row: (in): A #PpgRow.
+ *
+ * A GSourceFunc to handle resizing of the rows_box.
+ *
+ * Returns: FALSE always.
+ * Side effects: None.
+ */
 static gboolean
-ppg_row_do_resize (PpgRow *row)
+ppg_row_resize_timeout (PpgRow *row)
 {
 	PpgRowPrivate *priv;
 	gfloat height;
@@ -223,15 +289,36 @@ ppg_row_do_resize (PpgRow *row)
 	return FALSE;
 }
 
+/**
+ * ppg_row_notify_allocation:
+ * @row: (in): A #PpgRow.
+ *
+ * Handles the "notify::allocation" of the visualizer rows box. The row
+ * and its actors are adjusted.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_rows_notify_allocation (ClutterActor *actor,
                                 GParamSpec   *pspec,
                                 PpgRow       *row)
 {
-	g_timeout_add(0, (GSourceFunc)ppg_row_do_resize, row);
+	g_timeout_add(0, (GSourceFunc)ppg_row_resize_timeout, row);
 	ppg_row_queue_paint(row);
 }
 
+/**
+ * ppg_row_set_selected:
+ * @row: (in): A #PpgRow.
+ * @selected: (in): If the row is selected.
+ *
+ * Determines if the row is selected. The state of the row is updated
+ * and its styling updated.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_set_selected (PpgRow   *row,
                       gboolean  selected)
@@ -250,6 +337,17 @@ ppg_row_set_selected (PpgRow   *row,
 	g_object_notify(G_OBJECT(row), "selected");
 }
 
+/**
+ * ppg_row_set_title:
+ * @row: (in): A #PpgRow.
+ * @title: (in): The new title.
+ *
+ * Sets the title of the row. The ClutterText actor is updated to
+ * contain @title.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_row_set_title (PpgRow      *row,
                    const gchar *title)
@@ -265,13 +363,23 @@ ppg_row_set_title (PpgRow      *row,
 	g_object_notify(G_OBJECT(row), "title");
 }
 
+/**
+ * ppg_row_show_tooltip:
+ * @row: (in): A #PpgRow.
+ *
+ * Updates the status-label in the window to contain the hovered
+ * visualizer as the tooltip text.
+ *
+ * Returns: %FALSE always.
+ * Side effects: None.
+ */
 static gboolean
-ppg_row_show_tooltip (PpgRow *row,
+ppg_row_show_tooltip (PpgRow       *row,
                       ClutterEvent *event,
                       ClutterActor *actor)
 {
 	PpgRowPrivate *priv;
-	PpgVisualizer *viz;
+	PpgVisualizer *visualizer;
 	GList *list;
 	GList *iter;
 	gchar *title;
@@ -282,11 +390,9 @@ ppg_row_show_tooltip (PpgRow *row,
 
 	list = ppg_instrument_get_visualizers(priv->instrument);
 	for (iter = list; iter; iter = iter->next) {
-		viz = iter->data;
-		g_assert(PPG_IS_VISUALIZER(viz));
-
-		if (actor == ppg_visualizer_get_actor(viz)) {
-			g_object_get(viz, "title", &title, NULL);
+		visualizer = iter->data;
+		if (actor == ppg_visualizer_get_actor(visualizer)) {
+			g_object_get(visualizer, "title", &title, NULL);
 			g_object_set(priv->window, "status-label", title, NULL);
 			g_free(title);
 		}
@@ -295,22 +401,37 @@ ppg_row_show_tooltip (PpgRow *row,
 	return FALSE;
 }
 
+/**
+ * ppg_row_hide_tooltip:
+ * @row: (in): A #PpgRow.
+ *
+ * Hides the visualizer tooltip by setting it to empty string.
+ *
+ * Returns: %FALSE always.
+ * Side effects: None.
+ */
 static gboolean
-ppg_row_hide_tooltip (PpgRow *row,
+ppg_row_hide_tooltip (PpgRow       *row,
                       ClutterEvent *event,
                       ClutterActor *actor)
 {
-	PpgRowPrivate *priv;
-
 	g_return_val_if_fail(PPG_IS_ROW(row), FALSE);
-
-	priv = row->priv;
-	g_object_set(priv->window, "status-label", "", NULL);
+	g_object_set(row->priv->window, "status-label", "", NULL);
 	return FALSE;
 }
 
+/**
+ * ppg_row_visualizer_added:
+ * @row: (in): A #PpgRow.
+ *
+ * Handle the "visualizer-added" signal. The visualizer is added to the
+ * rows box.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_row_visualizer_added (PpgRow *row,
+ppg_row_visualizer_added (PpgRow        *row,
                           PpgVisualizer *visualizer,
                           PpgInstrument *instrument)
 {
@@ -341,8 +462,18 @@ ppg_row_visualizer_added (PpgRow *row,
 	                         row);
 }
 
+/**
+ * ppg_row_visualizer_removed:
+ * @row: (in): A #PpgRow.
+ *
+ * Handles the "visualizer-removed" signal. The visualizer is removed
+ * from the rows box.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_row_visualizer_removed (PpgRow *row,
+ppg_row_visualizer_removed (PpgRow        *row,
                             PpgVisualizer *visualizer,
                             PpgInstrument *instrument)
 {
@@ -360,6 +491,15 @@ ppg_row_visualizer_removed (PpgRow *row,
 	clutter_container_remove(CLUTTER_CONTAINER(priv->rows_box), actor, NULL);
 }
 
+/**
+ * ppg_row_get_instrument:
+ * @row: (in): A #PpgRow.
+ *
+ * Retrieves the #PpgInstrument for the row.
+ *
+ * Returns: A #PpgInstrument.
+ * Side effects: None.
+ */
 PpgInstrument*
 ppg_row_get_instrument (PpgRow *row)
 {
@@ -367,8 +507,18 @@ ppg_row_get_instrument (PpgRow *row)
 	return row->priv->instrument;
 }
 
+/**
+ * ppg_row_set_instrument:
+ * @row: (in): A #PpgRow.
+ *
+ * Sets the instrument for the row. This may only be called once during
+ * object construction.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_row_set_instrument (PpgRow *row,
+ppg_row_set_instrument (PpgRow        *row,
                         PpgInstrument *instrument)
 {
 	PpgRowPrivate *priv;
@@ -409,10 +559,21 @@ ppg_row_set_instrument (PpgRow *row,
 	g_object_notify(G_OBJECT(row), "instrument");
 }
 
+/**
+ * ppg_row_parent_set:
+ * @row: (in): A #PpgRow.
+ * @old_parent: (in): The old parent #ClutterActor or %NULL.
+ * @user_data: (in): User data for callback.
+ *
+ * Called when the parent is set on the row. The size of the row is adjusted.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_row_parent_set (PpgRow *row,
+ppg_row_parent_set (PpgRow       *row,
                     ClutterActor *old_parent,
-                    gpointer user_data)
+                    gpointer      user_data)
 {
 	PpgRowPrivate *priv;
 	ClutterActor *parent;
@@ -432,8 +593,18 @@ ppg_row_parent_set (PpgRow *row,
 	             NULL);
 }
 
+/**
+ * ppg_row_set_window:
+ * @row: (in): A #PpgRow.
+ * @window: (in): A #PpgWindow.
+ *
+ * Sets the window that owns the row.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
-ppg_row_set_window (PpgRow *row,
+ppg_row_set_window (PpgRow    *row,
                     PpgWindow *window)
 {
 	PpgRowPrivate *priv;
