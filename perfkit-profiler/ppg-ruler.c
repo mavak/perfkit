@@ -66,6 +66,7 @@ ppg_ruler_update_layout_text (PpgRuler *ruler,
 	                         (gint)(((gint)t % 3600) / 60.0),
 	                         (gint)((gint)t % 60));
 	pango_layout_set_text(layout, markup, -1);
+	g_free(markup);
 }
 
 void
