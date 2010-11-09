@@ -25,15 +25,19 @@
 #endif
 #define G_LOG_DOMAIN "Channel"
 
+#include <fcntl.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gi18n.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "pka-channel.h"
 #include "pka-log.h"
 #include "pka-source.h"
 #include "pka-util.h"
 
+#define IO_SUCCESS(_f) (G_IO_STATUS_NORMAL == (_f))
 #define ENSURE_STATE(_c, _s, _l)                                            \
     G_STMT_START {                                                          \
     	if ((_c)->priv->state != (PKA_CHANNEL_##_s)) {                      \
@@ -144,6 +148,9 @@ struct _PkaChannelPrivate
 	gboolean      kill_pid;    /* Should inferior be killed upon stop */
 	gint          exit_status; /* The inferiors exit status */
 	GTimeVal      created_at;  /* When the channel was created */
+	GIOChannel   *stdin;
+	GIOChannel   *stdout;
+	GIOChannel   *stderr;
 };
 
 enum
@@ -669,6 +676,97 @@ pka_channel_destroy_spawn_info (PkaChannel   *channel,    /* IN */
 }
 
 /**
+ * pka_channel_stdout_cb:
+ * @channel: (in): A #PkaChannel.
+ *
+ * Handle data available to read on the "stdout" #GIOChannel @io.
+ *
+ * NOTE:
+ *   Data is currently read and immediately discarded until we have
+ *   determined how we want to pass this on to clients.
+ *
+ * Returns: %FALSE if the source should be removed.
+ * Side effects: None.
+ */
+static gboolean
+pka_channel_stdio_cb (GIOChannel   *io,
+                      GIOCondition  cond,
+                      gboolean      is_stderr,
+                      gpointer      user_data)
+{
+	PkaChannel *channel = (PkaChannel *)user_data;
+	PkaChannelPrivate *priv;
+	GError *error = NULL;
+	gchar buf[1024];
+	gsize n_bytes;
+
+	ENTRY;
+
+	g_return_val_if_fail(PKA_IS_CHANNEL(channel), FALSE);
+
+	priv = channel->priv;
+
+	while (IO_SUCCESS(g_io_channel_read_chars(io, buf, sizeof buf, &n_bytes, &error))) {
+		/*
+		 * FIXME: We should be sending the data to any subscribing client
+		 *        here instead of immediately discarding it.
+		 */
+	}
+
+	if (error) {
+		INFO(Channel, "Error reading %s from inferior: %s",
+		     is_stderr ? "stderr" : "stdout",
+		     error->message);
+		g_error_free(error);
+		error = NULL;
+	}
+
+	RETURN(priv->state != PKA_CHANNEL_STOPPED);
+}
+
+/**
+ * pka_channel_stdout_cb:
+ * @channel: (in): A #PkaChannel.
+ *
+ * Handle data available to read on the "stdout" #GIOChannel @io.
+ *
+ * NOTE:
+ *   Data is currently read and immediately discarded until we have
+ *   determined how we want to pass this on to clients.
+ *
+ * Returns: %FALSE if the source should be removed.
+ * Side effects: None.
+ */
+static gboolean
+pka_channel_stdout_cb (GIOChannel   *io,
+                       GIOCondition  cond,
+                       gpointer      user_data)
+{
+	return pka_channel_stdio_cb (io, cond, FALSE, user_data);
+}
+
+/**
+ * pka_channel_stderr_cb:
+ * @channel: (in): A #PkaChannel.
+ *
+ * Handle data available to read on the "stderr" #GIOChannel @io.
+ *
+ * NOTE:
+ *   Data is currently read and immediately discarded until we have
+ *   determined how we want to pass this on to clients.
+ *
+ * Returns: %FALSE if the source should be removed.
+ * Side effects: None.
+ */
+static gboolean
+pka_channel_stderr_cb (GIOChannel   *io,
+                       GIOCondition  cond,
+                       gpointer      user_data)
+{
+	return pka_channel_stdio_cb (io, cond, TRUE, user_data);
+}
+
+/**
  * pka_channel_start:
  * @channel: A #PkaChannel
  * @error: A location for a #GError or %NULL
@@ -690,6 +788,9 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 {
 	PkaChannelPrivate *priv;
 	PkaSpawnInfo spawn_info = { 0 };
+	gint standard_input;
+	gint standard_output;
+	gint standard_error;
 	gboolean ret = FALSE;
 	GError *local_error = NULL;
 	gchar **argv = NULL;
@@ -775,17 +876,17 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 		/*
 		 * Attempt to spawn the process.
 		 */
-		if (!g_spawn_async(spawn_info.working_dir,
-		                   argv,
-		                   spawn_info.env,
-		                   G_SPAWN_SEARCH_PATH |
-		                   G_SPAWN_STDERR_TO_DEV_NULL |
-		                   G_SPAWN_STDOUT_TO_DEV_NULL |
-		                   G_SPAWN_DO_NOT_REAP_CHILD,
-		                   NULL,
-		                   NULL,
-		                   &priv->pid,
-		                   &local_error))
+		if (!g_spawn_async_with_pipes(spawn_info.working_dir,
+		                              argv,
+		                              spawn_info.env,
+		                              G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
+		                              NULL,
+		                              NULL,
+		                              &priv->pid,
+		                              &standard_input,
+		                              &standard_output,
+		                              &standard_error,
+		                              &local_error))
 		{
 			priv->state = PKA_CHANNEL_FAILED;
 			WARNING(Channel, "Error starting channel %d: %s",
@@ -793,6 +894,24 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 			g_propagate_error(error, local_error);
 			GOTO(unlock);
 		}
+
+		/*
+		 * Make our file descriptors non-blocking.
+		 */
+		fcntl(standard_input, F_SETFL, O_NONBLOCK);
+		fcntl(standard_output, F_SETFL, O_NONBLOCK);
+		fcntl(standard_error, F_SETFL, O_NONBLOCK);
+
+		/*
+		 * Setup GIOChannel's for the particular FDs.
+		 */
+		priv->stdin = g_io_channel_unix_new(standard_input);
+		priv->stdout = g_io_channel_unix_new(standard_output);
+		priv->stderr = g_io_channel_unix_new(standard_error);
+		g_io_add_watch(priv->stdout, G_IO_IN | G_IO_HUP,
+		               pka_channel_stdout_cb, channel);
+		g_io_add_watch(priv->stderr, G_IO_IN | G_IO_HUP,
+		               pka_channel_stderr_cb, channel);
 
 		/*
 		 * Register callback upon child exit.
@@ -877,6 +996,17 @@ pka_channel_stop (PkaChannel  *channel, /* IN */
 			     priv->id, (gint)priv->pid, pka_context_get_id(context));
 			kill(priv->pid, SIGKILL);
 		}
+
+		/*
+		 * Close the file descriptors.
+		 */
+		g_io_channel_unref(priv->stdin);
+		g_io_channel_unref(priv->stdout);
+		g_io_channel_unref(priv->stderr);
+		priv->stdin = NULL;
+		priv->stdout = NULL;
+		priv->stderr = NULL;
+
 		BREAK;
 	CASE(PKA_CHANNEL_READY);
 		ret = FALSE;
