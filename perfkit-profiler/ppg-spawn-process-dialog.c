@@ -24,6 +24,14 @@
 #include "ppg-spawn-process-dialog.h"
 #include "ppg-task.h"
 
+/*
+ * The following value is stored as a gboolean in the gpointer.
+ * A value of 0 means we should copy the environment and a value
+ * of 1 means we should not (disabled). This makes the default
+ * to copy, which is what we want.
+ */
+#define COPY_QUARK (g_quark_from_static_string("copy-env-quark"))
+
 G_DEFINE_TYPE(PpgSpawnProcessDialog, ppg_spawn_process_dialog, GTK_TYPE_DIALOG)
 
 struct _PpgSpawnProcessDialogPrivate
@@ -35,6 +43,7 @@ struct _PpgSpawnProcessDialogPrivate
 	GtkWidget    *dir_button;
 	GtkWidget    *env_treeview;
 	GtkWidget    *ok_button;
+	GtkWidget    *copy_env_button;
 	GtkListStore *env_model;
 };
 
@@ -49,6 +58,8 @@ static gchar **
 ppg_spawn_process_dialog_build_env (PpgSpawnProcessDialog *dialog)
 {
 	PpgSpawnProcessDialogPrivate *priv;
+	GHashTable *env;
+	GHashTableIter env_iter;
 	GtkTreeModel *model;
 	GtkTreeIter iter;
 	GPtrArray *ar;
@@ -57,37 +68,65 @@ ppg_spawn_process_dialog_build_env (PpgSpawnProcessDialog *dialog)
 	gchar *key;
 	gchar *value;
 	gchar *item;
+	gchar **names;
+	gint i;
 
 	g_return_val_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog), NULL);
 
 	priv = dialog->priv;
 
 	model = GTK_TREE_MODEL(priv->env_model);
-	ar = g_ptr_array_new();
+	env = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
+	/*
+	 * Copy the current environment if needed.
+	 */
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(priv->copy_env_button))) {
+		names = g_listenv();
+		for (i = 0; names[i]; i++) {
+			g_hash_table_insert(env,
+			                    g_strdup(names[i]),
+			                    g_strdup(g_getenv(names[i])));
+		}
+		g_strfreev(names);
+	}
+
+	/*
+	 * Add overrides in the treeview.
+	 */
 	if (gtk_tree_model_get_iter_first(model, &iter)) {
 		do {
 			gtk_tree_model_get(model, &iter, 2, &is_dummy, -1);
 			if (is_dummy) {
 				break;
 			}
-
 			gtk_tree_model_get(model, &iter,
 			                   0, &key,
 			                   1, &value,
 			                   -1);
-
-			item = g_strdup_printf("%s=%s", key, value);
-			g_ptr_array_add(ar, item);
-
-			g_free(key);
-			g_free(value);
+			g_hash_table_insert(env, key, value);
 		} while (gtk_tree_model_iter_next(model, &iter));
 	}
 
+	/*
+	 * Convert to a GStrv of KEY=VALUE strings.
+	 */
+	ar = g_ptr_array_new();
+	g_hash_table_iter_init(&env_iter, env);
+	while (g_hash_table_iter_next(&env_iter, (gpointer *)&key,
+	                              (gpointer *)&value)) {
+		item = g_strdup_printf("%s=%s", key, value);
+		g_ptr_array_add(ar, item);
+	}
 	g_ptr_array_add(ar, NULL);
+
+	/*
+	 * Free the array after stealing its data.
+	 */
 	ret = (gchar **)ar->pdata;
 	g_ptr_array_free(ar, FALSE);
+
+	g_hash_table_unref(env);
 
 	return ret;
 }
@@ -270,17 +309,45 @@ static void
 ppg_spawn_process_dialog_load_env (PpgSpawnProcessDialog *dialog,
                                    gchar **env)
 {
+	PpgSpawnProcessDialogPrivate *priv;
+	gboolean do_copy;
 	gchar **kv;
 	gint len;
 	gint i;
+
+	g_return_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog));
+
+	priv = dialog->priv;
+
+	do_copy = !GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(priv->session),
+	                           COPY_QUARK));
 
 	for (i = 0; env[i]; i++) {
 		kv = g_strsplit(env[i], "=", 2);
 		len = g_strv_length(kv);
 
+		if (!len) {
+			g_strfreev(kv);
+			continue;
+		}
+
+		/*
+		 * We can ignore this item if the item if we are copying from
+		 * the current env and it matches.
+		 */
+		if (do_copy) {
+			if (g_getenv(kv[0])) {
+				/*
+				 * The strcmp is safe because kv[1] is at least NULL.
+				 */
+				if (!g_strcmp0(kv[1], g_getenv(kv[0]))) {
+					g_strfreev(kv);
+					continue;
+				}
+			}
+		}
+
 		switch (len) {
-		case 0:
-			break;
 		case 1:
 			ppg_spawn_process_dialog_add_env(dialog, kv[0], "");
 			break;
@@ -290,7 +357,6 @@ ppg_spawn_process_dialog_load_env (PpgSpawnProcessDialog *dialog,
 		default:
 			g_assert_not_reached();
 		}
-
 		g_strfreev(kv);
 	}
 }
@@ -304,6 +370,7 @@ ppg_spawn_process_dialog_set_session (PpgSpawnProcessDialog *dialog,
 	gchar *args_str;
 	gchar *target;
 	gchar **env;
+	gboolean active;
 
 	g_return_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog));
 	g_return_if_fail(PPG_IS_SESSION(session));
@@ -333,6 +400,11 @@ ppg_spawn_process_dialog_set_session (PpgSpawnProcessDialog *dialog,
 		ppg_spawn_process_dialog_load_env(dialog, env);
 		g_strfreev(env);
 	}
+
+	active = !GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(priv->session),
+	                          COPY_QUARK));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(priv->copy_env_button),
+	                             active);
 }
 
 static PpgTask*
@@ -347,6 +419,7 @@ ppg_spawn_process_dialog_get_task (PpgSpawnProcessDialog *dialog)
 	gint argc = 0;
 	gboolean empty;
 	PpgTask *task;
+	gboolean do_copy;
 
 	g_return_val_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog), NULL);
 
@@ -370,9 +443,9 @@ ppg_spawn_process_dialog_get_task (PpgSpawnProcessDialog *dialog)
 	                    "env", env,
 	                    NULL);
 
-	/*
-	 * FIXME: Environment variables.
-	 */
+	do_copy = !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(priv->copy_env_button));
+	g_object_set_qdata(G_OBJECT(priv->session), COPY_QUARK,
+	                   GINT_TO_POINTER(do_copy));
 
 	g_strfreev(env);
 	g_strfreev(argv);
@@ -577,6 +650,7 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	GtkCellRenderer *cell;
 	GtkWidget *content_area;
 	GtkWidget *vbox;
+	GtkWidget *vbox2;
 	GtkWidget *b;
 	GtkWidget *l;
 	GtkWidget *table;
@@ -778,13 +852,19 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	                                  "top-attach", 5,
 	                                  NULL);
 
+	vbox2 = g_object_new(GTK_TYPE_VBOX,
+	                     "spacing", 6,
+	                     "visible", TRUE,
+	                     NULL);
+	gtk_container_add(GTK_CONTAINER(align), vbox2);
+
 	scroller = g_object_new(GTK_TYPE_SCROLLED_WINDOW,
 	                        "hscrollbar-policy", GTK_POLICY_NEVER,
 	                        "vscrollbar-policy", GTK_POLICY_AUTOMATIC,
 	                        "shadow-type", GTK_SHADOW_IN,
 	                        "visible", TRUE,
 	                        NULL);
-	gtk_container_add(GTK_CONTAINER(align), scroller);
+	gtk_container_add(GTK_CONTAINER(vbox2), scroller);
 
 	priv->env_model = gtk_list_store_new(3,
 	                                     G_TYPE_STRING,
@@ -830,6 +910,16 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	g_signal_connect(cell, "edited",
 	                 G_CALLBACK(ppg_spawn_process_dialog_value_edited),
 	                 dialog);
+
+	priv->copy_env_button = g_object_new(GTK_TYPE_CHECK_BUTTON,
+	                                     "active", TRUE,
+	                                     "label", _("Copy current environment"),
+	                                     "visible", TRUE,
+	                                     NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(vbox2),
+	                                  priv->copy_env_button,
+	                                  "expand", FALSE,
+	                                  NULL);
 
 	gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CANCEL,
 	                      GTK_RESPONSE_CANCEL);
