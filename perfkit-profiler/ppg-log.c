@@ -170,7 +170,7 @@ ppg_log_init (gboolean     stdout_,  /* IN */
 			g_ptr_array_add(channels, channel);
 		}
 		if (stdout_) {
-			channel = g_io_channel_unix_new(0);
+			channel = g_io_channel_unix_new(STDOUT_FILENO);
 			g_ptr_array_add(channels, channel);
 		}
 
