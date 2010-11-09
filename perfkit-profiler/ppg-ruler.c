@@ -426,7 +426,7 @@ ppg_ruler_draw_ruler (PpgRuler *ruler)
 
 	layout = pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, priv->font_desc);
-	pango_layout_set_markup(layout, "00:00:00", -1);
+	pango_layout_set_markup(layout, "00:00:00.000", -1);
 	pango_layout_get_pixel_size(layout, &text_width, &text_height);
 	text_width += 5;
 
