@@ -1280,6 +1280,14 @@ pka_channel_finalize (GObject *object)
 	g_ptr_array_foreach(priv->sources, (GFunc)g_object_unref, NULL);
 	g_ptr_array_free(priv->sources, TRUE);
 	g_mutex_free(priv->mutex);
+
+	g_io_channel_shutdown(priv->stdin, FALSE, NULL);
+	g_io_channel_shutdown(priv->stdout, FALSE, NULL);
+	g_io_channel_shutdown(priv->stderr, FALSE, NULL);
+	g_io_channel_unref(priv->stdin);
+	g_io_channel_unref(priv->stdout);
+	g_io_channel_unref(priv->stderr);
+
 	G_OBJECT_CLASS(pka_channel_parent_class)->finalize(object);
 
 	EXIT;
