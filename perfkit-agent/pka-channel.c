@@ -20,9 +20,7 @@
 #include "config.h"
 #endif
 
-#ifdef G_LOG_DOMAIN
 #undef G_LOG_DOMAIN
-#endif
 #define G_LOG_DOMAIN "Channel"
 
 #include <fcntl.h>
@@ -742,7 +740,8 @@ pka_channel_stdout_cb (GIOChannel   *io,
                        GIOCondition  cond,
                        gpointer      user_data)
 {
-	return pka_channel_stdio_cb (io, cond, FALSE, user_data);
+	ENTRY;
+	RETURN(pka_channel_stdio_cb (io, cond, FALSE, user_data));
 }
 
 /**
@@ -763,7 +762,8 @@ pka_channel_stderr_cb (GIOChannel   *io,
                        GIOCondition  cond,
                        gpointer      user_data)
 {
-	return pka_channel_stdio_cb (io, cond, TRUE, user_data);
+	ENTRY;
+	RETURN(pka_channel_stdio_cb (io, cond, TRUE, user_data));
 }
 
 /**
@@ -798,9 +798,10 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 	gchar *env_str;
 	gint len, i;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_CHANNEL(channel), FALSE);
 
-	ENTRY;
 	priv = channel->priv;
 	g_mutex_lock(priv->mutex);
 	/*
@@ -968,9 +969,10 @@ pka_channel_stop (PkaChannel  *channel, /* IN */
 	PkaChannelPrivate *priv;
 	gboolean ret = TRUE;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_CHANNEL(channel), FALSE);
 
-	ENTRY;
 	priv = channel->priv;
 	g_mutex_lock(priv->mutex);
 	switch (priv->state) {
@@ -1047,9 +1049,10 @@ pka_channel_mute (PkaChannel  *channel, /* IN */
 	PkaChannelPrivate *priv;
 	gboolean ret = FALSE;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_CHANNEL(channel), FALSE);
 
-	ENTRY;
 	priv = channel->priv;
 	g_mutex_lock(priv->mutex);
 	switch (priv->state) {
@@ -1111,10 +1114,12 @@ pka_channel_unmute (PkaChannel  *channel, /* IN */
 	PkaChannelPrivate *priv;
 	gboolean ret = FALSE;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_CHANNEL(channel), FALSE);
 
-	ENTRY;
 	priv = channel->priv;
+
 	g_mutex_lock(priv->mutex);
 	switch (priv->state) {
 	CASE(PKA_CHANNEL_MUTED);
@@ -1142,6 +1147,7 @@ pka_channel_unmute (PkaChannel  *channel, /* IN */
 		g_warn_if_reached();
 	}
 	g_mutex_unlock(priv->mutex);
+
 	RETURN(ret);
 }
 
@@ -1160,13 +1166,16 @@ pka_channel_get_state (PkaChannel *channel) /* IN */
 	PkaChannelPrivate *priv;
 	PkaChannelState state;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_CHANNEL(channel), 0);
 
-	ENTRY;
 	priv = channel->priv;
+
 	g_mutex_lock(priv->mutex);
 	state = priv->state;
 	g_mutex_unlock(priv->mutex);
+
 	RETURN(state);
 }
 
@@ -1189,37 +1198,52 @@ pka_channel_get_sources (PkaChannel *channel) /* IN */
 	GList *sources = NULL;
 	gint i;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_CHANNEL(channel), NULL);
 
-	ENTRY;
 	priv = channel->priv;
+
 	g_mutex_lock(priv->mutex);
 	for (i = 0; i < priv->sources->len; i++) {
 		source = g_ptr_array_index(priv->sources, i);
 		sources = g_list_prepend(sources, g_object_ref(source));
 	}
 	g_mutex_unlock(priv->mutex);
-	return(sources);
+
+	RETURN(sources);
 }
 
+/**
+ * pka_channel_get_created_at:
+ * @channel: (in): A #PkaChannel.
+ * @tv: (out): A #GTimeVal.
+ *
+ * Retrieves the time that @channel was created and stores it in @tv.
+ *
+ * Returns: None.
+ * Side effects: @tv is set.
+ */
 void
-pka_channel_get_created_at (PkaChannel *channel, /* IN */
-                            GTimeVal   *tv)      /* OUT */
+pka_channel_get_created_at (PkaChannel *channel,
+                            GTimeVal   *tv)
 {
 	PkaChannelPrivate *priv;
 
+	ENTRY;
+
 	g_return_if_fail(PKA_IS_CHANNEL(channel));
 
-	ENTRY;
 	priv = channel->priv;
 	*tv = priv->created_at;
+
 	EXIT;
 }
 
 /**
  * pka_channel_compare:
- * @a: A #PkaChannel.
- * @b: A #PkaChannel.
+ * @a: (type Pka.Channel): A #PkaChannel.
+ * @b: (type Pka.Channel): A #PkaChannel.
  *
  * Standard qsort() style compare function.
  *
@@ -1228,8 +1252,8 @@ pka_channel_get_created_at (PkaChannel *channel, /* IN */
  * Side effects: None.
  */
 gint
-pka_channel_compare (gconstpointer a, /* IN */
-                     gconstpointer b) /* IN */
+pka_channel_compare (gconstpointer a,
+                     gconstpointer b)
 {
 	return ((PkaChannel *)a)->priv->id - ((PkaChannel *)b)->priv->id;
 }
@@ -1249,6 +1273,7 @@ pka_channel_finalize (GObject *object)
 	PkaChannelPrivate *priv = PKA_CHANNEL(object)->priv;
 
 	ENTRY;
+
 	g_free(priv->target);
 	g_free(priv->working_dir);
 	g_strfreev(priv->args);
@@ -1257,6 +1282,7 @@ pka_channel_finalize (GObject *object)
 	g_ptr_array_free(priv->sources, TRUE);
 	g_mutex_free(priv->mutex);
 	G_OBJECT_CLASS(pka_channel_parent_class)->finalize(object);
+
 	EXIT;
 }
 
@@ -1303,16 +1329,17 @@ pka_channel_class_init (PkaChannelClass *klass)
  * Side effects: None.
  */
 static void
-pka_channel_init (PkaChannel *channel) /* IN */
+pka_channel_init (PkaChannel *channel)
 {
 	static gint id_seq = 0;
 	PkaChannelPrivate *priv;
 
 	ENTRY;
-	channel->priv = G_TYPE_INSTANCE_GET_PRIVATE(channel,
-	                                            PKA_TYPE_CHANNEL,
+
+	channel->priv = G_TYPE_INSTANCE_GET_PRIVATE(channel, PKA_TYPE_CHANNEL,
 	                                            PkaChannelPrivate);
 	priv = channel->priv;
+
 	priv->sources = g_ptr_array_new();
 	priv->mutex = g_mutex_new();
 	priv->id = g_atomic_int_exchange_and_add(&id_seq, 1);
@@ -1320,6 +1347,7 @@ pka_channel_init (PkaChannel *channel) /* IN */
 	priv->kill_pid = TRUE;
 	priv->working_dir = g_strdup(g_get_tmp_dir());
 	g_get_current_time(&priv->created_at);
+
 	EXIT;
 }
 
