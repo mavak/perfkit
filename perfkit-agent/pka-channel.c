@@ -715,8 +715,7 @@ pka_channel_stdio_cb (GIOChannel   *io,
 		INFO(Channel, "Error reading %s from inferior: %s",
 		     is_stderr ? "stderr" : "stdout",
 		     error->message);
-		g_error_free(error);
-		error = NULL;
+		g_clear_error(&error);
 	}
 
 	RETURN(priv->state != PKA_CHANNEL_STOPPED);
