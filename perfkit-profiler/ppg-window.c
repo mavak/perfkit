@@ -1656,6 +1656,10 @@ ppg_window_set_uri (PpgWindow   *window,
 	g_object_set(priv->process_menu,
 	             "session", priv->session,
 	             NULL);
+
+	g_object_set(priv->settings_dialog,
+	             "session", priv->session,
+	             NULL);
 }
 
 /**
@@ -2350,7 +2354,6 @@ ppg_window_init (PpgWindow *window)
 	                      NULL);
 
 	priv->settings_dialog = g_object_new(PPG_TYPE_SETTINGS_DIALOG,
-	                                     "session", priv->session,
 	                                     "visible", FALSE,
 	                                     NULL);
 	g_signal_connect(priv->settings_dialog, "response",
