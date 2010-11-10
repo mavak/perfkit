@@ -145,7 +145,7 @@ perfkit_profiler_SOURCES = main.c
 
 perfkit_profiler_LDADD =						\
 	$(top_builddir)/perfkit/libperfkit-1.0.la			\
-	$(top_builddir)/perfkit-profiler/libprofiler.la \
+	$(top_builddir)/perfkit-profiler/libprofiler.la			\
 	$(NULL)
 
 run: perfkit-profiler
