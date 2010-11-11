@@ -51,13 +51,16 @@ struct _PpgLineVisualizerClass
 	PpgVisualizerClass parent_class;
 };
 
-GType ppg_line_visualizer_get_type (void) G_GNUC_CONST;
-void  ppg_line_visualizer_append (PpgLineVisualizer *visualizer,
-                                  const gchar *name,
-                                  GdkColor *color,
-                                  gboolean fill,
-                                  PpgModel *model,
-                                  gint row);
+GType ppg_line_visualizer_get_type  (void) G_GNUC_CONST;
+void  ppg_line_visualizer_append    (PpgLineVisualizer *visualizer,
+                                     const gchar       *name,
+                                     GdkColor          *color,
+                                     gboolean           fill,
+                                     PpgModel          *model,
+                                     gint               row);
+void  ppg_line_visualizer_set_range (PpgLineVisualizer *visualizer,
+                                     gdouble            lower,
+                                     gdouble            upper);
 
 G_END_DECLS
 

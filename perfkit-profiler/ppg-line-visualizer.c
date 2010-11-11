@@ -36,7 +36,27 @@ struct _PpgLineVisualizerPrivate
 	ClutterActor *actor;
 	guint         paint_handler;
 	guint         resize_handler;
+
+	gboolean      range_set;
+	gdouble       range_lower;
+	gdouble       range_upper;
 };
+
+void
+ppg_line_visualizer_set_range (PpgLineVisualizer *visualizer,
+                               gdouble            lower,
+                               gdouble            upper)
+{
+	PpgLineVisualizerPrivate *priv;
+
+	g_return_if_fail(PPG_IS_LINE_VISUALIZER(visualizer));
+
+	priv = visualizer->priv;
+
+	priv->range_lower = lower;
+	priv->range_upper = upper;
+	priv->range_set = TRUE;
+}
 
 void
 ppg_line_visualizer_append (PpgLineVisualizer *visualizer,
