@@ -46,12 +46,16 @@ G_DEFINE_TYPE(PpgModel, ppg_model, G_TYPE_INITIALLY_UNOWNED)
 
 typedef struct
 {
-	gint key;
-	PpgModelType type;
-	gchar *name;
-	GType expected_type;
-	PpgModelValueFunc func;
-	gpointer user_data;
+	gint               key;           /* User definable key */
+	PpgModelType       type;          /* Model type */
+	gchar             *name;          /* Name of field in manifest */
+	GType              expected_type; /* Expected GType */
+	PpgModelValueFunc  func;          /* Closure callback */
+	gpointer           user_data;     /* User data for closure */
+	gboolean           track_range;   /* Should we track bounds */
+	gdouble            lower;         /* Lower tracked bounds */
+	gdouble            upper;         /* Upper tracked bounds */
+	gint               current_row;   /* Name's row in current manifest */
 } Mapping;
 
 struct _PpgModelPrivate
@@ -280,6 +284,8 @@ ppg_model_insert_manifest (PpgModel   *model,
                            PkManifest *manifest)
 {
 	PpgModelPrivate *priv;
+	GHashTableIter iter;
+	Mapping *mapping;
 
 	g_return_if_fail(PPG_IS_MODEL(model));
 	g_return_if_fail(manifest != NULL);
@@ -300,6 +306,18 @@ ppg_model_insert_manifest (PpgModel   *model,
 	priv->manifest = manifest;
 	priv->sample_count = 0;
 	g_ptr_array_add(priv->manifests, pk_manifest_ref(manifest));
+
+	/*
+	 * Update each mapping with current row id. This allows us to avoid a
+	 * lookup when a new sample is delivered while determine bounds.
+	 */
+	g_hash_table_iter_init(&iter, priv->mappings);
+	while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&mapping)) {
+		if (mapping->name) {
+			mapping->current_row =
+				pk_manifest_get_row_id(manifest, mapping->name);
+		}
+	}
 }
 
 void
@@ -308,13 +326,52 @@ ppg_model_insert_sample (PpgModel   *model,
                          PkSample   *sample)
 {
 	PpgModelPrivate *priv;
+	GHashTableIter iter;
+	Mapping *mapping;
+	GValue value = { 0 };
+	gdouble dval;
 
 	g_return_if_fail(PPG_IS_MODEL(model));
 	g_return_if_fail(manifest != NULL);
 
 	priv = model->priv;
-
 	g_assert(manifest == priv->manifest);
+
+	/*
+	 * Track bounds if needed.
+	 */
+	g_hash_table_iter_init(&iter, priv->mappings);
+	while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&mapping)) {
+		if (mapping->track_range) {
+			if (mapping->current_row > 0) {
+				if (pk_sample_get_value(sample, mapping->current_row, &value)) {
+					switch (value.g_type) {
+					case G_TYPE_DOUBLE:
+						dval = g_value_get_double(&value);
+						break;
+					case G_TYPE_INT:
+						dval = g_value_get_int(&value);
+						break;
+					case G_TYPE_UINT:
+						dval = g_value_get_uint(&value);
+						break;
+					case G_TYPE_FLOAT:
+						dval = g_value_get_float(&value);
+						break;
+					default:
+						/* TODO */
+						g_assert_not_reached();
+					}
+					if (dval > mapping->upper) {
+						mapping->upper = dval;
+					} else if (dval < mapping->lower) {
+						mapping->lower = dval;
+					}
+					g_value_unset(&value);
+				}
+			}
+		}
+	}
 
 	/*
 	 * FIXME: Use insertion sort to order based on timestamp.
@@ -573,4 +630,55 @@ ppg_model_get_iter_at (PpgModel      *model,
 	 */
 
 	return FALSE;
+}
+
+void
+ppg_model_set_track_range (PpgModel *model,
+                           gint      key,
+                           gboolean  track_range)
+{
+	PpgModelPrivate *priv;
+	Mapping *mapping;
+
+	g_return_if_fail(PPG_IS_MODEL(model));
+
+	priv = model->priv;
+
+	mapping = g_hash_table_lookup(priv->mappings, &key);
+	if (!mapping) {
+		CRITICAL(Model, "Must call ppg_model_add_mapping() before %s()",
+		         G_STRFUNC);
+		return;
+	}
+
+	/*
+	 * XXX: Should we retroactively determine the range for all samples?
+	 */
+	mapping->track_range = track_range;
+}
+
+void
+ppg_model_get_range (PpgModel *model,
+                     gint      key,
+                     gdouble  *lower,
+                     gdouble  *upper)
+{
+	PpgModelPrivate *priv;
+	Mapping *mapping;
+
+	g_return_if_fail(PPG_IS_MODEL(model));
+
+	priv = model->priv;
+
+	mapping = g_hash_table_lookup(priv->mappings, &key);
+	if (!mapping) {
+		CRITICAL(Model, "No mapping found for %d", key);
+	}
+
+	if (lower) {
+		*lower = mapping->lower;
+	}
+	if (upper) {
+		*upper = mapping->upper;
+	}
 }

@@ -46,8 +46,8 @@ typedef void (*PpgModelValueFunc) (PpgModel     *model,
 
 struct _PpgModelIter
 {
-	guint32 stamp;
-	gdouble time;
+	guint32 stamp; /* Unique stamp corresponding to model. */
+	gdouble time;  /* Time of current sample. */
 
 	/*< private >*/
 	gpointer user_data;
@@ -106,6 +106,10 @@ void     ppg_model_get              (PpgModel          *model,
                                      PpgModelIter      *iter,
                                      gint               first_key,
                                      ...);
+void     ppg_model_get_range        (PpgModel          *model,
+                                     gint               key,
+                                     gdouble           *lower,
+                                     gdouble           *upper);
 void     ppg_model_get_value        (PpgModel          *model,
                                      PpgModelIter      *iter,
                                      gint               key,
@@ -117,6 +121,9 @@ void     ppg_model_insert_sample    (PpgModel          *model,
                                      PkSample          *sample);
 gboolean ppg_model_iter_next        (PpgModel          *model,
                                      PpgModelIter      *iter);
+void     ppg_model_set_track_range  (PpgModel          *model,
+                                     gint               key,
+                                     gboolean           track_range);
 
 G_END_DECLS
 
