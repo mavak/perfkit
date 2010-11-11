@@ -365,4 +365,9 @@ ppg_memory_instrument_init (PpgMemoryInstrument *instrument)
 	ppg_model_add_mapping(priv->model, COLUMN_SHARE, "share", G_TYPE_UINT, PPG_MODEL_RAW);
 	ppg_model_add_mapping(priv->model, COLUMN_TEXT, "text", G_TYPE_UINT, PPG_MODEL_RAW);
 	ppg_model_add_mapping(priv->model, COLUMN_DATA, "data", G_TYPE_UINT, PPG_MODEL_RAW);
+	ppg_model_set_track_range(priv->model, COLUMN_SIZE, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_RESIDENT, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_SHARE, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_TEXT, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_DATA, TRUE);
 }
