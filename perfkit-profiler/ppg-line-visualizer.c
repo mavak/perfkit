@@ -191,8 +191,10 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 	gdouble y;
 	gdouble begin;
 	gdouble end;
-	gdouble lower;
-	gdouble upper;
+	gdouble lower = 0;
+	gdouble upper = 0;
+	gdouble tl;
+	gdouble tu;
 	gdouble val = 0;
 	gint i;
 
@@ -213,9 +215,26 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 	             "height", &height,
 	             NULL);
 
-	/* FIXME: */
-	lower = 0;
-	upper = 200;
+#if 0
+	cairo_rectangle(cr, 0, 0, width, height);
+	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_fill(cr);
+#endif
+
+	/*
+	 * Create the smallest range containing all lines.
+	 */
+	if (priv->range_set) {
+		lower = priv->range_lower;
+		upper = priv->range_upper;
+	} else {
+		for (i = 0; i < priv->lines->len; i++) {
+			line = &g_array_index(priv->lines, Line, i);
+			ppg_model_get_range(line->model, line->key, &tl, &tu);
+			lower = MIN(lower, tl);
+			upper = MAX(upper, tu);
+		}
+	}
 
 	ppg_color_iter_init(&color);
 
