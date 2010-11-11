@@ -102,6 +102,7 @@ ppg_cpu_instrument_combined_cb (PpgCpuInstrument *instrument)
 	                          "name", "combined",
 	                          "title", _("Combined Cpu Usage"),
 	                          NULL);
+	ppg_line_visualizer_set_range(PPG_LINE_VISUALIZER(visualizer), 0.0, 100.0);
 
 	g_hash_table_iter_init(&iter, priv->models);
 	ppg_color_iter_init(&color);
