@@ -723,7 +723,10 @@ ppg_window_settings_activate (GtkAction *action,
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
 	priv = window->priv;
-	gtk_window_present(GTK_WINDOW(priv->settings_dialog));
+
+	if (priv->settings_dialog) {
+		gtk_window_present(GTK_WINDOW(priv->settings_dialog));
+	}
 }
 
 /**
@@ -1657,9 +1660,19 @@ ppg_window_set_uri (PpgWindow   *window,
 	             "session", priv->session,
 	             NULL);
 
-	g_object_set(priv->settings_dialog,
-	             "session", priv->session,
-	             NULL);
+	/*
+	 * Create the settings dialog now that we have a session.
+	 */
+	priv->settings_dialog = g_object_new(PPG_TYPE_SETTINGS_DIALOG,
+	                                     "session", priv->session,
+	                                     "visible", FALSE,
+	                                     NULL);
+	g_signal_connect(priv->settings_dialog, "response",
+	                 G_CALLBACK(gtk_widget_hide),
+	                 NULL);
+	g_signal_connect(priv->settings_dialog, "delete-event",
+	                 G_CALLBACK(gtk_widget_hide_on_delete),
+	                 NULL);
 }
 
 /**
@@ -2352,16 +2365,6 @@ ppg_window_init (PpgWindow *window)
 	                      priv->timer_sep,
 	                      priv->status_actor,
 	                      NULL);
-
-	priv->settings_dialog = g_object_new(PPG_TYPE_SETTINGS_DIALOG,
-	                                     "visible", FALSE,
-	                                     NULL);
-	g_signal_connect(priv->settings_dialog, "response",
-	                 G_CALLBACK(gtk_widget_hide),
-	                 NULL);
-	g_signal_connect(priv->settings_dialog, "delete-event",
-	                 G_CALLBACK(gtk_widget_hide_on_delete),
-	                 NULL);
 
 	priv->visualizers_menu = g_object_new(PPG_TYPE_VISUALIZER_MENU, NULL);
 	g_object_set(visualizers,
