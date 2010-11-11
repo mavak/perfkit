@@ -913,7 +913,8 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 
 	priv->copy_env_button = g_object_new(GTK_TYPE_CHECK_BUTTON,
 	                                     "active", TRUE,
-	                                     "label", _("Copy current environment"),
+	                                     "label", _("_Copy current environment"),
+	                                     "use-underline", TRUE,
 	                                     "visible", TRUE,
 	                                     NULL);
 	gtk_container_add_with_properties(GTK_CONTAINER(vbox2),
