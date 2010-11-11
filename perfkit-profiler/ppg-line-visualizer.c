@@ -118,6 +118,8 @@ ppg_line_visualizer_resize_surface (PpgLineVisualizer *visualizer)
 	             "surface-height", (gint)height,
 	             "surface-width", (gint)width,
 	             NULL);
+
+	ppg_visualizer_queue_draw(PPG_VISUALIZER(visualizer));
 }
 
 static gboolean
