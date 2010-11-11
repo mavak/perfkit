@@ -27,9 +27,14 @@
 
 #define ERROR(_d, _f, ...)    g_log(#_d, G_LOG_LEVEL_ERROR, _f, ##__VA_ARGS__)
 #define WARNING(_d, _f, ...)  g_log(#_d, G_LOG_LEVEL_WARNING, _f, ##__VA_ARGS__)
-#define DEBUG(_d, _f, ...)    g_log(#_d, G_LOG_LEVEL_DEBUG, _f, ##__VA_ARGS__)
 #define INFO(_d, _f, ...)     g_log(#_d, G_LOG_LEVEL_INFO, _f, ##__VA_ARGS__)
 #define CRITICAL(_d, _f, ...) g_log(#_d, G_LOG_LEVEL_CRITICAL, _f, ##__VA_ARGS__)
+
+#ifdef PERFKIT_DEBUG
+#define DEBUG(_d, _f, ...)    g_log(#_d, G_LOG_LEVEL_DEBUG, _f, ##__VA_ARGS__)
+#else
+#define DEBUG(_d, _f, ...)
+#endif
 
 #ifdef PERFKIT_TRACE
 #define TRACE(_d, _f, ...) g_log(#_d, G_LOG_LEVEL_TRACE, "  MSG: " _f, ##__VA_ARGS__)
