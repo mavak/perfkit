@@ -20,9 +20,7 @@
 #include "config.h"
 #endif
 
-#ifdef G_LOG_DOMAIN
 #undef G_LOG_DOMAIN
-#endif
 #define G_LOG_DOMAIN "Manager"
 
 #include "pka-context.h"
@@ -245,8 +243,8 @@ pka_manager_init (void)
 	/*
 	 * Work around linker issues by using the source types.
 	 */
-	DEBUG(Source, "Registering %s source.",
-	      g_type_name(PKA_TYPE_SOURCE_SIMPLE));
+	INFO(Source, "Registering %s source.",
+	     g_type_name(PKA_TYPE_SOURCE_SIMPLE));
 	EXIT;
 }
 
