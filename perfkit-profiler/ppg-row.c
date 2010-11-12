@@ -46,8 +46,6 @@ struct _PpgRowPrivate
 	GPtrArray *rows;
 	GtkStyle *style;
 
-	guint paint_handler;
-
 	ClutterActor *hbox;
 	ClutterActor *header_bg;
 	ClutterActor *header_text;
@@ -67,6 +65,12 @@ enum
 	PROP_TITLE,
 	PROP_WINDOW,
 };
+
+ClutterActor*
+ppg_row_get_rows (PpgRow *row)
+{
+	return row->priv->rows_box;
+}
 
 /**
  * ppg_row_paint_header:
@@ -120,55 +124,6 @@ ppg_row_paint_header (PpgRow *row)
 }
 
 /**
- * ppg_row_paint:
- * @row: (in): A #PpgRow.
- *
- * GSourceFunc style callback to paint the row and then complete the
- * idle callback.
- *
- * Returns: None.
- * Side effects: None.
- */
-static gboolean
-ppg_row_paint_timeout (PpgRow *row)
-{
-	PpgRowPrivate *priv;
-
-	g_return_val_if_fail(PPG_IS_ROW(row), FALSE);
-
-	priv = row->priv;
-
-	priv->paint_handler = 0;
-	ppg_row_paint_header(row);
-
-	return FALSE;
-}
-
-/**
- * ppg_row_queue_paint:
- * @row: (in): A #PpgRow.
- *
- * Queues a paint operation on the row.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_row_queue_paint (PpgRow *row)
-{
-	PpgRowPrivate *priv;
-
-	g_return_if_fail(PPG_IS_ROW(row));
-
-	priv = row->priv;
-
-	if (!priv->paint_handler) {
-		priv->paint_handler =
-			g_timeout_add(0, (GSourceFunc)ppg_row_paint_timeout, row);
-	}
-}
-
-/**
  * ppg_row_set_style:
  * @row: (in): A #PpgRow.
  *
@@ -194,7 +149,7 @@ ppg_row_set_style (PpgRow   *row,
 	GDK_TO_CLUTTER(style->text[priv->state], text);
 	g_object_set(priv->data_bg, "color", &color, NULL);
 	g_object_set(priv->header_text, "color", &text, NULL);
-	ppg_row_queue_paint(row);
+	ppg_row_paint_header(row);
 
 	g_object_notify(G_OBJECT(row), "style");
 }
@@ -305,7 +260,6 @@ ppg_row_rows_notify_allocation (ClutterActor *actor,
                                 PpgRow       *row)
 {
 	g_timeout_add(0, (GSourceFunc)ppg_row_resize_timeout, row);
-	ppg_row_queue_paint(row);
 }
 
 /**

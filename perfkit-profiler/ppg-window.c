@@ -339,6 +339,46 @@ ppg_window_zoom_one_activate (GtkAction *action,
 	             NULL);
 }
 
+static void
+ppg_window_zoom_in_instrument_activate (GtkAction *action,
+                                        PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	gfloat height;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	if (priv->selected) {
+		height = clutter_actor_get_height(window->priv->selected);
+		clutter_actor_animate(ppg_row_get_rows(PPG_ROW(priv->selected)),
+		                      CLUTTER_EASE_OUT_CUBIC, 250,
+		                      "height", MAX(45.0f, height + 45.0f),
+		                      NULL);
+	}
+}
+
+static void
+ppg_window_zoom_out_instrument_activate (GtkAction *action,
+                                         PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	gfloat height;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	if (priv->selected) {
+		height = clutter_actor_get_height(window->priv->selected);
+		clutter_actor_animate(ppg_row_get_rows(PPG_ROW(priv->selected)),
+		                      CLUTTER_EASE_OUT_CUBIC, 250,
+		                      "height", MAX(45.0f, height - 45.0f),
+		                      NULL);
+	}
+}
+
 /**
  * ppg_window_spawn_activate:
  * @action: (in): A #GtkAction.

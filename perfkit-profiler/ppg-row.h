@@ -52,6 +52,7 @@ struct _PpgRowClass
 
 GType          ppg_row_get_type       (void) G_GNUC_CONST;
 PpgInstrument* ppg_row_get_instrument (PpgRow *row);
+ClutterActor*  ppg_row_get_rows       (PpgRow *row);
 
 G_END_DECLS
 

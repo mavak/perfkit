@@ -67,6 +67,10 @@ static void ppg_window_next_activate                 (GtkAction *action,
                                                       PpgWindow *window);
 static void ppg_window_previous_activate             (GtkAction *action,
                                                       PpgWindow *window);
+static void ppg_window_zoom_in_instrument_activate   (GtkAction *action,
+                                                      PpgWindow *window);
+static void ppg_window_zoom_out_instrument_activate  (GtkAction *action,
+                                                      PpgWindow *window);
 
 static GtkActionEntry ppg_window_action_entries[] = {
 	{ "file", NULL, N_("Per_fkit") },
@@ -90,6 +94,8 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "visualizers", NULL, N_("_Visualizers") },
 	{ "next-instrument", NULL, N_("Next"), "j", NULL, G_CALLBACK(ppg_window_next_activate) },
 	{ "previous-instrument", NULL, N_("Previous"), "k", NULL, G_CALLBACK(ppg_window_previous_activate) },
+	{ "zoom-in-instrument", NULL, N_("Zoom In Instrument"), "space", NULL, G_CALLBACK(ppg_window_zoom_in_instrument_activate) },
+	{ "zoom-out-instrument", NULL, N_("Zoom Out Instrument"), "<shift>space", NULL, G_CALLBACK(ppg_window_zoom_out_instrument_activate) },
 
 	{ "target-spawn", NULL, N_("Spawn a new process"), "<control>t", NULL, G_CALLBACK(ppg_window_target_spawn_activate) },
 	{ "target-existing", NULL, N_("Select an existing process"), NULL, NULL, NULL },
