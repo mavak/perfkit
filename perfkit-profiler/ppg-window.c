@@ -380,6 +380,80 @@ ppg_window_zoom_out_instrument_activate (GtkAction *action,
 }
 
 /**
+ * ppg_window_go_forward_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "activate" event for the "go-forward" action. Move the current
+ * time in the profiler view forward.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_window_go_forward_activate (GtkAction *action,
+                                PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	gdouble upper;
+	gdouble value;
+	gdouble step;
+	gdouble page;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	g_object_get(priv->hadj,
+	             "page-size", &page,
+	             "step-increment", &step,
+	             "upper", &upper,
+	             "value", &value,
+	             NULL);
+	g_object_set(priv->hadj,
+	             "value", CLAMP((value + step), 0.0, upper - page),
+	             NULL);
+	gtk_adjustment_value_changed(priv->hadj);
+}
+
+/**
+ * ppg_window_go_back_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handle the "activate" signal for the "go-back" action.
+ * Move the time backwards in the profiler view.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_window_go_back_activate (GtkAction *action,
+                             PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	gdouble upper;
+	gdouble value;
+	gdouble step;
+	gdouble page;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	g_object_get(priv->hadj,
+	             "page-size", &page,
+	             "step-increment", &step,
+	             "upper", &upper,
+	             "value", &value,
+	             NULL);
+	g_object_set(priv->hadj,
+	             "value", CLAMP((value - step), 0.0, upper - page),
+	             NULL);
+	gtk_adjustment_value_changed(priv->hadj);
+}
+
+/**
  * ppg_window_spawn_activate:
  * @action: (in): A #GtkAction.
  * @window: (in): A #PpgWindow.

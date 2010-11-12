@@ -59,6 +59,8 @@ static char ppg_window_ui[] =
 	"      <separator/>"
 	"      <menuitem action=\"next-instrument\"/>"
 	"      <menuitem action=\"previous-instrument\"/>"
+	"      <menuitem action=\"go-forward\"/>"
+	"      <menuitem action=\"go-back\"/>"
 	"      <separator/>"
 	"      <menuitem action=\"zoom-in-instrument\"/>"
 	"      <menuitem action=\"zoom-out-instrument\"/>"
