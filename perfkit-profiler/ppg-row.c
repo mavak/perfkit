@@ -145,7 +145,7 @@ ppg_row_set_style (PpgRow   *row,
 	priv = row->priv;
 
 	priv->style = style;
-	GDK_TO_CLUTTER(style->bg[priv->state], color);
+	GDK_TO_CLUTTER(style->mid[priv->state], color);
 	GDK_TO_CLUTTER(style->text[priv->state], text);
 	g_object_set(priv->data_bg, "color", &color, NULL);
 	g_object_set(priv->header_text, "color", &text, NULL);
