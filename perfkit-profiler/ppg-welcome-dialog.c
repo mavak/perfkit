@@ -18,6 +18,7 @@
 
 #include <glib/gi18n.h>
 
+#include "ppg-discover-dialog.h"
 #include "ppg-runtime.h"
 #include "ppg-session.h"
 #include "ppg-sessions-store.h"
@@ -137,12 +138,9 @@ static void
 ppg_welcome_dialog_local_clicked (GtkWidget        *button,
                                   PpgWelcomeDialog *dialog)
 {
-	PpgWelcomeDialogPrivate *priv;
 	GtkWidget *window;
 
 	g_return_if_fail(PPG_IS_WELCOME_DIALOG(dialog));
-
-	priv = dialog->priv;
 
 	window = g_object_new(PPG_TYPE_WINDOW,
 	                      "uri", "dbus:///",
@@ -153,10 +151,37 @@ ppg_welcome_dialog_local_clicked (GtkWidget        *button,
 }
 
 static void
+ppg_welcome_dialog_remote_clicked (GtkWidget        *button,
+                                   PpgWelcomeDialog *dialog)
+{
+	GtkWidget *discover;
+	GtkWidget *window;
+	gchar *uri;
+	gint ret;
+
+	g_return_if_fail(PPG_IS_WELCOME_DIALOG(dialog));
+
+	discover = g_object_new(PPG_TYPE_DISCOVER_DIALOG,
+	                        "transient-for", dialog,
+	                        NULL);
+	ret = gtk_dialog_run(GTK_DIALOG(discover));
+	if (ret == GTK_RESPONSE_OK) {
+		g_object_get(discover, "uri", &uri, NULL);
+		window = g_object_new(PPG_TYPE_WINDOW,
+		                      "uri", uri,
+		                      "visible", TRUE,
+		                      NULL);
+		gtk_window_present(GTK_WINDOW(window));
+		gtk_widget_destroy(GTK_WIDGET(dialog));
+		g_free(uri);
+	}
+	gtk_widget_destroy(discover);
+}
+
+static void
 ppg_welcome_dialog_open_clicked (GtkWidget        *button,
                                  PpgWelcomeDialog *dialog)
 {
-	PpgWelcomeDialogPrivate *priv;
 	GtkDialog *load;
 	GtkWidget *window;
 	GtkDialog *message;
@@ -166,8 +191,6 @@ ppg_welcome_dialog_open_clicked (GtkWidget        *button,
 	GError *error = NULL;
 
 	g_return_if_fail(PPG_IS_WELCOME_DIALOG(dialog));
-
-	priv = dialog->priv;
 
 	load = g_object_new(GTK_TYPE_FILE_CHOOSER_DIALOG,
 	                    "action", GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -433,6 +456,9 @@ ppg_welcome_dialog_init (PpgWelcomeDialog *dialog)
 	gtk_container_add_with_properties(GTK_CONTAINER(vbox2), b,
 	                                  "expand", FALSE,
 	                                  NULL);
+	g_signal_connect(b, "clicked",
+	                 G_CALLBACK(ppg_welcome_dialog_remote_clicked),
+	                 dialog);
 
 	b = ppg_welcome_dialog_create_button(dialog, GTK_STOCK_OPEN,
 	                                     GTK_ICON_SIZE_DIALOG,

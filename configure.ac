@@ -77,6 +77,8 @@ PKG_CHECK_MODULES(PERFKIT_PROFILER, [gobject-2.0      >= 2.26
                                      clutter-gtk-0.10 >= 0.10.4])
 PKG_CHECK_MODULES(DBUS,             [dbus-glib-1      >= 0.80])
 PKG_CHECK_MODULES(GTK,              [gtk+-2.0         >= 2.20])
+PKG_CHECK_MODULES(AVAHI,            [avahi-client     >= 0.6
+				     avahi-gobject    >= 0.6])
 
 
 dnl ************************************************************************

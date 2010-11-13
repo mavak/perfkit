@@ -9,6 +9,9 @@ targets=" \
    git-core \
    gnome-common \
    gtk-doc-tools \
+   libavahi-glib-dev \
+   libavahi-client-dev \
+   libavahi-common-dev \
    libglib2.0-dev \
    libglib2.0-0-dbg \
    libgtk2.0-dev \

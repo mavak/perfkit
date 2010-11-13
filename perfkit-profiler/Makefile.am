@@ -35,12 +35,14 @@ AM_CFLAGS =								\
 	-I$(top_srcdir)/perfkit-profiler/				\
 	-I$(top_srcdir)/cut-n-paste/					\
 	-I$(top_srcdir)/uber/						\
+	$(AVAHI_CFLAGS)							\
 	$(PERFKIT_DEBUG_CFLAGS)						\
 	$(PERFKIT_PROFILER_CFLAGS)					\
 	$(WARNINGS)							\
 	$(NULL)
 
 AM_LDFLAGS =								\
+	$(AVAHI_LIBS)							\
 	$(PERFKIT_PROFILER_LIBS)					\
 	$(NULL)
 
@@ -55,6 +57,7 @@ INST_H_FILES =								\
 	ppg-color.h							\
 	ppg-configure-instrument-dialog.h				\
 	ppg-cpu-instrument.h						\
+	ppg-discover-dialog.h						\
 	ppg-edit-channel-task.h						\
 	ppg-header.h							\
 	ppg-instrument.h						\
@@ -99,10 +102,11 @@ libprofiler_la_SOURCES =						\
 	$(INST_H_FILES)							\
 	ppg-about-dialog.c						\
 	ppg-actions.c							\
+	ppg-add-instrument-dialog.c					\
 	ppg-color.c							\
 	ppg-configure-instrument-dialog.c				\
 	ppg-cpu-instrument.c						\
-	ppg-add-instrument-dialog.c					\
+	ppg-discover-dialog.c						\
 	ppg-edit-channel-task.c						\
 	ppg-header.c							\
 	ppg-instrument.c						\
