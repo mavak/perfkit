@@ -711,7 +711,7 @@ ppg_session_set_uri (PpgSession  *session,
 	priv = session->priv;
 
 	if (!(priv->conn = pk_connection_new_from_uri(uri))) {
-		g_critical("Invalid URI specified: %s", uri);
+		CRITICAL(Session, "Invalid URI specified: %s", uri);
 		return;
 	}
 
