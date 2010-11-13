@@ -57,7 +57,6 @@ enum _PpgSessionState
 };
 
 GType           ppg_session_get_type       (void) G_GNUC_CONST;
-PpgSession*     ppg_session_new            (void);
 void            ppg_session_pause          (PpgSession    *session);
 void            ppg_session_start          (PpgSession    *session);
 void            ppg_session_stop           (PpgSession    *session);
