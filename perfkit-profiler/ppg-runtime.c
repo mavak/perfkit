@@ -95,6 +95,9 @@ ppg_runtime_init (gint    *argc,
 	                                  ppg_paths_get_icon_dir());
 	ppg_instruments_init();
 	ppg_actions_init();
+#ifdef HAVE_AVAHI
+	ppg_avahi_init();
+#endif
 
 	if (show_cpu) {
 		GtkWidget *graph;
@@ -189,6 +192,9 @@ ppg_runtime_quit_fast (gint code)
 void
 ppg_runtime_shutdown (void)
 {
+#ifdef HAVE_AVAHI
+	ppg_avahi_shutdown();
+#endif
 	ppg_instruments_shutdown();
 	ppg_actions_shutdown();
 	ppg_prefs_shutdown();

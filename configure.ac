@@ -80,12 +80,12 @@ PKG_CHECK_MODULES(GTK,              [gtk+-2.0         >= 2.20])
 
 
 dnl ************************************************************************
-dnl Enable additional DBUS features
+dnl Enable avahi features
 dnl ************************************************************************
-PKG_CHECK_MODULES(DBUS_0_82, [dbus-glib-1 >= 0.82],
-                             [have_dbus_0_82=yes],
-                             [have_dbus_0_82=no])
-AM_CONDITIONAL(HAVE_DBUS_0_82, test "x$have_dbus_0_82" = "xyes")
+PKG_CHECK_MODULES(AVAHI, [avahi-gobject >= 0.6],
+                         [have_avahi=yes],
+                         [have_avahi=no])
+AM_CONDITIONAL(HAVE_AVAHI, test "x$have_avahi" = "xyes")
 
 
 dnl ************************************************************************

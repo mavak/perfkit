@@ -25,6 +25,10 @@ G_BEGIN_DECLS
 
 void     ppg_actions_init         (void);
 void     ppg_actions_shutdown     (void);
+#ifdef HAVE_AVAHI
+void     ppg_avahi_init           (void);
+void     ppg_avahi_shutdown       (void);
+#endif
 void     ppg_color_init           (void);
 void     ppg_color_shutdown       (void);
 void     ppg_instruments_init     (void);
