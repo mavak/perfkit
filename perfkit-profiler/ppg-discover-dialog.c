@@ -327,6 +327,7 @@ ppg_discover_dialog_init (PpgDiscoverDialog *dialog)
 	GtkWidget *notebook;
 	GtkWidget *scroller;
 	GtkWidget *treeview;
+	GtkWidget *vbox;
 
 	priv = G_TYPE_INSTANCE_GET_PRIVATE(dialog, PPG_TYPE_DISCOVER_DIALOG,
 	                                   PpgDiscoverDialogPrivate);
@@ -341,23 +342,26 @@ ppg_discover_dialog_init (PpgDiscoverDialog *dialog)
 
 	action = gtk_dialog_get_action_area(GTK_DIALOG(dialog));
 	content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-	g_object_set(content,
-	             "border-width", 6,
-	             "spacing", 12,
-	             NULL);
+
+	vbox = g_object_new(GTK_TYPE_VBOX,
+	                    "border-width", 6,
+	                    "spacing", 12,
+	                    "visible", TRUE,
+	                    NULL);
+	gtk_container_add(GTK_CONTAINER(content), vbox);
 
 	priv->uri_entry = g_object_new(GTK_TYPE_ENTRY,
 	                               "visible", TRUE,
 	                               "editable", FALSE,
 	                               NULL);
-	gtk_container_add_with_properties(GTK_CONTAINER(content), priv->uri_entry,
+	gtk_container_add_with_properties(GTK_CONTAINER(vbox), priv->uri_entry,
 	                                  "expand", FALSE,
 	                                  NULL);
 
 	notebook = g_object_new(GTK_TYPE_NOTEBOOK,
 	                        "visible", TRUE,
 	                        NULL);
-	gtk_container_add(GTK_CONTAINER(content), notebook);
+	gtk_container_add(GTK_CONTAINER(vbox), notebook);
 
 	l = g_object_new(GTK_TYPE_LABEL,
 	                 "label", _("_Discover"),
