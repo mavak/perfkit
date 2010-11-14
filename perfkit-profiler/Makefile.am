@@ -152,6 +152,8 @@ perfkit_profiler_LDADD =						\
 	$(top_builddir)/perfkit-profiler/libprofiler.la			\
 	$(NULL)
 
+perfkit_profiler_DEPENDENCIES = libprofiler.la
+
 run: perfkit-profiler
 	@PPG_DATA_DIR=$(top_builddir)/data					\
 	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs	\
