@@ -99,7 +99,7 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "next-instrument", NULL, N_("Next"), "j", NULL, G_CALLBACK(ppg_window_next_activate) },
 	{ "previous-instrument", NULL, N_("Previous"), "k", NULL, G_CALLBACK(ppg_window_previous_activate) },
 	{ "go-forward", NULL, N_("Go Forward in Time"), "l", NULL, G_CALLBACK(ppg_window_go_forward_activate) },
-	{ "go-back", NULL, N_("Go Backwards in Time"), "h", NULL, G_CALLBACK(ppg_window_go_back_activate) },
+	{ "go-back", NULL, N_("Go Backward in Time"), "h", NULL, G_CALLBACK(ppg_window_go_back_activate) },
 	{ "zoom-in-instrument", NULL, N_("Zoom In Instrument"), "space", NULL, G_CALLBACK(ppg_window_zoom_in_instrument_activate) },
 	{ "zoom-out-instrument", NULL, N_("Zoom Out Instrument"), "<shift>space", NULL, G_CALLBACK(ppg_window_zoom_out_instrument_activate) },
 
