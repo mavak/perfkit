@@ -10,6 +10,7 @@ targets=" \
    gnome-common \
    gtk-doc-tools \
    libavahi-glib-dev \
+   libavahi-gobject-dev \
    libavahi-client-dev \
    libavahi-common-dev \
    libglib2.0-dev \
