@@ -26,6 +26,7 @@
 
 #include "pka-channel.h"
 #include "pka-log.h"
+#include "pka-private.h"
 #include "pka-source.h"
 #include "pka-subscription.h"
 
@@ -55,11 +56,6 @@ G_DEFINE_ABSTRACT_TYPE (PkaSource, pka_source, G_TYPE_OBJECT)
  *   from the main loop to simplify locking models.  It also helps give
  *   some sort of guarantee of thread to the source implementations.
  */
-
-extern void pka_sample_set_source_id   (PkaSample   *sample,
-                                        gint         source_id);
-extern void pka_manifest_set_source_id (PkaManifest *manifest,
-                                        gint         source_id);
 
 struct _PkaSourcePrivate
 {

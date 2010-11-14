@@ -28,6 +28,7 @@
 #include "pka-log.h"
 #include "pka-manager.h"
 #include "pka-plugin.h"
+#include "pka-private.h"
 #include "pka-source.h"
 #include "pka-source-simple.h"
 
@@ -53,8 +54,6 @@
         }                                                           \
         G_UNLOCK(listeners);                                        \
     } G_STMT_END
-
-extern void pka_source_notify_stopped (PkaSource *source);
 
 typedef struct
 {

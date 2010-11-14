@@ -56,9 +56,6 @@
 
 G_DEFINE_ABSTRACT_TYPE(PkaListener, pka_listener, G_TYPE_OBJECT)
 
-extern void pka_channel_add_subscription (PkaChannel      *channel,
-                                          PkaSubscription *subscription);
-
 /**
  * pka_listener_listen:
  * @listener: A #PkaListener.

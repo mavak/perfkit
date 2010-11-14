@@ -32,10 +32,12 @@
 
 #include "pka-channel.h"
 #include "pka-log.h"
+#include "pka-private.h"
 #include "pka-source.h"
 #include "pka-util.h"
 
 #define IO_SUCCESS(_f) (G_IO_STATUS_NORMAL == (_f))
+
 #define ENSURE_STATE(_c, _s, _l)                                            \
     G_STMT_START {                                                          \
     	if ((_c)->priv->state != (PKA_CHANNEL_##_s)) {                      \
@@ -118,18 +120,6 @@
  */
 
 G_DEFINE_TYPE (PkaChannel, pka_channel, G_TYPE_OBJECT)
-
-/*
- * Internal methods used for management of samples and manifests.
- */
-extern void     pka_source_notify_started         (PkaSource       *source,
-                                                   PkaSpawnInfo    *spawn_info);
-extern void     pka_source_notify_stopped         (PkaSource       *source);
-extern void     pka_source_notify_muted           (PkaSource       *source);
-extern void     pka_source_notify_unmuted         (PkaSource       *source);
-extern void     pka_source_notify_reset           (PkaSource       *source);
-extern gboolean pka_source_set_channel            (PkaSource       *source,
-                                                   PkaChannel      *channel);
 
 struct _PkaChannelPrivate
 {

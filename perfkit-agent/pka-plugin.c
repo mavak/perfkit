@@ -20,9 +20,7 @@
 #include "config.h"
 #endif
 
-#ifdef G_LOG_DOMAIN
 #undef G_LOG_DOMAIN
-#endif
 #define G_LOG_DOMAIN "Plugin"
 
 #include <gmodule.h>
@@ -31,9 +29,8 @@
 #include "pka-config.h"
 #include "pka-log.h"
 #include "pka-plugin.h"
+#include "pka-private.h"
 #include "pka-source.h"
-
-extern void pka_source_set_plugin (PkaSource *source, PkaPlugin *plugin);
 
 /**
  * SECTION:pka-plugin

@@ -27,16 +27,7 @@
 
 #include "pka-config.h"
 #include "pka-manager.h"
-
-extern void pka_config_init      (const gchar *filename);
-extern void pka_config_shutdown  (void);
-extern void pka_log_init         (gboolean     stdout_,
-                                  const gchar *filename);
-extern void pka_log_shutdown     (void);
-extern void pka_manager_init     (void);
-extern void pka_manager_quit     (void);
-extern void pka_manager_run      (void);
-extern void pka_manager_shutdown (void);
+#include "pka-private.h"
 
 static gchar *opt_config = NULL;
 static gchar *opt_logfile = NULL;

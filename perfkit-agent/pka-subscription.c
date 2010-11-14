@@ -19,11 +19,10 @@
 #include "pka-encoder.h"
 #include "pka-marshal.h"
 #include "pka-log.h"
+#include "pka-private.h"
 #include "pka-subscription.h"
 
-#ifdef G_LOG_DOMAIN
 #undef G_LOG_DOMAIN
-#endif
 #define G_LOG_DOMAIN "Subscription"
 
 #define IS_AUTHORIZED(_context, _ioctl, _target) (TRUE)
@@ -36,8 +35,8 @@ struct _PkaSubscription
 	gint                  id;
 	PkaSubscriptionState  state;
 	GTimeVal              created_at;
-	gint                   buffer_timeout;
-	gint                   buffer_size;
+	gint                  buffer_timeout;
+	gint                  buffer_size;
 	GTree                *channels;
 	GTree                *sources;
 	GTree                *manifests;
@@ -45,11 +44,6 @@ struct _PkaSubscription
 	GClosure             *manifest_closure;
 	GClosure             *sample_closure;
 };
-
-extern void pka_source_add_subscription    (PkaSource       *source,
-                                            PkaSubscription *subscription);
-extern void pka_source_remove_subscription (PkaSource       *source,
-                                            PkaSubscription *subscription);
 
 /**
  * pka_subscription_destroy:

@@ -74,6 +74,7 @@ INST_H_FILES =								\
 
 NOINST_H_FILES =							\
 	pka-listener-closures.h						\
+	pka-private.h							\
 	$(NULL)
 
 BUILT_SOURCES =								\
