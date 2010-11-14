@@ -145,6 +145,10 @@ enum
 {
 	SOURCE_ADDED,
 	SOURCE_REMOVED,
+	STARTED,
+	STOPPED,
+	MUTED,
+	UNMUTED,
 	LAST_SIGNAL
 };
 
@@ -923,6 +927,7 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 		/*
 		 * Notify the included data channels of the inferior starting up.
 		 */
+		g_signal_emit(channel, signals[STARTED], 0);
 		g_ptr_array_foreach(priv->sources,
 		                    (GFunc)pka_source_notify_started,
 		                    &spawn_info);
@@ -1011,6 +1016,9 @@ pka_channel_stop (PkaChannel  *channel, /* IN */
 		g_warn_if_reached();
 	}
 	g_mutex_unlock(priv->mutex);
+	if (ret) {
+		g_signal_emit(channel, signals[STOPPED], 0);
+	}
 	RETURN(ret);
 }
 
@@ -1064,19 +1072,21 @@ pka_channel_mute (PkaChannel  *channel, /* IN */
 		priv->state = PKA_CHANNEL_MUTED;
 		INFO(Channel, "Muting channel %d on behalf of context %d.",
 		     priv->id, pka_context_get_id(context));
-
-		/*
-		 * Notify sources that we have muted.
-		 */
-		g_ptr_array_foreach(priv->sources,
-		                    (GFunc)pka_source_notify_muted,
-		                    NULL);
 		ret = TRUE;
 		BREAK;
 	default:
 		g_warn_if_reached();
 	}
 	g_mutex_unlock(priv->mutex);
+	if (ret) {
+		g_signal_emit(channel, signals[MUTED], 0);
+		/*
+		 * Notify sources that we have muted.
+		 */
+		g_ptr_array_foreach(priv->sources,
+		                    (GFunc)pka_source_notify_muted,
+		                    NULL);
+	}
 	RETURN(ret);
 }
 
@@ -1115,14 +1125,6 @@ pka_channel_unmute (PkaChannel  *channel, /* IN */
 		INFO(Channel, "Unpausing channel %d on behalf of context %d.",
 		     priv->id, pka_context_get_id(context));
 		priv->state = PKA_CHANNEL_RUNNING;
-
-		/*
-		 * Enable sources.
-		 */
-		g_ptr_array_foreach(priv->sources,
-		                    (GFunc)pka_source_notify_unmuted,
-		                    NULL);
-
 		ret = TRUE;
 		BREAK;
 	CASE(PKA_CHANNEL_READY);
@@ -1136,7 +1138,15 @@ pka_channel_unmute (PkaChannel  *channel, /* IN */
 		g_warn_if_reached();
 	}
 	g_mutex_unlock(priv->mutex);
-
+	if (ret) {
+		/*
+		 * Enable sources.
+		 */
+		g_signal_emit(channel, signals[UNMUTED], 0);
+		g_ptr_array_foreach(priv->sources,
+		                    (GFunc)pka_source_notify_unmuted,
+		                    NULL);
+	}
 	RETURN(ret);
 }
 
@@ -1322,6 +1332,34 @@ pka_channel_class_init (PkaChannelClass *klass)
 	                                       0, NULL, NULL,
 	                                       g_cclosure_marshal_VOID__OBJECT,
 	                                       G_TYPE_NONE, 1, PKA_TYPE_SOURCE);
+
+	signals[STARTED] = g_signal_new("started",
+	                                PKA_TYPE_CHANNEL,
+	                                G_SIGNAL_RUN_FIRST,
+	                                0, NULL, NULL,
+	                                g_cclosure_marshal_VOID__VOID,
+	                                G_TYPE_NONE, 0);
+
+	signals[STOPPED] = g_signal_new("stopped",
+	                                PKA_TYPE_CHANNEL,
+	                                G_SIGNAL_RUN_FIRST,
+	                                0, NULL, NULL,
+	                                g_cclosure_marshal_VOID__VOID,
+	                                G_TYPE_NONE, 0);
+
+	signals[MUTED] = g_signal_new("muted",
+	                              PKA_TYPE_CHANNEL,
+	                              G_SIGNAL_RUN_FIRST,
+	                              0, NULL, NULL,
+	                              g_cclosure_marshal_VOID__VOID,
+	                              G_TYPE_NONE, 0);
+
+	signals[UNMUTED] = g_signal_new("unmuted",
+	                                PKA_TYPE_CHANNEL,
+	                                G_SIGNAL_RUN_FIRST,
+	                                0, NULL, NULL,
+	                                g_cclosure_marshal_VOID__VOID,
+	                                G_TYPE_NONE, 0);
 }
 
 /**
