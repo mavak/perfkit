@@ -1858,6 +1858,14 @@ static const gchar * ChannelIntrospection =
 	"  </method>"
 	"  <method name=\"Unmute\">"
 	"  </method>"
+	"  <signal name=\"Started\">"
+	"  </signal>"
+	"  <signal name=\"Stopped\">"
+	"  </signal>"
+	"  <signal name=\"Muted\">"
+	"  </signal>"
+	"  <signal name=\"Unmuted\">"
+	"  </signal>"
 	" </interface>"
 	" <interface name=\"org.freedesktop.DBus.Introspectable\">"
 	"  <method name=\"Introspect\">"
@@ -4670,6 +4678,158 @@ pka_listener_dbus_source_removed (PkaListener *listener, /* IN */
 }
 
 /**
+ * pka_listener_dbus_channel_started:
+ * @listener: (in): A #PkaListenerDbus.
+ * @channel: (in): A #PkaChannel.
+ *
+ * Emits the "Started" event for the channel via DBus.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+pka_listener_dbus_channel_started (PkaListenerDBus *listener,
+                                   PkaChannel      *channel)
+{
+	PkaListenerDBusPrivate *priv = PKA_LISTENER_DBUS(listener)->priv;
+	DBusMessage *message = NULL;
+	gint channel_id;
+	gchar *path;
+
+	ENTRY;
+	channel_id = pka_channel_get_id(channel);
+	path = g_strdup_printf("/org/perfkit/Agent/Channel/%d", channel_id);
+	if (!(message = dbus_message_new_signal(path,
+	                                        "org.perfkit.Agent.Channel",
+	                                        "Started"))) {
+		GOTO(failed);
+	}
+	if (!dbus_connection_send(priv->dbus, message, NULL)) {
+		GOTO(failed);
+	}
+  failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
+	g_free(path);
+	EXIT;
+}
+
+/**
+ * pka_listener_dbus_channel_stopped:
+ * @listener: (in): A #PkaListenerDbus.
+ * @channel: (in): A #PkaChannel.
+ *
+ * Emits the "Stopped" event for the channel via DBus.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+pka_listener_dbus_channel_stopped (PkaListener *listener,
+                                   PkaChannel  *channel)
+{
+	PkaListenerDBusPrivate *priv = PKA_LISTENER_DBUS(listener)->priv;
+	DBusMessage *message = NULL;
+	gint channel_id;
+	gchar *path;
+
+	ENTRY;
+	channel_id = pka_channel_get_id(channel);
+	path = g_strdup_printf("/org/perfkit/Agent/Channel/%d", channel_id);
+	if (!(message = dbus_message_new_signal(path,
+	                                        "org.perfkit.Agent.Channel",
+	                                        "Stopped"))) {
+		GOTO(failed);
+	}
+	if (!dbus_connection_send(priv->dbus, message, NULL)) {
+		GOTO(failed);
+	}
+  failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
+	g_free(path);
+	EXIT;
+}
+
+/**
+ * pka_listener_dbus_channel_muted:
+ * @listener: (in): A #PkaListenerDbus.
+ * @channel: (in): A #PkaChannel.
+ *
+ * Emits the "Muted" event for the channel via DBus.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+pka_listener_dbus_channel_muted (PkaListener *listener,
+                                 PkaChannel  *channel)
+{
+	PkaListenerDBusPrivate *priv = PKA_LISTENER_DBUS(listener)->priv;
+	DBusMessage *message = NULL;
+	gint channel_id;
+	gchar *path;
+
+	ENTRY;
+	channel_id = pka_channel_get_id(channel);
+	path = g_strdup_printf("/org/perfkit/Agent/Channel/%d", channel_id);
+	if (!(message = dbus_message_new_signal(path,
+	                                        "org.perfkit.Agent.Channel",
+	                                        "Muted"))) {
+		GOTO(failed);
+	}
+	if (!dbus_connection_send(priv->dbus, message, NULL)) {
+		GOTO(failed);
+	}
+  failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
+	g_free(path);
+	EXIT;
+}
+
+/**
+ * pka_listener_dbus_channel_unmuted:
+ * @listener: (in): A #PkaListenerDbus.
+ * @channel: (in): A #PkaChannel.
+ *
+ * Emits the "Unmuted" event for the channel via DBus.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+pka_listener_dbus_channel_unmuted (PkaListener *listener,
+                                   PkaChannel  *channel)
+{
+	PkaListenerDBusPrivate *priv = PKA_LISTENER_DBUS(listener)->priv;
+	DBusMessage *message = NULL;
+	gint channel_id;
+	gchar *path;
+
+	ENTRY;
+	channel_id = pka_channel_get_id(channel);
+	path = g_strdup_printf("/org/perfkit/Agent/Channel/%d", channel_id);
+	if (!(message = dbus_message_new_signal(path,
+	                                        "org.perfkit.Agent.Channel",
+	                                        "Unmuted"))) {
+		GOTO(failed);
+	}
+	if (!dbus_connection_send(priv->dbus, message, NULL)) {
+		GOTO(failed);
+	}
+  failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
+	g_free(path);
+	EXIT;
+}
+
+/**
  * pka_listener_dbus_channel_added:
  * @listener: A #PkaListenerDBus.
  * @channel: The channel identifier.
@@ -4685,6 +4845,7 @@ pka_listener_dbus_channel_added (PkaListener *listener, /* IN */
 {
 	PkaListenerDBusPrivate *priv = PKA_LISTENER_DBUS(listener)->priv;
 	DBusMessage *message = NULL;
+	PkaChannel *channel_;
 	gchar *path;
 
 	ENTRY;
@@ -4713,6 +4874,22 @@ pka_listener_dbus_channel_added (PkaListener *listener, /* IN */
   failed:
   	if (message) {
   		dbus_message_unref(message);
+  		if (pka_manager_find_channel(pka_context_default(),
+  		                             channel, &channel_, NULL)) {
+  			g_signal_connect_swapped(channel_, "started",
+  			                         G_CALLBACK(pka_listener_dbus_channel_started),
+  			                         listener);
+  			g_signal_connect_swapped(channel_, "stopped",
+  			                         G_CALLBACK(pka_listener_dbus_channel_stopped),
+  			                         listener);
+  			g_signal_connect_swapped(channel_, "muted",
+  			                         G_CALLBACK(pka_listener_dbus_channel_muted),
+  			                         listener);
+  			g_signal_connect_swapped(channel_, "unmuted",
+  			                         G_CALLBACK(pka_listener_dbus_channel_unmuted),
+  			                         listener);
+  			g_object_unref(channel_);
+		}
 	}
 	g_free(path);
 	EXIT;
@@ -4754,7 +4931,6 @@ pka_listener_dbus_channel_removed (PkaListener *listener, /* IN */
 	g_free(path);
 	EXIT;
 }
-
 
 /**
  * pka_listener_dbus_subscription_added:
