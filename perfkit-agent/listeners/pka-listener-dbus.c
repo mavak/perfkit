@@ -4448,7 +4448,7 @@ pka_listener_dbus_error_quark (void)
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_plugin_added (PkaListener *listener, /* IN */
                                 const gchar *plugin)   /* IN */
 {
@@ -4488,7 +4488,7 @@ pka_listener_dbus_plugin_added (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_plugin_removed (PkaListener *listener, /* IN */
                                   const gchar *plugin)   /* IN */
 {
@@ -4525,7 +4525,7 @@ pka_listener_dbus_plugin_removed (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_encoder_added (PkaListener *listener, /* IN */
                                  gint         encoder)  /* IN */
 {
@@ -4565,7 +4565,7 @@ pka_listener_dbus_encoder_added (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_encoder_removed (PkaListener *listener, /* IN */
                                    gint         encoder)  /* IN */
 {
@@ -4602,7 +4602,7 @@ pka_listener_dbus_encoder_removed (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_source_added (PkaListener *listener, /* IN */
                                 gint         source)   /* IN */
 {
@@ -4642,7 +4642,7 @@ pka_listener_dbus_source_added (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_source_removed (PkaListener *listener, /* IN */
                                   gint         source)   /* IN */
 {
@@ -4679,7 +4679,7 @@ pka_listener_dbus_source_removed (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_channel_added (PkaListener *listener, /* IN */
                                  gint         channel)  /* IN */
 {
@@ -4728,7 +4728,7 @@ pka_listener_dbus_channel_added (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_channel_removed (PkaListener *listener, /* IN */
                                    gint         channel)  /* IN */
 {
@@ -4755,6 +4755,7 @@ pka_listener_dbus_channel_removed (PkaListener *listener, /* IN */
 	EXIT;
 }
 
+
 /**
  * pka_listener_dbus_subscription_added:
  * @listener: A #PkaListenerDBus.
@@ -4765,7 +4766,7 @@ pka_listener_dbus_channel_removed (PkaListener *listener, /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_subscription_added (PkaListener *listener,     /* IN */
                                       gint         subscription) /* IN */
 {
@@ -4805,7 +4806,7 @@ pka_listener_dbus_subscription_added (PkaListener *listener,     /* IN */
  * Returns: None.
  * Side effects: None.
  */
-void
+static void
 pka_listener_dbus_subscription_removed (PkaListener *listener,     /* IN */
                                         gint         subscription) /* IN */
 {
