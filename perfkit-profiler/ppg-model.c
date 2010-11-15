@@ -628,8 +628,7 @@ ppg_model_get_iter_at (PpgModel      *model,
 	/*
 	 * TODO: Binary search for begin time.
 	 */
-
-	return FALSE;
+	return ppg_model_get_iter_first(model, iter);
 }
 
 void
