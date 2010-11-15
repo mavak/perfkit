@@ -725,7 +725,6 @@ pk_connection_dbus_message_filter (DBusConnection *connection,
 	        ret = DBUS_HANDLER_RESULT_HANDLED;                           \
 	    } G_STMT_END
 
-	ENTRY;
 	if (dbus_message_get_type(message) != DBUS_MESSAGE_TYPE_SIGNAL) {
 		RETURN(ret);
 	}
