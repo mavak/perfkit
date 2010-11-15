@@ -88,6 +88,17 @@ pk_sample_new (void)
 	return sample;
 }
 
+gdouble
+pk_sample_get_time (PkSample *sample)
+{
+	gdouble time_;
+
+	time_ = sample->ts.tv_sec;
+	time_ += sample->ts.tv_nsec / (G_USEC_PER_SEC * 1000.0);
+
+	return time_;
+}
+
 static gboolean
 pk_sample_decode_timespec (PkSample   *sample,   /* IN */
                            EggBuffer  *buffer,   /* IN */
