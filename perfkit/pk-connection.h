@@ -605,7 +605,15 @@ void          pk_connection_emit_state_changed                (PkConnection     
                                                                PkConnectionState      state);
 void          pk_connection_emit_channel_added                (PkConnection          *connection,
                                                                gint                   channel);
+void          pk_connection_emit_channel_muted                (PkConnection          *connection,
+                                                               gint                   channel);
 void          pk_connection_emit_channel_removed              (PkConnection          *connection,
+                                                               gint                   channel);
+void          pk_connection_emit_channel_started              (PkConnection          *connection,
+                                                               gint                   channel);
+void          pk_connection_emit_channel_stopped              (PkConnection          *connection,
+                                                               gint                   channel);
+void          pk_connection_emit_channel_unmuted              (PkConnection          *connection,
                                                                gint                   channel);
 void          pk_connection_emit_encoder_added                (PkConnection          *connection,
                                                                gint                   encoder);

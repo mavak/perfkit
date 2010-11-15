@@ -103,7 +103,11 @@ enum
 {
 	STATE_CHANGED,
 	CHANNEL_ADDED,
+	CHANNEL_MUTED,
 	CHANNEL_REMOVED,
+	CHANNEL_STARTED,
+	CHANNEL_STOPPED,
+	CHANNEL_UNMUTED,
 	ENCODER_ADDED,
 	ENCODER_REMOVED,
 	PLUGIN_ADDED,
@@ -7749,11 +7753,47 @@ pk_connection_emit_channel_added (PkConnection *connection, /* IN */
 }
 
 void
+pk_connection_emit_channel_muted (PkConnection *connection, /* IN */
+                                  gint          channel)    /* IN */
+{
+	ENTRY;
+	g_signal_emit(connection, signals[CHANNEL_MUTED], 0, channel);
+	EXIT;
+}
+
+void
 pk_connection_emit_channel_removed (PkConnection *connection, /* IN */
                                     gint          channel)    /* IN */
 {
 	ENTRY;
 	g_signal_emit(connection, signals[CHANNEL_REMOVED], 0, channel);
+	EXIT;
+}
+
+void
+pk_connection_emit_channel_started (PkConnection *connection, /* IN */
+                                    gint          channel)    /* IN */
+{
+	ENTRY;
+	g_signal_emit(connection, signals[CHANNEL_STARTED], 0, channel);
+	EXIT;
+}
+
+void
+pk_connection_emit_channel_stopped (PkConnection *connection, /* IN */
+                                    gint          channel)    /* IN */
+{
+	ENTRY;
+	g_signal_emit(connection, signals[CHANNEL_STOPPED], 0, channel);
+	EXIT;
+}
+
+void
+pk_connection_emit_channel_unmuted (PkConnection *connection, /* IN */
+                                    gint          channel)    /* IN */
+{
+	ENTRY;
+	g_signal_emit(connection, signals[CHANNEL_UNMUTED], 0, channel);
 	EXIT;
 }
 
@@ -7969,7 +8009,11 @@ pk_connection_class_init (PkConnectionClass *klass) /* IN */
 	                               G_TYPE_NONE, 1, G_TYPE_STRING)
 
 	ADD_SIGNAL_INT(CHANNEL_ADDED, "channel-added");
+	ADD_SIGNAL_INT(CHANNEL_MUTED, "channel-muted");
 	ADD_SIGNAL_INT(CHANNEL_REMOVED, "channel-removed");
+	ADD_SIGNAL_INT(CHANNEL_STARTED, "channel-started");
+	ADD_SIGNAL_INT(CHANNEL_STOPPED, "channel-stopped");
+	ADD_SIGNAL_INT(CHANNEL_UNMUTED, "channel-unmuted");
 	ADD_SIGNAL_INT(SOURCE_ADDED, "source-added");
 	ADD_SIGNAL_INT(SOURCE_REMOVED, "source-removed");
 	ADD_SIGNAL_INT(SUBSCRIPTION_ADDED, "subscription-added");

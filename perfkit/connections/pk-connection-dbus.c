@@ -690,6 +690,8 @@ pk_connection_dbus_message_filter (DBusConnection *connection,
 	PkConnection *conn = user_data;
 	DBusError dbus_error = { 0 };
 
+	ENTRY;
+
 	#define HANDLE_SIGNAL_INT(_n, _f)                                    \
 	    G_STMT_START {                                                   \
 	        const gchar *path;                                           \
@@ -737,6 +739,54 @@ pk_connection_dbus_message_filter (DBusConnection *connection,
 	                                  "ChannelRemoved")) {
 		DEBUG(Channel, "Received channel removed event.");
 		HANDLE_SIGNAL_INT(channel_removed, "/org/perfkit/Agent/Channel/%d");
+	} else if (dbus_message_is_signal(message,
+	                                  "org.perfkit.Agent.Channel",
+	                                  "Started")) {
+		gint channel_id;
+		DEBUG(Channel, "Received channel started event.");
+		if (sscanf(dbus_message_get_path(message),
+		           "/org/perfkit/Agent/Channel/%d",
+		           &channel_id) != 1) {
+			GOTO(failed);
+		}
+		pk_connection_emit_channel_started(conn, channel_id);
+		ret = DBUS_HANDLER_RESULT_HANDLED;
+	} else if (dbus_message_is_signal(message,
+	                                  "org.perfkit.Agent.Channel",
+	                                  "Stopped")) {
+		gint channel_id;
+		DEBUG(Channel, "Received channel stopped event.");
+		if (sscanf(dbus_message_get_path(message),
+		           "/org/perfkit/Agent/Channel/%d",
+		           &channel_id) != 1) {
+			GOTO(failed);
+		}
+		pk_connection_emit_channel_stopped(conn, channel_id);
+		ret = DBUS_HANDLER_RESULT_HANDLED;
+	} else if (dbus_message_is_signal(message,
+	                                  "org.perfkit.Agent.Channel",
+	                                  "Muted")) {
+		gint channel_id;
+		DEBUG(Channel, "Received channel muted event.");
+		if (sscanf(dbus_message_get_path(message),
+		           "/org/perfkit/Agent/Channel/%d",
+		           &channel_id) != 1) {
+			GOTO(failed);
+		}
+		pk_connection_emit_channel_muted(conn, channel_id);
+		ret = DBUS_HANDLER_RESULT_HANDLED;
+	} else if (dbus_message_is_signal(message,
+	                                  "org.perfkit.Agent.Channel",
+	                                  "Unmuted")) {
+		gint channel_id;
+		DEBUG(Channel, "Received channel unmuted event.");
+		if (sscanf(dbus_message_get_path(message),
+		           "/org/perfkit/Agent/Channel/%d",
+		           &channel_id) != 1) {
+			GOTO(failed);
+		}
+		pk_connection_emit_channel_unmuted(conn, channel_id);
+		ret = DBUS_HANDLER_RESULT_HANDLED;
 	} else if (dbus_message_is_signal(message,
 	                                  "org.perfkit.Agent.Manager",
 	                                  "SourceAdded")) {
@@ -4631,6 +4681,13 @@ pk_connection_dbus_manager_add_channel_finish (PkConnection  *connection, /* IN 
 		       "/org/perfkit/Agent/Channel/%d",
 		       channel);
 	}
+
+	/*
+	 * Register for signals from this channel.
+	 */
+	pk_connection_dbus_add_signal(connection, channel_path,
+	                              "org.perfkit.Agent.Channel",
+	                              NULL);
 
 	ret = TRUE;
 
