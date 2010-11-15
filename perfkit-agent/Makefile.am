@@ -114,6 +114,7 @@ perfkit_agent_LDFLAGS =							\
 	-export-dynamic							\
 	-export-symbols-regex "^pka_.*"					\
 	$(NULL)
+perfkit_agent_DEPENDENCIES = libperfkit-agent.la
 
 pka-marshal.c pka-marshal.h: pka-marshal.list
 	$(GLIB_GENMARSHAL) --header --prefix=pka_marshal $(srcdir)/pka-marshal.list > $(builddir)/pka-marshal.h
