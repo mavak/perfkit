@@ -329,7 +329,7 @@ ppg_model_insert_sample (PpgModel   *model,
 	GHashTableIter iter;
 	Mapping *mapping;
 	GValue value = { 0 };
-	gdouble dval;
+	gdouble dval = 0;
 
 	g_return_if_fail(PPG_IS_MODEL(model));
 	g_return_if_fail(manifest != NULL);
