@@ -4482,6 +4482,9 @@ pka_listener_dbus_plugin_added (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4519,6 +4522,9 @@ pka_listener_dbus_plugin_removed (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4559,6 +4565,9 @@ pka_listener_dbus_encoder_added (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4596,6 +4605,9 @@ pka_listener_dbus_encoder_removed (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4636,6 +4648,9 @@ pka_listener_dbus_source_added (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4673,6 +4688,9 @@ pka_listener_dbus_source_removed (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4928,6 +4946,9 @@ pka_listener_dbus_channel_removed (PkaListener *listener, /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -4968,6 +4989,9 @@ pka_listener_dbus_subscription_added (PkaListener *listener,     /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
@@ -5005,6 +5029,9 @@ pka_listener_dbus_subscription_removed (PkaListener *listener,     /* IN */
 		GOTO(failed);
 	}
   failed:
+  	if (message) {
+  		dbus_message_unref(message);
+	}
 	g_free(path);
 	EXIT;
 }
