@@ -41,6 +41,7 @@ static gint      exit_code    = 0;
 static gboolean  show_cpu     = FALSE;
 
 static GOptionEntry option_entries[] = {
+	{ "log", 'l', 0, G_OPTION_ARG_FILENAME, &log_filename, N_("Log to FILE"), N_("FILE") },
 	{ NULL }
 };
 
