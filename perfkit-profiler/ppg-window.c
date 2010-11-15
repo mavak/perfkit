@@ -134,26 +134,10 @@ enum
 
 static guint instances = 0;
 
-/**
- * ppg_window_stop_activate:
- * @action: (in): A #GtkAction.
- * @window: (in): A #PpgWindow.
- *
- * Handles the "activate" signal for the "stop" #GtkAction.
- *
- * Returns: None.
- * Side effects: None.
- */
 static void
-ppg_window_stop_activate (GtkAction *action,
-                          PpgWindow *window)
+ppg_window_session_stopped (PpgSession *session,
+                            PpgWindow  *window)
 {
-	PpgWindowPrivate *priv;
-
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
-
 	BEGIN_ACTION_UPDATE;
 
 	g_object_set(ppg_window_get_action(window, "run"),
@@ -173,6 +157,27 @@ ppg_window_stop_activate (GtkAction *action,
 	             NULL);
 
 	END_ACTION_UPDATE;
+}
+
+/**
+ * ppg_window_stop_activate:
+ * @action: (in): A #GtkAction.
+ * @window: (in): A #PpgWindow.
+ *
+ * Handles the "activate" signal for the "stop" #GtkAction.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_window_stop_activate (GtkAction *action,
+                          PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
 
 	if (priv->session) {
 		ppg_session_stop(priv->session);
@@ -1764,6 +1769,9 @@ ppg_window_set_uri (PpgWindow   *window,
 	                 window);
 	g_signal_connect(priv->session, "notify::position",
 	                 G_CALLBACK(ppg_window_notify_position),
+	                 window);
+	g_signal_connect(priv->session, "stopped",
+	                 G_CALLBACK(ppg_window_session_stopped),
 	                 window);
 
 	g_object_set(priv->timer_tool_item,
