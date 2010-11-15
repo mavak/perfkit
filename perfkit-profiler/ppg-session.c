@@ -380,6 +380,7 @@ ppg_session_channel_stopped_cb (PkConnection *connection,
 		priv->state = PPG_SESSION_STOPPED;
 		g_timer_stop(priv->timer);
 		ppg_session_stop_position_notifier(session);
+		ppg_session_notify_position(session);
 		g_signal_emit(session, signals[STOPPED], 0);
 	}
 
