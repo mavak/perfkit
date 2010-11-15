@@ -191,6 +191,8 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 	gfloat width;
 	gdouble x;
 	gdouble y;
+	gdouble last_x = 0;
+	gdouble last_y = 0;
 	gdouble begin;
 	gdouble end;
 	gdouble lower = 0;
@@ -251,6 +253,10 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 			goto next;
 		}
 
+		last_x = 0;
+		last_y = height;
+		cairo_move_to(cr, 0, height);
+
 		do {
 			ppg_model_get_value(line->model, &iter, line->key, &value);
 			if (G_VALUE_HOLDS(&value, G_TYPE_DOUBLE)) {
@@ -265,7 +271,17 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 			}
 			x = get_x_offset(begin, end, width, iter.time);
 			y = get_y_offset(lower, upper, height, val);
+#if 0
 			cairo_line_to(cr, x, y);
+#else
+			cairo_curve_to(cr,
+			               last_x + ((x - last_x) / 2.0),
+			               last_y,
+			               last_x + ((x - last_x) / 2.0),
+			               y, x, y);
+#endif
+			last_x = x;
+			last_y = y;
 			g_value_unset(&value);
 		} while (ppg_model_iter_next(line->model, &iter));
 
