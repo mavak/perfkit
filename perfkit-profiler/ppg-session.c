@@ -360,6 +360,32 @@ ppg_session_channel_added (GObject      *connection,
 	g_signal_emit(session, signals[READY], 0);
 }
 
+static void
+ppg_session_channel_stopped_cb (PkConnection *connection,
+                                gint          channel,
+                                PpgSession   *session)
+{
+	PpgSessionPrivate *priv;
+
+	ENTRY;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	if (priv->channel == channel) {
+		DEBUG(Session, "Received channel-stopped signal for channel %d",
+		      channel);
+		priv->state = PPG_SESSION_STOPPED;
+		g_timer_stop(priv->timer);
+		ppg_session_stop_position_notifier(session);
+		g_signal_emit(session, signals[STOPPED], 0);
+	}
+
+	EXIT;
+}
+
 /**
  * ppg_session_connection_connected:
  * @connection: (in): A #PkConnection.
@@ -380,6 +406,8 @@ ppg_session_connection_connected (GObject      *connection,
 	PpgSessionPrivate *priv;
 	GError *error = NULL;
 
+	ENTRY;
+
 	g_return_if_fail(PPG_IS_SESSION(session));
 
 	priv = session->priv;
@@ -390,18 +418,23 @@ ppg_session_connection_connected (GObject      *connection,
 		return;
 	}
 
+	g_signal_connect(connection, "channel-stopped",
+	                 G_CALLBACK(ppg_session_channel_stopped_cb),
+	                 session);
 	pk_connection_manager_add_channel_async(priv->conn, NULL,
 	                                        ppg_session_channel_added,
 	                                        session);
+
+	EXIT;
 }
 
 /**
- * ppg_session_connection_connected:
+ * ppg_session_channel_stopped:
  * @connection: (in): A #PkConnection.
  * @result: (in): A #GAsyncResult.
  * @user_data: (closure): User data for callback.
  *
- * Callback upon the connection connecting to the agent.
+ * Callback for asynchronous RPC to stop the channel.
  *
  * Returns: None.
  * Side effects: None.
@@ -415,6 +448,8 @@ ppg_session_channel_stopped (GObject *object,
 	PpgSessionPrivate *priv;
 	GError *error = NULL;
 
+	ENTRY;
+
 	g_return_if_fail(PPG_IS_SESSION(session));
 
 	priv = session->priv;
@@ -422,20 +457,14 @@ ppg_session_channel_stopped (GObject *object,
 	if (!pk_connection_channel_stop_finish(priv->conn, result, &error)) {
 		ppg_session_report_error(session, G_STRFUNC, error);
 		g_error_free(error);
-		return;
-
 		/*
 		 * FIXME: We need to make sure we handle this gracefully and stop
 		 *        updating the UI. This goes for the rest of the states.
 		 */
+		return;
 	}
 
-	priv->state = PPG_SESSION_STOPPED;
-	g_timer_stop(priv->timer);
-
-	ppg_session_stop_position_notifier(session);
-
-	g_signal_emit(session, signals[STOPPED], 0);
+	EXIT;
 }
 
 
@@ -632,6 +661,7 @@ ppg_session_pause (PpgSession *session)
 
 	priv = session->priv;
 
+	DEBUG(Session, "Pausing channel %d", priv->channel);
 	pk_connection_channel_mute_async(priv->conn, priv->channel, NULL,
 	                                 ppg_session_channel_muted,
 	                                 session);
@@ -659,6 +689,7 @@ ppg_session_unpause (PpgSession *session)
 
 	priv = session->priv;
 
+	DEBUG(Session, "Unpausing channel %d", priv->channel);
 	pk_connection_channel_unmute_async(priv->conn, priv->channel, NULL,
 	                                   ppg_session_channel_unmuted,
 	                                   session);
