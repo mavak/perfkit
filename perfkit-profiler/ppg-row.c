@@ -405,7 +405,7 @@ ppg_row_visualizer_added (PpgRow        *row,
 	                 "y-align", CLUTTER_BOX_ALIGNMENT_START,
 	                 "x-fill", TRUE,
 	                 "y-fill", TRUE,
-	                 "expand", FALSE,
+	                 "expand", TRUE,
 	                 NULL);
 	clutter_actor_set_reactive(actor, TRUE);
 	g_signal_connect_swapped(actor, "enter-event",
