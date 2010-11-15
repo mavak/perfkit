@@ -103,7 +103,9 @@ struct _PpgWindowPrivate
 	GtkWidget *settings_dialog;
 	GtkWidget *instrument_popup;
 	GtkWidget *visualizers_menu;
+	GtkWidget *visualizers_menu2;
 	GtkWidget *process_menu;
+	GtkWidget *process_menu2;
 
 	GtkAdjustment *hadj;
 	GtkAdjustment *vadj;
@@ -1493,6 +1495,9 @@ ppg_window_select_row (PpgWindow *window,
 		g_object_set(priv->visualizers_menu,
 		             "instrument", instrument,
 		             NULL);
+		g_object_set(priv->visualizers_menu2,
+		             "instrument", instrument,
+		             NULL);
 		g_object_unref(instrument);
 	}
 }
@@ -1779,6 +1784,10 @@ ppg_window_set_uri (PpgWindow   *window,
 	             NULL);
 
 	g_object_set(priv->process_menu,
+	             "session", priv->session,
+	             NULL);
+
+	g_object_set(priv->process_menu2,
 	             "session", priv->session,
 	             NULL);
 
@@ -2489,22 +2498,24 @@ ppg_window_init (PpgWindow *window)
 	                      NULL);
 
 	priv->visualizers_menu = g_object_new(PPG_TYPE_VISUALIZER_MENU, NULL);
+	priv->visualizers_menu2 = g_object_new(PPG_TYPE_VISUALIZER_MENU, NULL);
 	g_object_set(visualizers,
 	             "submenu", priv->visualizers_menu,
 	             "visible", TRUE,
 	             NULL);
 	g_object_set(mb_visualizers,
-	             "submenu", priv->visualizers_menu,
+	             "submenu", priv->visualizers_menu2,
 	             "visible", TRUE,
 	             NULL);
 
 	priv->process_menu = g_object_new(PPG_TYPE_PROCESS_MENU, NULL);
+	priv->process_menu2 = g_object_new(PPG_TYPE_PROCESS_MENU, NULL);
 	g_object_set(mb_target_existing,
 	             "submenu", priv->process_menu,
 	             "visible", TRUE,
 	             NULL);
 	g_object_set(target_existing,
-	             "submenu", priv->process_menu,
+	             "submenu", priv->process_menu2,
 	             "visible", TRUE,
 	             NULL);
 
