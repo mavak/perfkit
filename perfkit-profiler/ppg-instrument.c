@@ -61,6 +61,13 @@ ppg_instrument_get_visualizers (PpgInstrument *instrument)
 	return instrument->priv->visualizers;
 }
 
+PpgSession*
+ppg_instrument_get_session (PpgInstrument *instrument)
+{
+	g_return_val_if_fail(PPG_IS_INSTRUMENT(instrument), NULL);
+	return instrument->priv->session;
+}
+
 static void
 ppg_instrument_set_session (PpgInstrument *instrument,
                             PpgSession    *session)

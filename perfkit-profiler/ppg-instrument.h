@@ -77,6 +77,7 @@ void   ppg_instrument_remove_visualizer       (PpgInstrument      *instrument,
                                                PpgVisualizer      *visualizer);
 void   ppg_instrument_remove_visualizer_named (PpgInstrument      *instrument,
                                                const gchar        *name);
+PpgSession* ppg_instrument_get_session (PpgInstrument *instrument);
 
 G_END_DECLS
 
