@@ -272,6 +272,7 @@ gboolean      pk_connection_channel_set_working_dir_finish    (PkConnection     
                                                                GError               **error);
 gboolean      pk_connection_channel_start                     (PkConnection          *connection,
                                                                gint                   channel,
+                                                               GTimeVal              *started_at,
                                                                GError               **error);
 void          pk_connection_channel_start_async               (PkConnection          *connection,
                                                                gint                   channel,
@@ -280,6 +281,7 @@ void          pk_connection_channel_start_async               (PkConnection     
                                                                gpointer               user_data);
 gboolean      pk_connection_channel_start_finish              (PkConnection          *connection,
                                                                GAsyncResult          *result,
+                                                               GTimeVal              *started_at,
                                                                GError               **error);
 gboolean      pk_connection_channel_stop                      (PkConnection          *connection,
                                                                gint                   channel,

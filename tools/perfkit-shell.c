@@ -1631,6 +1631,7 @@ pk_shell_channel_start_cb (GObject       *object,    /* IN */
 	task->result = pk_connection_channel_start_finish(
 			PK_CONNECTION(object),
 			result,
+			task->params[0],
 			&task->error);
 	async_task_signal(task);
 	EXIT;
@@ -1655,6 +1656,8 @@ pk_shell_channel_start (EggLine  *line,   /* IN */
                         GError  **error)  /* OUT */
 {
 	AsyncTask task;
+	GTimeVal tv;
+	gchar *started_at;
 	gint channel = 0;
 	gint i = 0;
 
@@ -1666,6 +1669,7 @@ pk_shell_channel_start (EggLine  *line,   /* IN */
 		RETURN(EGG_LINE_STATUS_BAD_ARGS);
 	}
 	async_task_init(&task);
+	task.params[0] = &tv;
 	pk_connection_channel_start_async(conn,
 	                             channel,
 	                             NULL,
@@ -1675,6 +1679,13 @@ pk_shell_channel_start (EggLine  *line,   /* IN */
 		g_propagate_error(error, task.error);
 		RETURN(EGG_LINE_STATUS_FAILURE);
 	}
+	/*
+	 * Handle "started_at" param.
+	 */
+	started_at = g_time_val_to_iso8601(&tv);
+	g_print("%16s: %s\n", "started_at", started_at);
+	egg_line_set_variable(line, "1", started_at);
+	g_free(started_at);
 	RETURN(EGG_LINE_STATUS_OK);
 }
 

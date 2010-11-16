@@ -201,6 +201,7 @@ void          pka_listener_channel_start_async                (PkaListener      
                                                                gpointer               user_data);
 gboolean      pka_listener_channel_start_finish               (PkaListener           *listener,
                                                                GAsyncResult          *result,
+                                                               GTimeVal              *started_at,
                                                                GError               **error);
 void          pka_listener_channel_stop_async                 (PkaListener           *listener,
                                                                gint                   channel,

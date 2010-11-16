@@ -136,9 +136,10 @@ struct _PkaChannelPrivate
 	gboolean      kill_pid;    /* Should inferior be killed upon stop */
 	gint          exit_status; /* The inferiors exit status */
 	GTimeVal      created_at;  /* When the channel was created */
-	GIOChannel   *stdin;
-	GIOChannel   *stdout;
-	GIOChannel   *stderr;
+	GTimeVal      started_at;  /* When the channel was started */
+	GIOChannel   *stdin;       /* IOChannel (pipe) for standard input */
+	GIOChannel   *stdout;      /* IOChannel (pipe) for standard output */
+	GIOChannel   *stderr;      /* IOChannel (pipe) for standard error */
 };
 
 enum
@@ -761,8 +762,10 @@ pka_channel_stderr_cb (GIOChannel   *io,
 
 /**
  * pka_channel_start:
- * @channel: A #PkaChannel
- * @error: A location for a #GError or %NULL
+ * @channel: (in): A #PkaChannel
+ * @context: (in): A #PkaContext.
+ * @started_at: (out) (allow-none): A location for start time or %NULL.
+ * @error: (error): A location for a #GError or %NULL
  *
  * Attempts to start the channel.  If the channel was successfully started
  * the attached #PkaSource<!-- -->'s will be notified to start creating
@@ -775,9 +778,10 @@ pka_channel_stderr_cb (GIOChannel   *io,
  *   Data sources are notified to start sending manifests and samples.
  */
 gboolean
-pka_channel_start (PkaChannel  *channel, /* IN */
-                   PkaContext  *context, /* IN */
-                   GError     **error)   /* OUT */
+pka_channel_start (PkaChannel  *channel,
+                   PkaContext  *context,
+                   GTimeVal    *started_at,
+                   GError     **error)
 {
 	PkaChannelPrivate *priv;
 	PkaSpawnInfo spawn_info = { 0 };
@@ -818,6 +822,14 @@ pka_channel_start (PkaChannel  *channel, /* IN */
 	 */
 	if (!pka_channel_init_spawn_info_locked(channel, &spawn_info, error)) {
 		GOTO(unlock);
+	}
+
+	/*
+	 * Get the absolute time of the channel starting.
+	 */
+	g_get_current_time(&priv->started_at);
+	if (started_at) {
+		*started_at = priv->started_at;
 	}
 
 	/*

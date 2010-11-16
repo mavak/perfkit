@@ -45,10 +45,10 @@
 
 struct _PkaSample
 {
-	volatile gint   ref_count;
-	struct timespec ts;
-	gint           source_id;       /* Source identifier within the channel. */
-	EggBuffer     *buf;             /* Protocol buffer style data blob. */
+	volatile gint    ref_count;
+	struct timespec  ts;
+	gint             source_id; /* Source identifier within the channel. */
+	EggBuffer       *buf;       /* Protocol buffer style data blob. */
 };
 
 /**

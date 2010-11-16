@@ -1719,24 +1719,26 @@ pka_listener_channel_start_async (PkaListener           *listener,    /* IN */
  * Side effects: None.
  */
 gboolean
-pka_listener_channel_start_finish (PkaListener    *listener, /* IN */
-                                   GAsyncResult   *result,   /* IN */
-                                   GError        **error)    /* OUT */
+pka_listener_channel_start_finish (PkaListener    *listener,   /* IN */
+                                   GAsyncResult   *result,     /* IN */
+                                   GTimeVal       *started_at, /* OUT */
+                                   GError        **error)      /* OUT */
 {
 	PkaChannel *channel;
 	ChannelStartCall *call;
 	gboolean ret = FALSE;
 
+	ENTRY;
+
 	g_return_val_if_fail(PKA_IS_LISTENER(listener), FALSE);
 	g_return_val_if_fail(RESULT_IS_VALID(channel_start), FALSE);
 
-	ENTRY;
 	call = GET_RESULT_POINTER(ChannelStartCall, result);
 	if (!pka_manager_find_channel(DEFAULT_CONTEXT, call->channel,
 	                              &channel, error)) {
 		GOTO(failed);
 	}
-	ret = pka_channel_start(channel, DEFAULT_CONTEXT, error);
+	ret = pka_channel_start(channel, DEFAULT_CONTEXT, started_at, error);
 	g_object_unref(channel);
   failed:
 	RETURN(ret);
@@ -1768,9 +1770,10 @@ pka_listener_channel_stop_async (PkaListener           *listener,    /* IN */
 	ChannelStopCall *call;
 	GSimpleAsyncResult *result;
 
+	ENTRY;
+
 	g_return_if_fail(PKA_IS_LISTENER(listener));
 
-	ENTRY;
 	result = g_simple_async_result_new(G_OBJECT(listener),
 	                                   callback,
 	                                   user_data,

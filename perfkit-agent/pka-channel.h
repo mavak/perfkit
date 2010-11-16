@@ -138,6 +138,7 @@ gboolean        pka_channel_add_source      (PkaChannel   *channel,
                                              GError      **error);
 gboolean        pka_channel_start           (PkaChannel   *channel,
                                              PkaContext   *context,
+                                             GTimeVal     *started_at,
                                              GError      **error);
 gboolean        pka_channel_stop            (PkaChannel   *channel,
                                              PkaContext   *context,

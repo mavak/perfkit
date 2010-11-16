@@ -1853,6 +1853,7 @@ static const gchar * ChannelIntrospection =
     "   <arg name=\"working_dir\" direction=\"in\" type=\"s\"/>"
 	"  </method>"
 	"  <method name=\"Start\">"
+	"   <arg name=\"started_at\" direction=\"out\" type=\"s\"/>"
 	"  </method>"
 	"  <method name=\"Stop\">"
 	"  </method>"
@@ -2748,20 +2749,23 @@ pka_listener_dbus_channel_start_cb (GObject      *listener,  /* IN */
 	DBusMessage *message = user_data;
 	DBusMessage *reply = NULL;
 	GError *error = NULL;
+	GTimeVal started_at;
+	gchar *started_at_str;
 
 	ENTRY;
 	priv = PKA_LISTENER_DBUS(listener)->priv;
-	if (!pka_listener_channel_start_finish(
-			PKA_LISTENER(listener),
-			result,
-			&error)) {
+	if (!pka_listener_channel_start_finish(PKA_LISTENER(listener),
+	                                       result, &started_at, &error)) {
 		reply = dbus_message_new_error(message, DBUS_ERROR_FAILED,
 		                               error->message);
 		g_error_free(error);
 	} else {
 		reply = dbus_message_new_method_return(message);
+		started_at_str = g_time_val_to_iso8601(&started_at);
 		dbus_message_append_args(reply,
+		                         DBUS_TYPE_STRING, &started_at_str,
 		                         DBUS_TYPE_INVALID);
+		g_free(started_at_str);
 	}
 	dbus_connection_send(priv->dbus, reply, NULL);
 	dbus_message_unref(reply);

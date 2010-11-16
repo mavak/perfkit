@@ -258,6 +258,7 @@ struct _PkConnectionClass
 	                                                     gpointer               user_data);
 	gboolean      (*channel_start_finish)               (PkConnection          *connection,
 	                                                     GAsyncResult          *result,
+	                                                     GTimeVal              *started_at,
 	                                                     GError               **error);
 	void          (*channel_stop_async)                 (PkConnection          *connection,
 	                                                     gint                   channel,

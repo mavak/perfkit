@@ -42,11 +42,15 @@ ppg_restart_task_channel_started (GObject      *object,
 	PkConnection *conn = (PkConnection *)object;
 	PpgTask *task = (PpgTask *)user_data;
 	GError *error = NULL;
+	GTimeVal tv = { 0 };
 
 	g_return_if_fail(PK_IS_CONNECTION(conn));
 	g_return_if_fail(PPG_IS_TASK(task));
 
-	if (!pk_connection_channel_start_finish(conn, result, &error)) {
+	if (!pk_connection_channel_start_finish(conn, result, &tv, &error)) {
+		/*
+		 * TODO: Notify session of new start time?
+		 */
 		ppg_task_finish_with_error(task, error);
 		g_error_free(error);
 		return;

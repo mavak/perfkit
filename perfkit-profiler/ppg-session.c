@@ -30,6 +30,7 @@ struct _PpgSessionPrivate
 	gchar           **args;
 	gchar           **env;
 	GPid              pid;
+	GTimeVal          started_at;
 	GTimer           *timer;
 	guint             position_handler;
 	PpgSessionState   state;
@@ -46,6 +47,7 @@ enum
 	PROP_TARGET,
 	PROP_URI,
 	PROP_PID,
+	PROP_STARTED_AT,
 };
 
 enum
@@ -493,7 +495,8 @@ ppg_session_channel_started (GObject *object,
 
 	priv = session->priv;
 
-	if (!pk_connection_channel_start_finish(priv->conn, result, &error)) {
+	if (!pk_connection_channel_start_finish(priv->conn, result,
+	                                        &priv->started_at, &error)) {
 		ppg_session_report_error(session, G_STRFUNC, error);
 		g_error_free(error);
 		return;
@@ -882,6 +885,9 @@ ppg_session_get_property (GObject    *object,
 	case PROP_POSITION:
 		g_value_set_double(value, ppg_session_get_position(session));
 		break;
+	case PROP_STARTED_AT:
+		g_value_set_pointer(value, &session->priv->started_at);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
@@ -1014,6 +1020,13 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                                                     G_MAXDOUBLE,
 	                                                                     0.0,
 	                                                                     G_PARAM_READABLE));
+
+	g_object_class_install_property(object_class,
+	                                PROP_STARTED_AT,
+	                                g_param_spec_pointer("started-at",
+	                                                     "started-at",
+	                                                     "started-at",
+	                                                     G_PARAM_READABLE));
 
 	signals[READY] = g_signal_new("ready",
 	                              PPG_TYPE_SESSION,

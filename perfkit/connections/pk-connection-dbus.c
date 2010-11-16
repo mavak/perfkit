@@ -4046,12 +4046,15 @@ pk_connection_dbus_channel_start_async (PkConnection        *connection,  /* IN 
 static gboolean
 pk_connection_dbus_channel_start_finish (PkConnection  *connection, /* IN */
                                          GAsyncResult  *result,     /* IN */
+                                         GTimeVal      *started_at, /* OUT */
                                          GError       **error)      /* OUT */
 {
 	DBusPendingCall *call;
 	DBusMessage *msg;
+	DBusError dbus_error = { 0 };
 	gboolean ret = FALSE;
 	gchar *error_str = NULL;
+	const gchar *tv_str;
 
 	g_return_val_if_fail(G_IS_SIMPLE_ASYNC_RESULT(result), FALSE);
 	g_return_val_if_fail(RESULT_IS_VALID(channel_start), FALSE);
@@ -4063,14 +4066,16 @@ pk_connection_dbus_channel_start_finish (PkConnection  *connection, /* IN */
 	/*
 	 * Clear out params.
 	 */
+	if (started_at) {
+		memset(started_at, 0, sizeof *started_at);
+	}
 
 	/*
 	 * Check if call was cancelled.
 	 */
 	if (!(msg = dbus_pending_call_steal_reply(call))) {
-		g_simple_async_result_propagate_error(
-				G_SIMPLE_ASYNC_RESULT(result),
-				error);
+		g_simple_async_result_propagate_error(G_SIMPLE_ASYNC_RESULT(result),
+		                                      error);
 		goto finish;
 	}
 
@@ -4089,6 +4094,18 @@ pk_connection_dbus_channel_start_finish (PkConnection  *connection, /* IN */
 		goto finish;
 	}
 
+	if (started_at) {
+		if (!dbus_message_get_args(msg, &dbus_error,
+		                           DBUS_TYPE_STRING, &tv_str,
+		                           DBUS_TYPE_INVALID)) {
+			g_set_error(error, PK_CONNECTION_DBUS_ERROR,
+			            PK_CONNECTION_DBUS_ERROR_DBUS, "%s: %s",
+			            dbus_error.name, dbus_error.message);
+			dbus_error_free(&dbus_error);
+			goto finish;
+		}
+		g_time_val_from_iso8601(tv_str, started_at);
+	}
 
 	ret = TRUE;
 

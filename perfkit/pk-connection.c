@@ -2699,6 +2699,7 @@ pk_connection_channel_start_cb (GObject      *source,    /* IN */
 	ENTRY;
 	async->result = pk_connection_channel_start_finish(PK_CONNECTION(source),
 	                                                   result,
+	                                                   async->params[0],
 	                                                   async->error);
 	pk_connection_sync_signal(async);
 	EXIT;
@@ -2719,6 +2720,7 @@ pk_connection_channel_start_cb (GObject      *source,    /* IN */
 gboolean
 pk_connection_channel_start (PkConnection  *connection, /* IN */
                              gint           channel,    /* IN */
+                             GTimeVal      *started_at, /* OUT */
                              GError       **error)      /* OUT */
 {
 	PkConnectionSync async;
@@ -2729,6 +2731,7 @@ pk_connection_channel_start (PkConnection  *connection, /* IN */
 	CHECK_FOR_RPC(channel_start);
 	pk_connection_sync_init(&async);
 	async.error = error;
+	async.params[0] = started_at;
 	pk_connection_channel_start_async(connection,
 	                                  channel,
 	                                  NULL,
@@ -2783,6 +2786,7 @@ pk_connection_channel_start_async (PkConnection        *connection,  /* IN */
 gboolean
 pk_connection_channel_start_finish (PkConnection  *connection, /* IN */
                                     GAsyncResult  *result,     /* IN */
+                                    GTimeVal      *started_at, /* OUT */
                                     GError       **error)      /* OUT */
 {
 	gboolean ret;
@@ -2790,9 +2794,7 @@ pk_connection_channel_start_finish (PkConnection  *connection, /* IN */
 	g_return_val_if_fail(PK_IS_CONNECTION(connection), FALSE);
 
 	ENTRY;
-	RPC_FINISH(ret, channel_start)(connection,
-	                               result,
-	                               error);
+	RPC_FINISH(ret, channel_start)(connection, result, started_at, error);
 	RETURN(ret);
 }
 
