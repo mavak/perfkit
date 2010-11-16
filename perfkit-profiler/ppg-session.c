@@ -30,7 +30,8 @@ struct _PpgSessionPrivate
 	gchar           **args;
 	gchar           **env;
 	GPid              pid;
-	GTimeVal          started_at;
+	GTimeVal          started_at;  /* TimeVal on agent when channel started */
+	gdouble           started_at_; /* Double version of started_at */
 	GTimer           *timer;
 	guint             position_handler;
 	PpgSessionState   state;
@@ -502,6 +503,8 @@ ppg_session_channel_started (GObject *object,
 		return;
 	}
 
+	priv->started_at_ = priv->started_at.tv_sec
+	                  + (priv->started_at.tv_usec / (gdouble)G_USEC_PER_SEC);
 	priv->state = PPG_SESSION_STARTED;
 	priv->timer = g_timer_new();
 
@@ -838,6 +841,14 @@ ppg_session_get_started_at (PpgSession *session,
 	g_return_if_fail(started_at != NULL);
 
 	*started_at = session->priv->started_at;
+}
+
+gdouble
+ppg_session_convert_time (PpgSession *session,
+                          gdouble     abstime)
+{
+	g_return_val_if_fail(PPG_IS_SESSION(session), 0.0);
+	return abstime - session->priv->started_at_;
 }
 
 /**

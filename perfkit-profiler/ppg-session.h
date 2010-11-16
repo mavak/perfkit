@@ -71,6 +71,8 @@ gboolean        ppg_session_load           (PpgSession    *session,
                                             GError       **error);
 void            ppg_session_get_started_at (PpgSession    *session,
                                             GTimeVal      *started_at);
+gdouble         ppg_session_convert_time   (PpgSession    *session,
+                                            gdouble        abstime);
 
 
 G_END_DECLS
