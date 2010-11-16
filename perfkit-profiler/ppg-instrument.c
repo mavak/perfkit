@@ -85,6 +85,8 @@ ppg_instrument_set_session (PpgInstrument *instrument,
 	priv->session = session;
 	g_object_add_weak_pointer(G_OBJECT(priv->session), (gpointer *)&priv->session);
 
+	g_object_notify(G_OBJECT(instrument), "session");
+
 	if (klass->load) {
 		if (!klass->load(instrument, session, &error)) {
 			priv->failed = TRUE;

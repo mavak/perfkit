@@ -24,6 +24,7 @@
 
 #include "ppg-log.h"
 #include "ppg-model.h"
+#include "ppg-session.h"
 
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "Model"
@@ -62,12 +63,19 @@ struct _PpgModelPrivate
 {
 	guint32     stamp;
 
+	PpgSession *session;         /* The profiling session */
 	PkManifest *manifest;        /* Current manifest */
 	guint32     sample_count;    /* Samples on current manifest */
 	GPtrArray  *manifests;       /* All manifests */
 	GHashTable *mappings;        /* Key to name mappings */
 	GHashTable *next_manifests;  /* Manifest->NextManifest mappings */
 	GPtrArray  *samples;         /* All samples */
+};
+
+enum
+{
+	PROP_0,
+	PROP_SESSION,
 };
 
 enum
@@ -197,6 +205,16 @@ mapping_get_value (Mapping *mapping,
 	}
 }
 
+static void
+ppg_model_set_session (PpgModel   *model,
+                       PpgSession *session)
+{
+	g_return_if_fail(PPG_IS_MODEL(model));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	model->priv->session = session;
+}
+
 /**
  * ppg_model_finalize:
  * @object: (in): A #PpgModel.
@@ -225,6 +243,32 @@ ppg_model_finalize (GObject *object)
 }
 
 /**
+ * ppg_model_set_property:
+ * @object: (in): A #GObject.
+ * @prop_id: (in): The property identifier.
+ * @value: (in): The given property.
+ * @pspec: (in): A #ParamSpec.
+ *
+ * Set a given #GObject property.
+ */
+static void
+ppg_model_set_property (GObject      *object,
+                        guint         prop_id,
+                        const GValue *value,
+                        GParamSpec   *pspec)
+{
+	PpgModel *model = PPG_MODEL(object);
+
+	switch (prop_id) {
+	case PROP_SESSION:
+		ppg_model_set_session(model, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+	}
+}
+
+/**
  * ppg_model_class_init:
  * @klass: (in): A #PpgModelClass.
  *
@@ -240,7 +284,16 @@ ppg_model_class_init (PpgModelClass *klass)
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_model_finalize;
+	object_class->set_property = ppg_model_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgModelPrivate));
+
+	g_object_class_install_property(object_class,
+	                                PROP_SESSION,
+	                                g_param_spec_object("session",
+	                                                    "session",
+	                                                    "session",
+	                                                    PPG_TYPE_SESSION,
+	                                                    G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
 	signals[CHANGED] = g_signal_new("changed",
 	                                PPG_TYPE_MODEL,

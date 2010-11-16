@@ -133,6 +133,7 @@ get_model (PpgCpuInstrument *instrument,
            gint cpu)
 {
 	PpgCpuInstrumentPrivate *priv;
+	PpgSession *session;
 	PpgModel *model;
 	GList *iter;
 	gint *key;
@@ -142,7 +143,8 @@ get_model (PpgCpuInstrument *instrument,
 	priv = instrument->priv;
 
 	if (!(model = g_hash_table_lookup(priv->models, &cpu))) {
-		model = g_object_new(PPG_TYPE_MODEL, NULL);
+		session = ppg_instrument_get_session(PPG_INSTRUMENT(instrument));
+		model = g_object_new(PPG_TYPE_MODEL, "session", session, NULL);
 
 		ppg_model_add_mapping(model, COLUMN_CPUNUM, "CPU Number", G_TYPE_INT, PPG_MODEL_RAW);
 		ppg_model_add_mapping(model, COLUMN_USER, "User", G_TYPE_INT, PPG_MODEL_COUNTER);
