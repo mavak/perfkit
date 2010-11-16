@@ -621,9 +621,27 @@ ppg_model_get_iter_at (PpgModel      *model,
 	g_return_val_if_fail(begin >= 0.0, FALSE);
 	g_return_val_if_fail(end >= 0.0, FALSE);
 
+	/*
+	 * TODO:
+	 *
+	 * It would be very smart for us to aggregate values together in an index
+	 * and then iterate the index rather than every value if @resolution
+	 * allows for that.
+	 */
+
 	if ((begin == 0.0) && (end == 0.0)) {
 		return ppg_model_get_iter_first(model, iter);
 	}
+
+	/*
+	 * XXX:
+	 *
+	 * If we keep an index of all the relative timestamps (as doubles) for the
+	 * samples we store, we can have an easy way to binary search through the
+	 * items for our desired first sample. It will cost 8-bytes * N_SAMPLES
+	 * memory. However, this seems like a reasonable index once we move to
+	 * file-based storage.
+	 */
 
 	/*
 	 * TODO: Binary search for begin time.
