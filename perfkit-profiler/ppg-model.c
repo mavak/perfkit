@@ -296,7 +296,7 @@ ppg_model_class_init (PpgModelClass *klass)
 	                                                    "session",
 	                                                    "session",
 	                                                    PPG_TYPE_SESSION,
-	                                                    G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	                                                    G_PARAM_WRITABLE));
 
 	signals[CHANGED] = g_signal_new("changed",
 	                                PPG_TYPE_MODEL,

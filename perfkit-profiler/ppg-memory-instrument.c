@@ -219,6 +219,10 @@ ppg_memory_instrument_load (PpgInstrument  *instrument,
 
 	priv = memory->priv;
 
+	g_object_set(priv->model,
+	             "session", session,
+	             NULL);
+
 	g_object_get(session,
 	             "channel", &channel,
 	             "connection", &conn,
@@ -292,32 +296,6 @@ ppg_memory_instrument_unload (PpgInstrument  *instrument,
   	return ret;
 }
 
-static void
-ppg_memory_instrument_session_cb (PpgMemoryInstrument *instrument,
-                                  GParamSpec          *pspec,
-                                  gpointer             user_data)
-{
-	PpgMemoryInstrumentPrivate *priv;
-	PpgSession *session;
-
-	g_return_if_fail(PPG_IS_MEMORY_INSTRUMENT(instrument));
-
-	priv = instrument->priv;
-
-	session = ppg_instrument_get_session(PPG_INSTRUMENT(instrument));
-	priv->model = g_object_new(PPG_TYPE_MODEL, "session", session, NULL);
-	ppg_model_add_mapping(priv->model, COLUMN_SIZE, "size", G_TYPE_UINT, PPG_MODEL_RAW);
-	ppg_model_add_mapping(priv->model, COLUMN_RESIDENT, "resident", G_TYPE_UINT, PPG_MODEL_RAW);
-	ppg_model_add_mapping(priv->model, COLUMN_SHARE, "share", G_TYPE_UINT, PPG_MODEL_RAW);
-	ppg_model_add_mapping(priv->model, COLUMN_TEXT, "text", G_TYPE_UINT, PPG_MODEL_RAW);
-	ppg_model_add_mapping(priv->model, COLUMN_DATA, "data", G_TYPE_UINT, PPG_MODEL_RAW);
-	ppg_model_set_track_range(priv->model, COLUMN_SIZE, TRUE);
-	ppg_model_set_track_range(priv->model, COLUMN_RESIDENT, TRUE);
-	ppg_model_set_track_range(priv->model, COLUMN_SHARE, TRUE);
-	ppg_model_set_track_range(priv->model, COLUMN_TEXT, TRUE);
-	ppg_model_set_track_range(priv->model, COLUMN_DATA, TRUE);
-}
-
 /**
  * ppg_memory_instrument_finalize:
  * @object: (in): A #PpgMemoryInstrument.
@@ -384,6 +362,16 @@ ppg_memory_instrument_init (PpgMemoryInstrument *instrument)
 	                                    visualizer_entries,
 	                                    G_N_ELEMENTS(visualizer_entries),
 	                                    instrument);
-	g_signal_connect(instrument, "notify::session",
-	                 G_CALLBACK(ppg_memory_instrument_session_cb), NULL);
+
+	priv->model = g_object_new(PPG_TYPE_MODEL, NULL);
+	ppg_model_add_mapping(priv->model, COLUMN_SIZE, "size", G_TYPE_UINT, PPG_MODEL_RAW);
+	ppg_model_add_mapping(priv->model, COLUMN_RESIDENT, "resident", G_TYPE_UINT, PPG_MODEL_RAW);
+	ppg_model_add_mapping(priv->model, COLUMN_SHARE, "share", G_TYPE_UINT, PPG_MODEL_RAW);
+	ppg_model_add_mapping(priv->model, COLUMN_TEXT, "text", G_TYPE_UINT, PPG_MODEL_RAW);
+	ppg_model_add_mapping(priv->model, COLUMN_DATA, "data", G_TYPE_UINT, PPG_MODEL_RAW);
+	ppg_model_set_track_range(priv->model, COLUMN_SIZE, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_RESIDENT, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_SHARE, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_TEXT, TRUE);
+	ppg_model_set_track_range(priv->model, COLUMN_DATA, TRUE);
 }
