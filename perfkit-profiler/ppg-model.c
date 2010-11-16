@@ -70,6 +70,7 @@ struct _PpgModelPrivate
 	GHashTable *mappings;        /* Key to name mappings */
 	GHashTable *next_manifests;  /* Manifest->NextManifest mappings */
 	GPtrArray  *samples;         /* All samples */
+	GArray     *sample_times;    /* Relative offset of all samples */
 };
 
 enum
@@ -236,6 +237,8 @@ ppg_model_finalize (GObject *object)
 	g_ptr_array_foreach(priv->samples, (GFunc)pk_sample_unref, NULL);
 	g_ptr_array_unref(priv->samples);
 
+	g_array_unref(priv->sample_times);
+
 	g_hash_table_unref(priv->mappings);
 	g_hash_table_unref(priv->next_manifests);
 
@@ -327,6 +330,7 @@ ppg_model_init (PpgModel *model)
 	priv->stamp = g_random_int();
 	priv->manifests = g_ptr_array_new();
 	priv->samples = g_ptr_array_new();
+	priv->sample_times = g_array_new(FALSE, FALSE, sizeof(gdouble));
 	priv->mappings = g_hash_table_new_full(g_int_hash, g_int_equal,
 	                                       NULL, g_free);
 	priv->next_manifests = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -383,6 +387,7 @@ ppg_model_insert_sample (PpgModel   *model,
 	Mapping *mapping;
 	GValue value = { 0 };
 	gdouble dval = 0;
+	gdouble time_;
 
 	g_return_if_fail(PPG_IS_MODEL(model));
 	g_return_if_fail(manifest != NULL);
@@ -431,6 +436,14 @@ ppg_model_insert_sample (PpgModel   *model,
 	 */
 	priv->sample_count++;
 	g_ptr_array_add(priv->samples, pk_sample_ref(sample));
+
+	/*
+	 * Get the relative time to the start of the session and store it
+	 * so we can binary search when looking for a sample based on time.
+	 */
+	time_ = pk_sample_get_time(sample);
+	time_ = ppg_session_convert_time(priv->session, time_);
+	g_array_append_val(priv->sample_times, time_);
 
 	g_signal_emit(model, signals[CHANGED], 0);
 }
