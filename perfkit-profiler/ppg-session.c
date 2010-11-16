@@ -820,6 +820,27 @@ ppg_session_load (PpgSession   *session,
 }
 
 /**
+ * ppg_session_get_started_at:
+ * @session: (in): A #PpgSession.
+ * @started_at: (out): A #GTimeVal.
+ *
+ * Retrieves the time at which the session was started using remote
+ * agent time.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_session_get_started_at (PpgSession *session,
+                            GTimeVal   *started_at)
+{
+	g_return_if_fail(PPG_IS_SESSION(session));
+	g_return_if_fail(started_at != NULL);
+
+	*started_at = session->priv->started_at;
+}
+
+/**
  * ppg_session_finalize:
  * @object: (in): A #PpgSession.
  *

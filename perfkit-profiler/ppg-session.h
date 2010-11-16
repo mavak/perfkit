@@ -69,6 +69,8 @@ gboolean        ppg_session_save           (PpgSession    *session,
 gboolean        ppg_session_load           (PpgSession    *session,
                                             const gchar   *uri,
                                             GError       **error);
+void            ppg_session_get_started_at (PpgSession    *session,
+                                            GTimeVal      *started_at);
 
 
 G_END_DECLS
