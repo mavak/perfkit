@@ -58,6 +58,7 @@ gint            pk_manifest_get_row_id     (PkManifest      *manifest,
                                             const gchar     *name);
 void            pk_manifest_get_timespec   (PkManifest      *manifest,
                                             struct timespec *ts);
+gdouble         pk_manifest_get_time       (PkManifest      *manifest);
 gint            pk_manifest_get_source_id  (PkManifest      *manifest);
 
 G_END_DECLS

@@ -291,6 +291,28 @@ pk_manifest_get_timespec (PkManifest      *manifest, /* IN */
 	*ts = manifest->ts;
 }
 
+/**
+ * pk_manifest_get_time:
+ * @manifest: (in): A #PkManifest.
+ *
+ * Retrieves the time of the manifest as a double. Microseconds are provided
+ * as decimal precision.
+ *
+ * Returns: the time of the manifest as a double.
+ * Side effects: None.
+ */
+gdouble
+pk_manifest_get_time (PkManifest *manifest)
+{
+	gdouble time_;
+
+	g_return_val_if_fail(manifest != NULL, 0.0);
+
+	time_ = manifest->ts.tv_sec;
+	time_ += manifest->ts.tv_nsec / 1000000000.0;
+	return time_;
+}
+
 GType
 pk_manifest_get_type (void)
 {

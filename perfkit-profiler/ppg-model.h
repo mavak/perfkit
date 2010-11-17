@@ -46,14 +46,12 @@ typedef void (*PpgModelValueFunc) (PpgModel     *model,
 
 struct _PpgModelIter
 {
-	guint32 stamp; /* Unique stamp corresponding to model. */
-	gdouble time;  /* Time of current sample. */
-
-	/*< private >*/
-	gpointer user_data;
-	gpointer user_data2;
-	gpointer user_data3;
-	gpointer user_data4;
+	gdouble     time;
+	gint        index;
+	gint        begin;
+	gint        end;
+	PkSample   *sample;
+	PkManifest *manifest;
 };
 
 struct _PpgModel

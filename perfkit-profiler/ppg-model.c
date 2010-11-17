@@ -85,6 +85,12 @@ enum
 	LAST_SIGNAL
 };
 
+enum
+{
+	BEFORE = 1,
+	AFTER  = 2,
+};
+
 static guint signals[LAST_SIGNAL] = { 0 };
 
 static inline void
@@ -149,7 +155,6 @@ mapping_get_value (Mapping *mapping,
 	PkSample *last;
 	GType type;
 	gint row;
-	gint idx;
 
 	g_return_if_fail(mapping != NULL);
 	g_return_if_fail(manifest != NULL);
@@ -181,13 +186,12 @@ mapping_get_value (Mapping *mapping,
 		/*
 		 * We need to get the last value and subtract it.
 		 */
-		idx = GPOINTER_TO_INT(iter->user_data3);
-		if (!idx) {
+		if (!iter->index) {
 			g_value_init(value, mapping->expected_type);
 			return;
 		}
 
-		last = g_ptr_array_index(priv->samples, idx - 1);
+		last = g_ptr_array_index(priv->samples, iter->index - 1);
 		/*
 		 * FIXME: There is a (unlikely) chance that the last sample
 		 *        was not part of this manifest and the row id is
@@ -472,10 +476,10 @@ ppg_model_add_mapping (PpgModel     *model,
 }
 
 void
-ppg_model_add_mapping_func (PpgModel *model,
-                            gint key,
-                            PpgModelValueFunc func,
-                            gpointer user_data)
+ppg_model_add_mapping_func (PpgModel          *model,
+                            gint               key,
+                            PpgModelValueFunc  func,
+                            gpointer           user_data)
 {
 	PpgModelPrivate *priv;
 	Mapping *mapping;
@@ -493,14 +497,12 @@ ppg_model_add_mapping_func (PpgModel *model,
 }
 
 void
-ppg_model_get_valist (PpgModel *model,
+ppg_model_get_valist (PpgModel     *model,
                       PpgModelIter *iter,
-                      gint first_key,
-                      va_list args)
+                      gint          first_key,
+                      va_list       args)
 {
 	PpgModelPrivate *priv;
-	PkManifest *manifest;
-	PkSample *sample;
 	Mapping *mapping;
 	GValue value = { 0 };
 	gchar *error = NULL;
@@ -513,8 +515,6 @@ ppg_model_get_valist (PpgModel *model,
 	key = first_key;
 
 	do {
-		manifest = (PkManifest *)iter->user_data;
-		sample = (PkSample *)iter->user_data2;
 		mapping = g_hash_table_lookup(priv->mappings, &key);
 
 		if (!mapping) {
@@ -524,11 +524,12 @@ ppg_model_get_valist (PpgModel *model,
 			return;
 		}
 
-		g_assert(manifest);
-		g_assert(sample);
+		g_assert(iter->manifest);
+		g_assert(iter->sample);
 		g_assert(mapping);
 
-		mapping_get_value(mapping, model, iter, manifest, sample, &value);
+		mapping_get_value(mapping, model, iter, iter->manifest,
+		                  iter->sample, &value);
 		G_VALUE_LCOPY(&value, args, 0, &error);
 		if (error) {
 			g_warning("%s:%s", G_STRFUNC, error);
@@ -540,9 +541,9 @@ ppg_model_get_valist (PpgModel *model,
 }
 
 void
-ppg_model_get (PpgModel *model,
+ppg_model_get (PpgModel     *model,
                PpgModelIter *iter,
-               gint first_key,
+               gint          first_key,
                ...)
 {
 	va_list args;
@@ -553,14 +554,12 @@ ppg_model_get (PpgModel *model,
 }
 
 void
-ppg_model_get_value (PpgModel *model,
+ppg_model_get_value (PpgModel     *model,
                      PpgModelIter *iter,
-                     gint key,
-                     GValue *value)
+                     gint          key,
+                     GValue       *value)
 {
 	PpgModelPrivate *priv;
-	PkManifest *manifest;
-	PkSample *sample;
 	Mapping *mapping;
 
 	g_return_if_fail(PPG_IS_MODEL(model));
@@ -569,34 +568,14 @@ ppg_model_get_value (PpgModel *model,
 
 	priv = model->priv;
 
-	g_assert(iter->stamp == priv->stamp);
-
-	manifest = (PkManifest *)iter->user_data;
-	sample = (PkSample *)iter->user_data2;
 	mapping = g_hash_table_lookup(priv->mappings, &key);
 
-	g_assert(manifest);
-	g_assert(sample);
+	g_assert(iter->manifest);
+	g_assert(iter->sample);
 	g_assert(mapping);
 
-	mapping_get_value(mapping, model, iter, manifest, sample, value);
-}
-
-static inline gdouble
-ppg_model_make_relative (PpgModel *model,
-                         PkSample *sample)
-{
-	PpgModelPrivate *priv = model->priv;
-	PkManifest *manifest;
-	struct timespec ts_manifest;
-	struct timespec ts_sample;
-	struct timespec z;
-
-	manifest = g_ptr_array_index(priv->manifests, 0);
-	pk_manifest_get_timespec(manifest, &ts_manifest);
-	pk_sample_get_timespec(sample, &ts_sample);
-	timespec_subtract(&ts_sample, &ts_manifest, &z);
-	return z.tv_sec + (z.tv_nsec / 1000000000.0);
+	mapping_get_value(mapping, model, iter, iter->manifest,
+	                  iter->sample, value);
 }
 
 gboolean
@@ -604,45 +583,40 @@ ppg_model_iter_next (PpgModel     *model,
                      PpgModelIter *iter)
 {
 	PpgModelPrivate *priv;
-	PkManifest *manifest;
 	PkManifest *next_manifest;
-	PkSample *sample;
-	struct timespec ts_next;
-	struct timespec ts_sample;
-	gsize idx;
 
 	g_return_val_if_fail(PPG_IS_MODEL(model), FALSE);
 	g_return_val_if_fail(iter != NULL, FALSE);
 
 	priv = model->priv;
 
-	g_assert(iter->stamp == priv->stamp);
-
-	manifest = iter->user_data;
-
 	/*
-	 * Increment to next position in sample array.
+	 * Move to the next sample in the array.
 	 */
-	idx = GPOINTER_TO_INT(iter->user_data3) + 1;
-	if (G_UNLIKELY(idx >= priv->samples->len)) {
+
+	iter->index++;
+	if (iter->index > iter->end) {
 		return FALSE;
 	}
 
-	iter->user_data3 = GINT_TO_POINTER(idx);
-	sample = g_ptr_array_index(priv->samples, idx);
-	iter->user_data2 = sample;
-	iter->time = ppg_model_make_relative(model, sample);
+	iter->sample = g_ptr_array_index(priv->samples, iter->index);
+
+	/*
+	 * Update the time position of the sample.
+	 */
+	iter->time = ppg_session_convert_time(priv->session,
+	                                      pk_sample_get_time(iter->sample));
 
 	/*
 	 * The sample is guaranteed to be within either the current manifest
 	 * or the following manifest since we discard manifests that contained
 	 * no samples.
 	 */
-	if ((next_manifest = g_hash_table_lookup(priv->next_manifests, manifest))) {
-		pk_manifest_get_timespec(next_manifest, &ts_next);
-		pk_sample_get_timespec(sample, &ts_sample);
-		if (timespec_compare(&ts_sample, &ts_next) >= 0) {
-			iter->user_data = next_manifest;
+	if ((next_manifest = g_hash_table_lookup(priv->next_manifests,
+	                                         iter->manifest))) {
+		if (pk_manifest_get_time(next_manifest) <=
+		    pk_sample_get_time(iter->sample)) {
+			iter->manifest = next_manifest;
 		}
 	}
 
@@ -663,16 +637,104 @@ ppg_model_get_iter_first (PpgModel     *model,
 	if (priv->manifests->len) {
 		if (priv->samples->len) {
 			memset(iter, 0, sizeof *iter);
-			iter->stamp = priv->stamp;
-			iter->user_data = g_ptr_array_index(priv->manifests, 0);
-			iter->user_data2 = g_ptr_array_index(priv->samples, 0);
-			iter->user_data3 = 0;
-			iter->time = ppg_model_make_relative(model, iter->user_data2);
+			iter->manifest = g_ptr_array_index(priv->manifests, 0);
+			iter->sample = g_ptr_array_index(priv->samples, 0);
+			iter->index = 0;
+			iter->begin = 0;
+			iter->end = priv->samples->len - 1;
+			iter->time = ppg_session_convert_time(priv->session,
+			                                      pk_sample_get_time(iter->sample));
 			return TRUE;
 		}
 	}
 
 	return FALSE;
+}
+
+static inline gint
+compare_double (const gdouble *xp,
+                const gdouble *yp)
+{
+	const gdouble x = *xp;
+	const gdouble y = *yp;
+
+	if (x < y) return -1;
+	else if (x > y) return 1;
+	else return 0;
+}
+
+static gint
+ppg_model_binary_search (PpgModel *model,
+                         gdouble   target,
+                         gdouble   other,
+                         gint      mode)
+{
+	PpgModelPrivate *priv;
+	GArray *ar;
+	gdouble *dar;
+	gint left;
+	gint right;
+	gint middle = 0;
+	gdouble found = FALSE;
+
+	g_return_val_if_fail(PPG_IS_MODEL(model), -1);
+
+	priv = model->priv;
+	ar = priv->sample_times;
+	dar = (gdouble *)ar->data;
+
+	if (!ar->len) {
+		return -1;
+	}
+
+	left = 0;
+	right = ar->len - 1;
+
+	while (left <= right) {
+		middle = (left + right) / 2;
+		switch (compare_double(&dar[middle], &target)) {
+		case -1:
+			left = middle + 1;
+			break;
+		case 1:
+			right = middle - 1;
+			break;
+		case 0:
+			found = TRUE;
+			goto walk;
+		default:
+			g_assert_not_reached();
+		}
+	}
+
+walk:
+	switch (mode) {
+	case BEFORE:
+		while (middle >= 0 && dar[middle] >= target) {
+			middle--;
+		}
+		if (middle < 0) {
+			if (dar[0] < other) {
+				return 0;
+			}
+			return -1;
+		}
+		return middle;
+	case AFTER:
+		while (middle < ar->len && dar[middle] <= target) {
+			middle++;
+		}
+		if (middle >= ar->len) {
+			if (dar[ar->len - 1] > other) {
+				return ar->len - 1;
+			}
+			return -1;
+		}
+		return middle;
+	default:
+		g_assert_not_reached();
+		return -1;
+	}
 }
 
 gboolean
@@ -682,10 +744,16 @@ ppg_model_get_iter_at (PpgModel      *model,
                        gdouble        end,
                        PpgResolution  resolution) /* UNUSED */
 {
+	PpgModelPrivate *priv;
+	gint begin_idx;
+	gint end_idx;
+
 	g_return_val_if_fail(PPG_IS_MODEL(model), FALSE);
 	g_return_val_if_fail(iter != NULL, FALSE);
 	g_return_val_if_fail(begin >= 0.0, FALSE);
 	g_return_val_if_fail(end >= 0.0, FALSE);
+
+	priv = model->priv;
 
 	/*
 	 * TODO:
@@ -709,10 +777,32 @@ ppg_model_get_iter_at (PpgModel      *model,
 	 * file-based storage.
 	 */
 
+	begin_idx = ppg_model_binary_search(model, begin, end, BEFORE);
+	end_idx = ppg_model_binary_search(model, end, begin, AFTER);
+
 	/*
-	 * TODO: Binary search for begin time.
+	 * There are no items that fall within the range.
 	 */
-	return ppg_model_get_iter_first(model, iter);
+	if (begin_idx == -1 || end_idx == -1) {
+		return FALSE;
+	}
+
+	g_assert_cmpint(begin_idx, !=, -1);
+	g_assert_cmpint(end_idx, !=, -1);
+
+	/*
+	 * Build the iter for the given range.
+	 */
+	memset(iter, 0, sizeof *iter);
+	iter->manifest = g_ptr_array_index(priv->manifests, 0); /* FIXME */
+	iter->sample = g_ptr_array_index(priv->samples, begin_idx);
+	iter->begin = begin_idx;
+	iter->index = begin_idx;
+	iter->end = end_idx;
+	iter->time = ppg_session_convert_time(priv->session,
+	                                      pk_sample_get_time(iter->sample));
+
+	return TRUE;
 }
 
 void
