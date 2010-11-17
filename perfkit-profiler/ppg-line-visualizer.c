@@ -40,6 +40,8 @@ struct _PpgLineVisualizerPrivate
 	gboolean      range_set;
 	gdouble       range_lower;
 	gdouble       range_upper;
+
+	gdouble       last_time; /* time of last sample */
 };
 
 void
@@ -58,13 +60,26 @@ ppg_line_visualizer_set_range (PpgLineVisualizer *visualizer,
 	priv->range_set = TRUE;
 }
 
+static void
+model_changed_cb (PpgModel          *model,
+                  PpgLineVisualizer *line)
+{
+	PpgVisualizer *visualizer = (PpgVisualizer *)line;
+	PpgLineVisualizerPrivate *priv = line->priv;
+	gdouble last;
+
+	last = ppg_model_get_last_time(model);
+	ppg_visualizer_queue_draw_fast(visualizer, priv->last_time, last);
+	priv->last_time = last;
+}
+
 void
 ppg_line_visualizer_append (PpgLineVisualizer *visualizer,
-                            const gchar *name,
-                            GdkColor *color,
-                            gboolean fill,
-                            PpgModel *model,
-                            gint key)
+                            const gchar       *name,
+                            GdkColor          *color,
+                            gboolean           fill,
+                            PpgModel          *model,
+                            gint               key)
 {
 	PpgLineVisualizerPrivate *priv;
 	Line line = { 0 };
@@ -86,9 +101,8 @@ ppg_line_visualizer_append (PpgLineVisualizer *visualizer,
 
 	g_array_append_val(priv->lines, line);
 
-	g_signal_connect_swapped(model, "changed",
-	                         G_CALLBACK(ppg_visualizer_queue_draw),
-	                         visualizer);
+	g_signal_connect(model, "changed", G_CALLBACK(model_changed_cb),
+	                 visualizer);
 }
 
 static ClutterActor*
@@ -178,23 +192,53 @@ get_y_offset (gdouble lower,
 	return height - ((value - lower) / (upper - lower) * height);
 }
 
+static gdouble
+get_value (PpgModel     *model,
+           PpgModelIter *iter,
+           gint          key)
+{
+	GValue value = { 0 };
+
+	ppg_model_get_value(model, iter, key, &value);
+	switch (value.g_type) {
+	case G_TYPE_DOUBLE:
+		return g_value_get_double(&value);
+	case G_TYPE_FLOAT:
+		return g_value_get_float(&value);
+	case G_TYPE_INT:
+		return g_value_get_int(&value);
+	case G_TYPE_UINT:
+		return g_value_get_uint(&value);
+	case G_TYPE_LONG:
+		return g_value_get_long(&value);
+	case G_TYPE_ULONG:
+		return g_value_get_ulong(&value);
+	default:
+		g_critical("Uknown value type: %s", g_type_name(value.g_type));
+		g_assert_not_reached();
+	}
+
+	return 0.0;
+}
+
 static void
-ppg_line_visualizer_draw (PpgVisualizer *visualizer)
+ppg_line_visualizer_draw_fast (PpgVisualizer *visualizer,
+                               gdouble        begin,
+                               gdouble        end)
 {
 	PpgLineVisualizerPrivate *priv;
 	PpgModelIter iter;
 	Line *line;
 	PpgColorIter color;
 	cairo_t *cr;
-	GValue value = { 0 };
 	gfloat height;
 	gfloat width;
 	gdouble x;
 	gdouble y;
 	gdouble last_x = 0;
 	gdouble last_y = 0;
-	gdouble begin;
-	gdouble end;
+	gdouble real_begin;
+	gdouble real_end;
 	gdouble lower = 0;
 	gdouble upper = 0;
 	gdouble tl;
@@ -206,18 +250,38 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 
 	priv = PPG_LINE_VISUALIZER(visualizer)->priv;
 
+#if 0
 	clutter_cairo_texture_clear(CLUTTER_CAIRO_TEXTURE(priv->actor));
-	cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->actor));
+#endif
 
+	/*
+	 * Get the bounds we need to draw.
+	 */
 	g_object_get(visualizer,
-	             "begin", &begin,
-	             "end", &end,
+	             "begin", &real_begin,
+	             "end", &real_end,
 	             NULL);
-
 	g_object_get(priv->actor,
 	             "width", &width,
 	             "height", &height,
 	             NULL);
+
+	if (end < real_begin || begin > real_end) {
+		return;
+	}
+
+	cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->actor));
+
+	/*
+	 * Clear the range we are drawing.
+	 */
+	cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+	cairo_rectangle(cr,
+	                get_x_offset(real_begin, real_end, width, begin), 0,
+	                get_x_offset(real_begin, real_end, width, end), height);
+	cairo_clip_preserve(cr);
+	cairo_fill(cr);
+	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
 #if 0
 	cairo_rectangle(cr, 0, 0, width, height);
@@ -253,23 +317,21 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 			goto next;
 		}
 
-		last_x = 0;
-		last_y = height;
-		cairo_move_to(cr, 0, height);
+		last_x = get_x_offset(real_begin, real_end, width, iter.time);
+		last_y = get_y_offset(lower, upper, height,
+		                      get_value(line->model, &iter, line->key));
+		cairo_move_to(cr, last_x, last_y);
+
+		/*
+		 * Can't do anything with only a single data point.
+		 */
+		if (!ppg_model_iter_next(line->model, &iter)) {
+			goto next;
+		}
 
 		do {
-			ppg_model_get_value(line->model, &iter, line->key, &value);
-			if (G_VALUE_HOLDS(&value, G_TYPE_DOUBLE)) {
-				val = g_value_get_double(&value);
-			} else if (G_VALUE_HOLDS(&value, G_TYPE_INT)) {
-				val = g_value_get_int(&value);
-			} else if (G_VALUE_HOLDS(&value, G_TYPE_UINT)) {
-				val = g_value_get_uint(&value);
-			} else {
-				g_critical("HOLDS %s", g_type_name(value.g_type));
-				g_assert_not_reached();
-			}
-			x = get_x_offset(begin, end, width, iter.time);
+			val = get_value(line->model, &iter, line->key);
+			x = get_x_offset(real_begin, real_end, width, iter.time);
 			y = get_y_offset(lower, upper, height, val);
 #if 0
 			cairo_line_to(cr, x, y);
@@ -282,7 +344,6 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 #endif
 			last_x = x;
 			last_y = y;
-			g_value_unset(&value);
 		} while (ppg_model_iter_next(line->model, &iter));
 
 		cairo_stroke(cr);
@@ -292,6 +353,27 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 	}
 
 	cairo_destroy(cr);
+}
+
+static void
+ppg_line_visualizer_draw (PpgVisualizer *visualizer)
+{
+	PpgLineVisualizer *line = (PpgLineVisualizer *)visualizer;
+	PpgLineVisualizerPrivate *priv;
+	gdouble begin;
+	gdouble end;
+
+	g_return_if_fail(PPG_IS_LINE_VISUALIZER(line));
+
+	priv = line->priv;
+
+	g_object_get(visualizer,
+	             "begin", &begin,
+	             "end", &end,
+	             NULL);
+
+	clutter_cairo_texture_clear(CLUTTER_CAIRO_TEXTURE(priv->actor));
+	ppg_line_visualizer_draw_fast(visualizer, begin, end);
 }
 
 /**
@@ -336,6 +418,7 @@ ppg_line_visualizer_class_init (PpgLineVisualizerClass *klass)
 	visualizer_class = PPG_VISUALIZER_CLASS(klass);
 	visualizer_class->get_actor = ppg_line_visualizer_get_actor;
 	visualizer_class->draw = ppg_line_visualizer_draw;
+	visualizer_class->draw_fast = ppg_line_visualizer_draw_fast;
 }
 
 /**

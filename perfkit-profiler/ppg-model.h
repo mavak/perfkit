@@ -122,6 +122,7 @@ gboolean ppg_model_iter_next        (PpgModel          *model,
 void     ppg_model_set_track_range  (PpgModel          *model,
                                      gint               key,
                                      gboolean           track_range);
+gdouble  ppg_model_get_last_time    (PpgModel          *model);
 
 G_END_DECLS
 

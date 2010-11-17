@@ -50,6 +50,9 @@ struct _PpgVisualizerClass
 
 	ClutterActor* (*get_actor) (PpgVisualizer *visualizer);
 	void          (*draw)      (PpgVisualizer *visualizer);
+	void          (*draw_fast) (PpgVisualizer *visualizer,
+	                            gdouble        begin,
+	                            gdouble        end);
 };
 
 struct _PpgVisualizerEntry
@@ -60,9 +63,12 @@ struct _PpgVisualizerEntry
 	GCallback    callback;
 };
 
-GType         ppg_visualizer_get_type   (void) G_GNUC_CONST;
-ClutterActor* ppg_visualizer_get_actor  (PpgVisualizer *visualizer);
-void          ppg_visualizer_queue_draw (PpgVisualizer *visualizer);
+GType         ppg_visualizer_get_type        (void) G_GNUC_CONST;
+ClutterActor* ppg_visualizer_get_actor       (PpgVisualizer *visualizer);
+void          ppg_visualizer_queue_draw      (PpgVisualizer *visualizer);
+void          ppg_visualizer_queue_draw_fast (PpgVisualizer *visualizer,
+                                              gdouble        begin,
+                                              gdouble        end);
 
 G_END_DECLS
 

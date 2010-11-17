@@ -28,6 +28,10 @@ struct _PpgVisualizerPrivate
 	gdouble  begin;
 	gdouble  end;
 	guint    draw_handler;
+
+	guint    fast_draw_handler;
+	gdouble  fast_begin;
+	gdouble  fast_end;
 };
 
 enum
@@ -78,6 +82,82 @@ ppg_visualizer_queue_draw (PpgVisualizer *visualizer)
 	if (!priv->draw_handler) {
 		priv->draw_handler =
 			g_timeout_add(100, ppg_visualizer_draw_timeout, visualizer);
+	}
+}
+
+/**
+ * ppg_visualizer_fast_draw_timeout:
+ * @visualizer: (in): A #PpgVisualizer.
+ *
+ * Timeout that will force the redraw of a particular section of the
+ * visualizer. This can allow the visualizer to draw less information
+ * and therefore require less CPU.
+ *
+ * Returns: %FALSE always.
+ * Side effects: None.
+ */
+gboolean
+ppg_visualizer_fast_draw_timeout (gpointer data)
+{
+	PpgVisualizer *visualizer = (PpgVisualizer *)data;
+	PpgVisualizerPrivate *priv;
+	gdouble begin;
+	gdouble end;
+
+	g_return_val_if_fail(PPG_IS_VISUALIZER(visualizer), FALSE);
+
+	priv = visualizer->priv;
+
+	priv->fast_draw_handler = 0;
+
+	begin = priv->fast_begin;
+	end = priv->fast_end;
+	priv->fast_begin = 0.0;
+	priv->fast_end = 0.0;
+
+	if (PPG_VISUALIZER_GET_CLASS(visualizer)->draw_fast) {
+		PPG_VISUALIZER_GET_CLASS(visualizer)->draw_fast(visualizer, begin, end);
+	}
+
+	return FALSE;
+}
+
+/**
+ * ppg_visualizer_queue_draw_fast:
+ * @visualizer: (in): A #PpgVisualizer.
+ * @begin: (in): The beginning time of the range.
+ * @end: (in): The ending time of the range.
+ *
+ * Queues the draw for a particular visible range. This is often useful
+ * when new data arrives and you only want to draw that section of the
+ * visualizer.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_visualizer_queue_draw_fast (PpgVisualizer *visualizer,
+                                gdouble        begin,
+                                gdouble        end)
+{
+	PpgVisualizerPrivate *priv;
+
+	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
+	g_return_if_fail(begin <= end);
+
+	priv = visualizer->priv;
+
+	if (begin < priv->fast_begin || priv->fast_begin == 0.0) {
+		priv->fast_begin = begin;
+	}
+
+	if (end > priv->fast_end || priv->fast_end == 0.0) {
+		priv->fast_end = end;
+	}
+
+	if (!priv->fast_draw_handler) {
+		priv->fast_draw_handler =
+			g_timeout_add(100, ppg_visualizer_fast_draw_timeout, visualizer);
 	}
 }
 

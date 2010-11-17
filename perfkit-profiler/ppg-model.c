@@ -853,3 +853,22 @@ ppg_model_get_range (PpgModel *model,
 		*upper = mapping->upper;
 	}
 }
+
+gdouble
+ppg_model_get_last_time (PpgModel *model)
+{
+	PpgModelPrivate *priv;
+	PkSample *sample;
+
+	g_return_val_if_fail(PPG_IS_MODEL(model), 0.0);
+
+	priv = model->priv;
+
+	if (!priv->samples->len) {
+		return 0.0;
+	}
+
+	sample = g_ptr_array_index(priv->samples, priv->samples->len - 1);
+	return ppg_session_convert_time(priv->session,
+	                                pk_sample_get_time(sample));
+}
