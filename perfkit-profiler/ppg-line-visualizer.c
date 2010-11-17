@@ -249,7 +249,7 @@ ppg_line_visualizer_draw (PpgVisualizer *visualizer)
 		cairo_move_to(cr, 0, height);
 		gdk_cairo_set_source_color(cr, &color.color);
 
-		if (!ppg_model_get_iter_first(line->model, &iter)) {
+		if (!ppg_model_get_iter_at(line->model, &iter, begin, end, PPG_RESOLUTION_FULL)) {
 			goto next;
 		}
 
