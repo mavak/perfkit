@@ -675,7 +675,6 @@ ppg_model_binary_search (PpgModel *model,
 	gint left;
 	gint right;
 	gint middle = 0;
-	gdouble found = FALSE;
 
 	g_return_val_if_fail(PPG_IS_MODEL(model), -1);
 
@@ -700,7 +699,6 @@ ppg_model_binary_search (PpgModel *model,
 			right = middle - 1;
 			break;
 		case 0:
-			found = TRUE;
 			goto walk;
 		default:
 			g_assert_not_reached();
