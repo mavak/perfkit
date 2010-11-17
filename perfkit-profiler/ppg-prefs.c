@@ -20,17 +20,29 @@
 
 #include "ppg-prefs.h"
 
-#define PROJECT_SCHEMA      "org.perfkit.profiler.project"
-#define PROJECT_DEFAULT_DIR "default-dir"
+#define PROJECT_SCHEMA             "org.perfkit.profiler.project"
+#define PROJECT_SCHEMA_DEFAULT_DIR "default-dir"
 
-static GSettings *project_settings = NULL;
+static GSettings    *project_settings = NULL;
+static GOptionEntry  entries[]        = {
+	{ NULL }
+};
+
+GOptionGroup*
+ppg_prefs_get_option_group (void)
+{
+	GOptionGroup *group;
+
+	group = g_option_group_new("prefs", "Application preferences",
+	                           "", NULL, NULL);
+	g_option_group_add_entries(group, entries);
+	return group;
+}
 
 gboolean
-ppg_prefs_init (gint    *argc,
-                gchar ***argv)
+ppg_prefs_init (void)
 {
 	project_settings = g_settings_new(PROJECT_SCHEMA);
-
 	return TRUE;
 }
 
@@ -47,14 +59,18 @@ ppg_prefs_get_project_settings (void)
 	return project_settings;
 }
 
-gchar *
-ppg_prefs_get_project_default_dir (void)
-{
-    return g_settings_get_string(project_settings, PROJECT_DEFAULT_DIR);
-}
+#define STR_PREF(_n, _N)                                                     \
+	                                                                         \
+    gchar *                                                                  \
+    ppg_prefs_get_project_##_n (void)                                        \
+    {                                                                        \
+	    return g_settings_get_string(project_settings, PROJECT_SCHEMA_##_N); \
+    }                                                                        \
+	                                                                         \
+    void                                                                     \
+    ppg_prefs_set_project_##_n (const gchar *str)                            \
+    {                                                                        \
+	    g_settings_set_string(project_settings, PROJECT_SCHEMA_##_N, str);   \
+    }
 
-void
-ppg_prefs_set_project_default_dir (const gchar *default_dir)
-{
-    g_settings_set_string(project_settings, PROJECT_DEFAULT_DIR, default_dir);
-}
+STR_PREF(default_dir, DEFAULT_DIR)

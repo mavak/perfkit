@@ -23,26 +23,26 @@
 
 G_BEGIN_DECLS
 
-void     ppg_actions_init         (void);
-void     ppg_actions_shutdown     (void);
-void     ppg_color_init           (void);
-void     ppg_color_shutdown       (void);
-void     ppg_instruments_init     (void);
-void     ppg_instruments_shutdown (void);
-void     ppg_log_init             (gboolean       stdout_,
-                                   const gchar   *filename);
-void     ppg_log_shutdown         (void);
-void     ppg_monitor_init         (void);
-void     ppg_monitor_shutdown     (void);
-void     ppg_paths_init           (void);
-void     ppg_paths_shutdown       (void);
-void     ppg_prefs_init           (gint          *argc,
-                                   gchar       ***argv);
-void     ppg_prefs_shutdown       (void);
-gboolean ppg_runtime_init         (gint          *argc,
-                                   gchar       ***argv);
-gint     ppg_runtime_run          (void);
-void     ppg_runtime_shutdown     (void);
+void          ppg_actions_init           (void);
+void          ppg_actions_shutdown       (void);
+void          ppg_color_init             (void);
+void          ppg_color_shutdown         (void);
+void          ppg_instruments_init       (void);
+void          ppg_instruments_shutdown   (void);
+void          ppg_log_init               (gboolean       stdout_,
+                                          const gchar   *filename);
+void          ppg_log_shutdown           (void);
+void          ppg_monitor_init           (void);
+void          ppg_monitor_shutdown       (void);
+void          ppg_paths_init             (void);
+void          ppg_paths_shutdown         (void);
+GOptionGroup* ppg_prefs_get_option_group (void);
+void          ppg_prefs_init             (void);
+void          ppg_prefs_shutdown         (void);
+gboolean      ppg_runtime_init           (gint          *argc,
+                                          gchar       ***argv);
+gint          ppg_runtime_run            (void);
+void          ppg_runtime_shutdown       (void);
 
 G_END_DECLS
 

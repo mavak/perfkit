@@ -68,10 +68,6 @@ ppg_runtime_init (gint    *argc,
 	GOptionContext *context;
 	GError *error = NULL;
 
-	/*
-	 * FIXME: Retrieve option group from prefs.
-	 */
-
 	hidden = g_option_group_new("special", "", "", NULL, NULL);
 	g_option_group_add_entries(hidden, hidden_entries);
 
@@ -79,6 +75,7 @@ ppg_runtime_init (gint    *argc,
 	g_option_context_add_main_entries(context, option_entries, GETTEXT_PACKAGE);
 	g_option_context_add_group(context, gtk_get_option_group(TRUE));
 	g_option_context_add_group(context, clutter_get_option_group());
+	g_option_context_add_group(context, ppg_prefs_get_option_group());
 	g_option_context_add_group(context, hidden);
 	if (!g_option_context_parse(context, argc, argv, &error)) {
 		g_printerr("%s\n", error->message);
@@ -88,7 +85,7 @@ ppg_runtime_init (gint    *argc,
 
 	ppg_log_init(use_stdount, log_filename);
 	ppg_paths_init();
-	ppg_prefs_init(NULL, NULL); /* FIXME: */
+	ppg_prefs_init();
 	ppg_color_init();
 	ppg_monitor_init();
 	gtk_window_set_default_icon_name("clock");
