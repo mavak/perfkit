@@ -75,9 +75,12 @@ static void ppg_window_go_forward_activate           (GtkAction *action,
                                                       PpgWindow *window);
 static void ppg_window_go_back_activate              (GtkAction *action,
                                                       PpgWindow *window);
+static void ppg_window_new_session_activate          (GtkAction *action,
+                                                      PpgWindow *window);
 
 static GtkActionEntry ppg_window_action_entries[] = {
 	{ "file", NULL, N_("Per_fkit") },
+	{ "new-session", NULL, N_("_New Session"), NULL, NULL, G_CALLBACK(ppg_window_new_session_activate) },
 	{ "quit", GTK_STOCK_QUIT, NULL, NULL, NULL, G_CALLBACK(ppg_window_quit_activate) },
 	{ "close", GTK_STOCK_CLOSE, N_("_Close Window"), NULL, NULL, G_CALLBACK(ppg_window_close_activate) },
 

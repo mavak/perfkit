@@ -161,6 +161,29 @@ ppg_window_session_stopped (PpgSession *session,
 	END_ACTION_UPDATE;
 }
 
+static void
+ppg_window_new_session_activate (GtkAction *action,
+                                 PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GtkWidget *win;
+	gchar *uri;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(GTK_IS_ACTION(action));
+
+	priv = window->priv;
+
+	g_object_get(priv->session,
+	             "uri", &uri,
+	             NULL);
+	win = g_object_new(PPG_TYPE_WINDOW,
+	                   "uri", uri,
+	                   NULL);
+	gtk_window_present(GTK_WINDOW(win));
+	g_free(uri);
+}
+
 /**
  * ppg_window_stop_activate:
  * @action: (in): A #GtkAction.
