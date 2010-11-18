@@ -24,6 +24,7 @@ G_DEFINE_TYPE(PpgSession, ppg_session, G_TYPE_INITIALLY_UNOWNED)
 
 struct _PpgSessionPrivate
 {
+	gchar            *uri;
 	PkConnection     *conn;
 	gint              channel;
 	gchar            *target;
@@ -753,9 +754,11 @@ ppg_session_set_uri (PpgSession  *session,
 		return;
 	}
 
+	priv->uri = g_strdup(uri);
 	pk_connection_connect_async(priv->conn, NULL,
 	                            ppg_session_connection_connected,
 	                            session);
+	g_object_notify(G_OBJECT(session), "uri");
 
 	EXIT;
 }
@@ -873,6 +876,8 @@ ppg_session_finalize (GObject *object)
 		priv->timer = NULL;
 	}
 
+	g_free(priv->uri);
+
 	G_OBJECT_CLASS(ppg_session_parent_class)->finalize(object);
 
 	EXIT;
@@ -919,6 +924,9 @@ ppg_session_get_property (GObject    *object,
 		break;
 	case PROP_STARTED_AT:
 		g_value_set_pointer(value, &session->priv->started_at);
+		break;
+	case PROP_URI:
+		g_value_set_string(value, session->priv->uri);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -989,7 +997,7 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                                    "uri",
 	                                                    "uri",
 	                                                    NULL,
-	                                                    G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
 	g_object_class_install_property(object_class,
 	                                PROP_CHANNEL,
