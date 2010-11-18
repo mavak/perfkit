@@ -7671,6 +7671,7 @@ pk_connection_new_from_uri (const gchar *uri) /* IN */
 	g_static_mutex_lock(&protocol_mutex);
 	if (!(connection = g_hash_table_lookup(connections, uri))) {
 		if ((connection = g_object_new(protocol_type, "uri", uri, NULL))) {
+			g_hash_table_insert(connections, g_strdup(uri), connection);
 			/*
 			 * Add a weak ref so that we can remove it from our hashtable
 			 * when it is finalized.
