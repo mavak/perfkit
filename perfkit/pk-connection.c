@@ -121,6 +121,7 @@ static guint         signals[LAST_SIGNAL] = { 0 };
 static GStaticMutex  protocol_mutex       = G_STATIC_MUTEX_INIT;
 static GHashTable   *protocol_types       = NULL;
 static gsize         protocol_init        = FALSE;
+static GHashTable   *connections          = NULL;
 
 /**
  * pk_connection_sync_init:
@@ -7514,6 +7515,8 @@ pk_connection_get_protocol_type (const gchar *protocol) /* IN */
 	if (G_UNLIKELY(g_once_init_enter(&protocol_init))) {
 		protocol_types = g_hash_table_new_full(g_str_hash, g_str_equal,
 		                                       g_free, NULL);
+		connections = g_hash_table_new_full(g_str_hash, g_str_equal,
+		                                    g_free, NULL);
 		g_once_init_leave(&protocol_init, TRUE);
 	}
 
@@ -7606,6 +7609,18 @@ invalid_protocol:
 	return G_TYPE_INVALID;
 }
 
+static void
+pk_connection_weak_ref_cb (gpointer  data,
+                           GObject  *where_the_object_was)
+{
+	gchar *key = (gchar *)data;
+
+	g_static_mutex_lock(&protocol_mutex);
+	g_hash_table_remove(connections, key);
+	g_static_mutex_unlock(&protocol_mutex);
+	g_free(key);
+}
+
 /**
  * pk_connection_new_from_uri:
  * @uri: A uri to the destination.
@@ -7653,10 +7668,25 @@ pk_connection_new_from_uri (const gchar *uri) /* IN */
 		return NULL;
 	}
 
+	g_static_mutex_lock(&protocol_mutex);
+	if (!(connection = g_hash_table_lookup(connections, uri))) {
+		if ((connection = g_object_new(protocol_type, "uri", uri, NULL))) {
+			/*
+			 * Add a weak ref so that we can remove it from our hashtable
+			 * when it is finalized.
+			 */
+			g_object_weak_ref(G_OBJECT(connection),
+			                  pk_connection_weak_ref_cb,
+			                  g_strdup(uri));
+		}
+	} else {
+		g_object_ref(connection);
+	}
+	g_static_mutex_unlock(&protocol_mutex);
+
 	/*
 	 * Create instance of PkConnection and pass in the uri.
 	 */
-	connection = g_object_new(protocol_type, "uri", uri, NULL);
 
 	return connection;
 }
