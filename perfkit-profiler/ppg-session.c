@@ -331,7 +331,7 @@ ppg_session_get_state (PpgSession *session)
 }
 
 /**
- * ppg_session_channel_added:
+ * ppg_session_add_channel_cb:
  * @connection: (in): A #PkConnection.
  * @result: (in): A #GAsyncResult.
  * @user_data: (closure): User data for callback.
@@ -342,13 +342,15 @@ ppg_session_get_state (PpgSession *session)
  * Side effects: None.
  */
 static void
-ppg_session_channel_added (GObject      *connection,
-                           GAsyncResult *result,
-                           gpointer      user_data)
+ppg_session_add_channel_cb (GObject      *connection,
+                            GAsyncResult *result,
+                            gpointer      user_data)
 {
 	PpgSession *session = user_data;
 	PpgSessionPrivate *priv;
 	GError *error = NULL;
+
+	ENTRY;
 
 	g_return_if_fail(PPG_IS_SESSION(session));
 
@@ -358,10 +360,12 @@ ppg_session_channel_added (GObject      *connection,
 	                                              &priv->channel, &error)) {
 		ppg_session_report_error(session, G_STRFUNC, error);
 		g_error_free(error);
-		return;
+		EXIT;
 	}
 
 	g_signal_emit(session, signals[READY], 0);
+
+	EXIT;
 }
 
 static void
@@ -379,8 +383,6 @@ ppg_session_channel_stopped_cb (PkConnection *connection,
 	priv = session->priv;
 
 	if (priv->channel == channel) {
-		DEBUG(Session, "Received channel-stopped signal for channel %d",
-		      channel);
 		priv->state = PPG_SESSION_STOPPED;
 		g_timer_stop(priv->timer);
 		ppg_session_stop_position_notifier(session);
@@ -389,6 +391,23 @@ ppg_session_channel_stopped_cb (PkConnection *connection,
 	}
 
 	EXIT;
+}
+
+static void
+ppg_session_set_connected (PpgSession *session)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	g_signal_connect(priv->conn, "channel-stopped",
+	                 G_CALLBACK(ppg_session_channel_stopped_cb),
+	                 session);
+	pk_connection_manager_add_channel_async(priv->conn, NULL,
+	                                        ppg_session_add_channel_cb,
+	                                        session);
 }
 
 /**
@@ -423,12 +442,7 @@ ppg_session_connection_connected (GObject      *connection,
 		return;
 	}
 
-	g_signal_connect(connection, "channel-stopped",
-	                 G_CALLBACK(ppg_session_channel_stopped_cb),
-	                 session);
-	pk_connection_manager_add_channel_async(priv->conn, NULL,
-	                                        ppg_session_channel_added,
-	                                        session);
+	ppg_session_set_connected(session);
 
 	EXIT;
 }
@@ -755,9 +769,13 @@ ppg_session_set_uri (PpgSession  *session,
 	}
 
 	priv->uri = g_strdup(uri);
-	pk_connection_connect_async(priv->conn, NULL,
-	                            ppg_session_connection_connected,
-	                            session);
+	if (!pk_connection_is_connected(priv->conn)) {
+		pk_connection_connect_async(priv->conn, NULL,
+		                            ppg_session_connection_connected,
+		                            session);
+	} else {
+		ppg_session_set_connected(session);
+	}
 	g_object_notify(G_OBJECT(session), "uri");
 
 	EXIT;
