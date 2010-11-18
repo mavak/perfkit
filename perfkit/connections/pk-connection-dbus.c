@@ -839,7 +839,7 @@ pk_connection_dbus_message_filter (DBusConnection *connection,
 
 static void
 pk_connection_dbus_add_signal (PkConnection *connection, /* IN */
-                               const gchar  *path,       /* IN */
+                               const gchar  *path,       /* IN/UNUSED */
                                const gchar  *iface,      /* IN */
                                const gchar  *signame)    /* IN/UNUSED */
 {
@@ -847,12 +847,13 @@ pk_connection_dbus_add_signal (PkConnection *connection, /* IN */
 	DBusError dbus_error = { 0 };
 	gchar *rule;
 
+	ENTRY;
+
 	g_return_if_fail(PK_IS_CONNECTION_DBUS(connection));
-	g_return_if_fail(path != NULL);
 	g_return_if_fail(iface != NULL);
 
-	ENTRY;
 	priv = PK_CONNECTION_DBUS(connection)->priv;
+
 	rule = g_strdup_printf("type='signal',sender='org.perfkit.Agent',"
 	                       "interface='%s'", iface);
 	dbus_bus_add_match(priv->dbus, rule, &dbus_error);
