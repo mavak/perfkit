@@ -61,7 +61,8 @@ dnl ************************************************************************
 PKG_CHECK_MODULES(PERFKIT_AGENT,    [gobject-2.0      >= 2.26
                                      gthread-2.0      >= 2.26
                                      gmodule-2.0      >= 2.26
-                                     gio-2.0          >= 2.26])
+                                     gio-2.0          >= 2.26
+                                     gio-unix-2.0     >= 2.26])
 PKG_CHECK_MODULES(PERFKIT_TOOLS,    [gobject-2.0      >= 2.26
                                      gthread-2.0      >= 2.26
                                      gio-2.0          >= 2.26])
