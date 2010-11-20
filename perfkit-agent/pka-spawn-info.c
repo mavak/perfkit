@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include "pka-log.h"
 #include "pka-spawn-info.h"
 
@@ -51,6 +53,37 @@ pka_spawn_info_free (PkaSpawnInfo *spawn_info) /* IN */
 	g_free(spawn_info->working_dir);
 	g_slice_free(PkaSpawnInfo, spawn_info);
 	EXIT;
+}
+
+void
+pka_spawn_info_set_env (PkaSpawnInfo *spawn_info,
+                        const gchar  *key,
+                        const gchar  *value)
+{
+	gchar *env;
+	guint32 len;
+	gint i;
+
+	g_return_if_fail(spawn_info);
+	g_return_if_fail(spawn_info->env);
+	g_return_if_fail(key);
+
+	env = g_strdup_printf("%s=%s", key, value ? value : "");
+	len = strlen(key) + 1;
+
+	for (i = 0; spawn_info->env[i]; i++) {
+		if (g_str_equal(spawn_info->env[i], env)) {
+			g_free(spawn_info->env[i]);
+			spawn_info->env[i] = env;
+			return;
+		}
+	}
+
+	len = g_strv_length(spawn_info->env);
+	spawn_info->env = g_realloc_n(spawn_info->env, len, sizeof(gchar*));
+	spawn_info->env[len] = env;
+	spawn_info->env[len + 1] = NULL;
+	g_assert(g_strv_length(spawn_info->env) == len + 1);
 }
 
 GType

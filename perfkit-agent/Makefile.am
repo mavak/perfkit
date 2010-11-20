@@ -100,6 +100,7 @@ libperfkit_agent_la_SOURCES =						\
 	pka-source-simple.c						\
 	pka-spawn-info.c						\
 	pka-subscription.c						\
+	pka-util.c							\
 	$(top_srcdir)/cut-n-paste/egg-buffer.c				\
 	$(NULL)
 

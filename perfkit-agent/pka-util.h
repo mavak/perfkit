@@ -25,6 +25,9 @@ G_BEGIN_DECLS
 
 #define pka_str_empty(_s)  (!(_s)[0])
 #define pka_str_empty0(_s) (!(_s) || pka_str_empty(_s))
+#define pka_get_user_runtime_path(...) g_build_filename(pka_get_user_runtime_dir(), ## __VA_ARGS__)
+
+const gchar* pka_get_user_runtime_dir (void);
 
 G_END_DECLS
 
