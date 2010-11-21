@@ -31,6 +31,7 @@
 #include "pka-private.h"
 #include "pka-source.h"
 #include "pka-source-simple.h"
+#include "pka-util.h"
 
 #define AUTHORIZE_IOCTL(_c, _i)                                     \
     G_STMT_START {                                                  \
@@ -244,6 +245,8 @@ pka_manager_init (void)
 	 */
 	INFO(Source, "Registering %s source.",
 	     g_type_name(PKA_TYPE_SOURCE_SIMPLE));
+	INFO(Source, "Runtime directory is %s",
+	     pka_get_user_runtime_dir());
 	EXIT;
 }
 
