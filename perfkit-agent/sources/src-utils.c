@@ -46,18 +46,14 @@ gchar*
 src_utils_str_tok (const gchar delim, /* IN */
                    gchar *ptr) /* IN */
 {
-   // Would like to use a switch here.
-   while(1) {
-      if (*ptr == '\0') {
-         return NULL;
-      } else if (*ptr == delim) {
-         *ptr = '\0';
-         return ++ptr;
-      } else {
-         ptr++;
-      }
-   }
-} /* src_utils_str_tok */
+	for (; *ptr; ptr++) {
+		if (*ptr == delim) {
+			*ptr = '\0';
+			return ++ptr;
+		}
+	}
+	return NULL;
+}
 
 
 /**
