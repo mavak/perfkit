@@ -21,30 +21,24 @@
  *      the near future.
  */
 
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <fcntl.h>
 
 #include "src-utils.h"
 
-
 /**
  * src_utils_str_tok:
- * @delim: (IN) The delimeter.
- * @*ptr: (IN) The string to tokenize.
- * @Returns: Pointer to the beginning of the string after the token or
- *           NULL if at the end of the string
+ * @delim: (in): The delimeter.
+ * @ptr: (in): The string to tokenize.
  *
  * Tokenizes string inline by replacing the delimiting charcter with a
  * \0.
  *
+ * Returns: Pointer to the beginning of the string after the token or
+ *          %NULL if at the end of the string
  **/
-gchar*
-src_utils_str_tok (const gchar delim, /* IN */
-                   gchar *ptr) /* IN */
+gchar *
+src_utils_str_tok (const gchar  delim,
+                   gchar       *ptr)
 {
 	for (; *ptr; ptr++) {
 		if (*ptr == delim) {
@@ -58,46 +52,46 @@ src_utils_str_tok (const gchar delim, /* IN */
 
 /**
  * src_utils_read_file:
- * @*path: (IN) Path to file.
- * @*buffer: (IN/OUT) The buffer to read into.  Can be NULL.
- * @bsize: (IN) The size of the buffer if buffer is not NULL.
- * @Returns: pointer to a buffer containg file data.
+ * @path: (in): Path to file.
+ * @buffer: (inout): The buffer to read into.  Can be NULL.
+ * @bsize: (in): The size of the buffer if buffer is not NULL.
  *
  * Will read a file into a given buffer or, if buffer is NULL, allocate
  * a new buffer and read into it.  If you do not give this function a
  * buffer, you are responsible for freeing the buffer when you are done
  * using it.
  *
+ * Returns: pointer to a buffer containg file data.
  **/
-gchar*
-src_utils_read_file (const gchar *path, /* IN */
-            gchar *buffer, /* IN/OUT */
-            gssize bsize) /* IN */
+gchar *
+src_utils_read_file (const gchar *path,
+                     gchar       *buffer,
+                     gssize       bsize)
 {
-   gint fd;
-   ssize_t bytesRead;
+	gint fd;
+	ssize_t bytesRead;
 
-   g_return_val_if_fail(path != NULL, NULL);
+	g_return_val_if_fail(path != NULL, NULL);
 
-   if (buffer != NULL) {
-      fd = open(path, O_RDONLY);
+	if (buffer != NULL) {
+		fd = open(path, O_RDONLY);
 
-      if (fd < 0) {
-         return NULL;
-      }
+		if (fd < 0) {
+			return NULL;
+		}
 
-      bytesRead = read(fd, buffer, bsize-1);
-      close(fd);
+		bytesRead = read(fd, buffer, bsize-1);
+		close(fd);
 
-      if (bytesRead < 0) {
-         return NULL;
-      }
+		if (bytesRead < 0) {
+			return NULL;
+		}
 
-      buffer[bytesRead] = '\0';
-      return buffer;
-   } else {
-      gchar *contents;
-      g_file_get_contents(path, &contents, NULL, NULL);
-      return contents;
-   }
-} /* src_utils_read_file */
+		buffer[bytesRead] = '\0';
+		return buffer;
+	} else {
+		gchar *contents;
+		g_file_get_contents(path, &contents, NULL, NULL);
+		return contents;
+	}
+}
