@@ -35,15 +35,19 @@ AM_CFLAGS =								\
 	-I$(top_srcdir)/perfkit-profiler/				\
 	-I$(top_srcdir)/cut-n-paste/					\
 	-I$(top_srcdir)/uber/						\
-	$(AVAHI_CFLAGS)							\
-	$(PERFKIT_DEBUG_CFLAGS)						\
-	$(PERFKIT_PROFILER_CFLAGS)					\
 	$(WARNINGS)							\
+	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(GIO_CFLAGS)							\
+	$(GTK_CFLAGS)							\
+	$(CLUTTER_CFLAGS)						\
+	$(AVAHI_CFLAGS)							\
 	$(NULL)
 
 AM_LDFLAGS =								\
 	$(AVAHI_LIBS)							\
-	$(PERFKIT_PROFILER_LIBS)					\
+	$(GIO_LIBS)							\
+	$(GTK_LIBS)							\
+	$(CLUTTER_LIBS)							\
 	$(NULL)
 
 BUILD_SOURCES = ppg-version.h

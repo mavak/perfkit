@@ -45,9 +45,11 @@ AM_CPPFLAGS =								\
 	-DGETTEXT_PACKAGE=\""perfkit-agent"\"				\
 	-DG_LOG_DOMAIN=\"Source\"					\
 	-I$(top_srcdir)/cut-n-paste					\
-	$(WARNINGS)							\
-	$(PERFKIT_AGENT_CFLAGS)						\
 	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(WARNINGS)							\
+	$(GIO_CFLAGS)							\
+	$(GMODULE_CFLAGS)						\
+	$(GOBJECT_CFLAGS)						\
 	$(NULL)
 
 AM_LDFLAGS =								\

@@ -56,3 +56,6 @@ libuber_la_CPPFLAGS =							\
 	$(GTK_CFLAGS)							\
 	$(PERFKIT_DEBUG_CFLAGS)						\
 	$(NULL)
+
+libuber_la_LIBADD =
+libuber_la_LIBADD += $(GTK_LIBS)

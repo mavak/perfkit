@@ -37,10 +37,12 @@ AM_CPPFLAGS =								\
 	-DG_LOG_DOMAIN=\"Listener\"					\
 	-I$(top_srcdir)/perfkit-agent					\
 	-D_GNU_SOURCE							\
+	$(PERFKIT_DEBUG_CFLAGS)						\
 	$(WARNINGS)							\
 	$(DBUS_CFLAGS)							\
-	$(PERFKIT_AGENT_CFLAGS)						\
-	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(GIO_CFLAGS)							\
+	$(GMODULE_CFLAGS)						\
+	$(GOBJECT_CFLAGS)						\
 	$(NULL)
 
 # AM_CPPFLAGS += -DDISABLE_TRACE

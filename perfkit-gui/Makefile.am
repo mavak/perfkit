@@ -33,9 +33,9 @@ AM_CPPFLAGS = \
 	-DG_LOG_DOMAIN=\"PerfkitGui\"					\
 	-DPERFKIT_GUI_COMPILATION					\
 	-I$(top_srcdir)/cut-n-paste					\
-	$(PERFKIT_GUI_CFLAGS)						\
-	$(PERFKIT_DEBUG_CFLAGS)						\
 	$(WARNINGS)							\
+	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(GTK_CFLAGS)							\
 	$(NULL)
 
 AM_LDFLAGS = $(PERFKIT_GUI_LIBS)
@@ -80,10 +80,12 @@ headerdir = $(prefix)/include/perfkit-1.0/perfkit-gui
 header_DATA = $(INST_H_FILES)
 
 perfkit_gui_SOURCES = main.c
-perfkit_gui_LDADD =							\
-	libperfkit-gui.la						\
-	$(top_builddir)/perfkit/libperfkit-1.0.la			\
-	$(NULL)
+
+perfkit_gui_LDADD =
+perfkit_gui_LDADD += libperfkit-gui.la
+perfkit_gui_LDADD += $(top_builddir)/perfkit/libperfkit-1.0.la
+perfkit_gui_LDADD += $(GTK_LIBS)
+
 perfkit_gui_LDFLAGS =							\
 	-export-dynamic							\
 	-no-undefined							\

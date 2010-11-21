@@ -66,7 +66,14 @@ libperfkit_1_0_la_CPPFLAGS =						\
 	-DG_LOG_DOMAIN=\"Perfkit\"					\
 	-DPERFKIT_COMPILATION						\
 	-I$(top_srcdir)/cut-n-paste					\
-	$(WARNINGS)							\
-	$(PERFKIT_CFLAGS)						\
 	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(WARNINGS)							\
+	$(GIO_CFLAGS)							\
+	$(GMODULE_CFLAGS)						\
+	$(GOBJECT_CFLAGS)						\
 	$(NULL)
+
+libperfkit_1_0_la_LIBADD =
+libperfkit_1_0_la_LIBADD += $(GIO_LIBS)
+libperfkit_1_0_la_LIBADD += $(GMODULE_LIBS)
+libperfkit_1_0_la_LIBADD += $(GOBJECT_LIBS)

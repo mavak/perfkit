@@ -9,7 +9,7 @@ TEST_PROGS +=								\
 	$(NULL)
 
 AM_CPPFLAGS =								\
-	$(PERFKIT_CFLAGS)						\
+	$(GIO_CFLAGS)							\
 	-I$(top_srcdir)							\
 	-I$(top_srcdir)/cut-n-paste					\
 	$(WARNINGS)							\
@@ -17,7 +17,7 @@ AM_CPPFLAGS =								\
 	$(NULL)
 
 AM_LDFLAGS =								\
-	$(PERFKIT_LIBS)							\
+	$(GIO_LIBS)							\
 	$(top_builddir)/perfkit/libperfkit-1.0.la			\
 	$(NULL)
 

@@ -47,8 +47,10 @@ AM_CPPFLAGS =								\
 	-D_GNU_SOURCE							\
 	-I$(top_srcdir)/cut-n-paste					\
 	$(WARNINGS)							\
-	$(PERFKIT_AGENT_CFLAGS)						\
 	$(PERFKIT_DEBUG_CFLAGS)						\
+	$(GIO_CFLAGS)							\
+	$(GMODULE_CFLAGS)						\
+	$(GOBJECT_CFLAGS)						\
 	$(NULL)
 
 INST_H_FILES =								\
@@ -82,35 +84,52 @@ BUILT_SOURCES =								\
 	pka-marshal.c							\
 	$(NULL)
 
-libperfkit_agent_la_SOURCES =						\
-	$(BUILT_SOURCES)						\
-	$(INST_H_FILES)							\
-	$(NOINST_H_FILES)						\
-	pka-channel.c							\
-	pka-config.c							\
-	pka-context.c							\
-	pka-encoder.c							\
-	pka-listener.c							\
-	pka-log.c							\
-	pka-manager.c							\
-	pka-manifest.c							\
-	pka-plugin.c							\
-	pka-sample.c							\
-	pka-source.c							\
-	pka-source-simple.c						\
-	pka-spawn-info.c						\
-	pka-subscription.c						\
-	pka-util.c							\
-	$(top_srcdir)/cut-n-paste/egg-buffer.c				\
-	$(NULL)
+##
+# libperfkit-agent - this is statically linked against perfkit-agent
+# and used in unit tests.
+##
 
-libperfkit_agent_la_LIBADD = $(PERFKIT_AGENT_LIBS)
-libperfkit_agent_la_LDFLAGS =						\
-	--export-all-symbols						\
-	$(NULL)
+libperfkit_agent_la_SOURCES =
+libperfkit_agent_la_SOURCES += $(BUILT_SOURCES)
+libperfkit_agent_la_SOURCES += $(INST_H_FILES)
+libperfkit_agent_la_SOURCES += $(NOINST_H_FILES)
+libperfkit_agent_la_SOURCES += pka-channel.c
+libperfkit_agent_la_SOURCES += pka-config.c
+libperfkit_agent_la_SOURCES += pka-context.c
+libperfkit_agent_la_SOURCES += pka-encoder.c
+libperfkit_agent_la_SOURCES += pka-listener.c
+libperfkit_agent_la_SOURCES += pka-log.c
+libperfkit_agent_la_SOURCES += pka-manager.c
+libperfkit_agent_la_SOURCES += pka-manifest.c
+libperfkit_agent_la_SOURCES += pka-plugin.c
+libperfkit_agent_la_SOURCES += pka-sample.c
+libperfkit_agent_la_SOURCES += pka-source.c
+libperfkit_agent_la_SOURCES += pka-source-simple.c
+libperfkit_agent_la_SOURCES += pka-spawn-info.c
+libperfkit_agent_la_SOURCES += pka-subscription.c
+libperfkit_agent_la_SOURCES += pka-util.c
+libperfkit_agent_la_SOURCES += $(top_srcdir)/cut-n-paste/egg-buffer.c
+
+libperfkit_agent_la_LIBADD =
+libperfkit_agent_la_LIBADD += $(GIO_LIBS)
+libperfkit_agent_la_LIBADD += $(GOBJECT_LIBS)
+libperfkit_agent_la_LIBADD += $(GMODULE_LIBS)
+
+libperfkit_agent_la_LDFLAGS =
+libperfkit_agent_la_LDFLAGS += --export-all-symbols
+
+##
+# perfkit-agent executable
+##
 
 perfkit_agent_SOURCES = main.c
-perfkit_agent_LDADD = libperfkit-agent.la $(PERFKIT_AGENT_LIBS)
+
+perfkit_agent_LDADD =
+perfkit_agent_LDADD += libperfkit-agent.la
+perfkit_agent_LDADD += $(GIO_LIBS)
+perfkit_agent_LDADD += $(GOBJECT_LIBS)
+perfkit_agent_LDADD += $(GMODULE_LIBS)
+
 perfkit_agent_LDFLAGS =							\
 	-export-dynamic							\
 	-export-symbols-regex "^pka_.*"					\

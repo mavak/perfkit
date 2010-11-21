@@ -15,15 +15,19 @@ TEST_PROGS +=								\
 	$(NULL)
 
 AM_CPPFLAGS =								\
-	$(PERFKIT_AGENT_CFLAGS)					\
+	$(GIO_CFLAGS)							\
+	$(GMODULE_CFLAGS)						\
+	$(GOBJECT_CFLAGS)						\
 	-I$(top_srcdir)							\
 	-I$(top_srcdir)/cut-n-paste					\
 	$(WARNINGS)							\
 	$(NULL)
 
 AM_LDFLAGS =								\
-	$(PERFKIT_AGENT_LIBS)						\
 	$(top_builddir)/perfkit-agent/libperfkit-agent.la		\
+	$(GIO_LIBS)							\
+	$(GMODULE_LIBS)							\
+	$(GOBJECT_LIBS)							\
 	$(NULL)
 
 test_pka_sample_SOURCES = test-pka-sample.c $(top_srcdir)/cut-n-paste/egg-buffer.c
