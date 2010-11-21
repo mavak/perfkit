@@ -47,7 +47,7 @@ G_DEFINE_TYPE(Gdkevent, gdkevent, PKA_TYPE_SOURCE)
 
 struct _GdkeventPrivate
 {
-	gpointer dummy;
+	GDBusServer *server;
 };
 
 static void
@@ -61,9 +61,21 @@ gdkevent_stopped (PkaSource *source)
 {
 }
 
+static gboolean
+gdkevent_modify_spawn_info (PkaSource     *source,
+                            PkaSpawnInfo  *spawn_info,
+                            GError       **error)
+{
+	return TRUE;
+}
+
 static void
 gdkevent_finalize (GObject *object)
 {
+	GdkeventPrivate *priv = GDKEVENT_SOURCE(object)->priv;
+
+	g_object_unref(priv->server);
+
 	G_OBJECT_CLASS(gdkevent_parent_class)->finalize(object);
 }
 
@@ -78,6 +90,7 @@ gdkevent_class_init (GdkeventClass *klass)
 	g_type_class_add_private(object_class, sizeof(GdkeventPrivate));
 
 	source_class = PKA_SOURCE_CLASS(klass);
+	source_class->modify_spawn_info = gdkevent_modify_spawn_info;
 	source_class->started = gdkevent_started;
 	source_class->stopped = gdkevent_stopped;
 }
@@ -85,9 +98,33 @@ gdkevent_class_init (GdkeventClass *klass)
 static void
 gdkevent_init (Gdkevent *gdkevent)
 {
-	gdkevent->priv = G_TYPE_INSTANCE_GET_PRIVATE(gdkevent,
-	                                             GDKEVENT_TYPE_SOURCE,
-	                                             GdkeventPrivate);
+	static gint instance = 0;
+	GdkeventPrivate *priv;
+	gchar *guid;
+	gchar *address;
+	GError *error = NULL;
+
+	priv = G_TYPE_INSTANCE_GET_PRIVATE(gdkevent, GDKEVENT_TYPE_SOURCE,
+	                                   GdkeventPrivate);
+	gdkevent->priv = priv;
+
+	address = g_strdup_printf(
+			"unix:path=%s" G_DIR_SEPARATOR_S "gdkevent-%d-%d.socket",
+			pka_get_user_runtime_dir(), (gint)getpid(), instance++);
+	guid = g_dbus_generate_guid();
+	priv->server = g_dbus_server_new_sync(address,
+	                                      G_DBUS_SERVER_FLAGS_NONE,
+	                                      guid,
+	                                      NULL, NULL, &error);
+	g_free(guid);
+	g_free(address);
+	if (!priv->server) {
+		CRITICAL(GdkEvent, "Failed to create IPC socket: %s", error->message);
+		g_error_free(error);
+		return;
+	}
+
+	g_dbus_server_start(priv->server);
 }
 
 GObject *

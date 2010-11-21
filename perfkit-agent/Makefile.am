@@ -10,6 +10,7 @@ listenersdir = $(libdir)/perfkit-agent/listeners
 
 sources_LTLIBRARIES =
 sources_LTLIBRARIES += cpu.la
+sources_LTLIBRARIES += gdkevent.la
 sources_LTLIBRARIES += memory.la
 sources_LTLIBRARIES += netdev.la
 sources_LTLIBRARIES += sched.la
@@ -194,6 +195,22 @@ cpu_la_SOURCES += sources/src-utils.h
 
 cpu_la_LDFLAGS =
 cpu_la_LDFLAGS += -module
+
+#
+# gdkevent source
+#
+
+gdkevent_la_CPPFLAGS =
+gdkevent_la_CPPFLAGS += $(INCLUDE_CFLAGS)
+gdkevent_la_CPPFLAGS += $(GOBJECT_CFLAGS)
+gdkevent_la_CPPFLAGS += $(GIO_CFLAGS)
+
+gdkevent_la_SOURCES =
+gdkevent_la_SOURCES += sources/gdkevent.c
+
+gdkevent_la_LDFLAGS =
+gdkevent_la_LDFLAGS += -module
+gdkevent_la_LDFLAGS += $(GIO_LIBS)
 
 #
 # developement helpers
