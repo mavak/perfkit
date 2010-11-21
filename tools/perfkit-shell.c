@@ -41,7 +41,7 @@
 #endif
 
 #include <perfkit/perfkit.h>
-#include "pk-log.h"
+#include <perfkit/pk-log.h>
 #include "egg-fmt.h"
 #include "egg-line.h"
 

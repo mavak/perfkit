@@ -148,14 +148,10 @@ AC_CONFIG_FILES([
 	tools/Makefile
 
 	perfkit/Makefile
-	perfkit/connections/Makefile
 	perfkit/pk-version.h
 	perfkit/perfkit-1.0.pc
 
 	perfkit-agent/Makefile
-	perfkit-agent/sources/Makefile
-	perfkit-agent/encoders/Makefile
-	perfkit-agent/listeners/Makefile
 	perfkit-agent/pka-version.h
 
 	perfkit-gui/Makefile

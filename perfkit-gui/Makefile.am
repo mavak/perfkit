@@ -1,27 +1,10 @@
+include $(top_srcdir)/Makefile.inc
+
 bin_PROGRAMS = perfkit-gui
 noinst_LTLIBRARIES = libperfkit-gui.la
 
-WARNINGS =								\
-	-Wall								\
-	-Werror								\
-	-Wold-style-definition						\
-	-Wdeclaration-after-statement					\
-	-Wredundant-decls						\
-	-Wmissing-noreturn						\
-	-Wshadow							\
-	-Wcast-align							\
-	-Wwrite-strings							\
-	-Winline							\
-	-Wformat-nonliteral						\
-	-Wformat-security						\
-	-Wswitch-enum							\
-	-Wswitch-default						\
-	-Winit-self							\
-	-Wmissing-include-dirs						\
-	-Wundef								\
-	-Waggregate-return						\
-	-Wmissing-format-attribute					\
-	-Wnested-externs
+headerdir = $(prefix)/include/perfkit-1.0/perfkit-gui
+header_DATA = $(INST_H_FILES)
 
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)s/locale"\"	\
@@ -40,65 +23,70 @@ AM_CPPFLAGS = \
 
 AM_LDFLAGS = $(PERFKIT_GUI_LIBS)
 
-INST_H_FILES =								\
-	perfkit-gui.h							\
-	pkg-channel-page.h						\
-	pkg-channels-page.h						\
-	pkg-closures.h							\
-	pkg-page.h							\
-	pkg-path.h							\
-	pkg-plugin-page.h						\
-	pkg-source-page.h						\
-	pkg-sources-page.h						\
-	pkg-subscription-page.h						\
-	pkg-version.h							\
-	$(NULL)
+#
+# libperfkit-gui static library
+#
 
-NOINST_H_FILES =							\
-	pkg-log.h							\
-	pkg-util.h							\
-	$(NULL)
+INST_H_FILES =
+INST_H_FILES += perfkit-gui.h
+INST_H_FILES += pkg-channel-page.h
+INST_H_FILES += pkg-channels-page.h
+INST_H_FILES += pkg-closures.h
+INST_H_FILES += pkg-page.h
+INST_H_FILES += pkg-path.h
+INST_H_FILES += pkg-plugin-page.h
+INST_H_FILES += pkg-source-page.h
+INST_H_FILES += pkg-sources-page.h
+INST_H_FILES += pkg-subscription-page.h
+INST_H_FILES += pkg-version.h
 
-libperfkit_gui_la_SOURCES =						\
-	$(INST_H_FILES)							\
-	$(NOINST_H_FILES)						\
-	pkg-channel-page.c						\
-	pkg-channels-page.c						\
-	pkg-closures.c							\
-	pkg-log.c							\
-	pkg-page.c							\
-	pkg-path.c							\
-	pkg-plugin-page.c						\
-	pkg-source-page.c						\
-	pkg-sources-page.c						\
-	pkg-subscription-page.c						\
-	pkg-util.c							\
-	pkg-window.c							\
-	$(NULL)
+NOINST_H_FILES =
+NOINST_H_FILES += pkg-log.h
+NOINST_H_FILES += pkg-util.h
 
-headerdir = $(prefix)/include/perfkit-1.0/perfkit-gui
-header_DATA = $(INST_H_FILES)
+libperfkit_gui_la_SOURCES =
+libperfkit_gui_la_SOURCES += $(INST_H_FILES)
+libperfkit_gui_la_SOURCES += $(NOINST_H_FILES)
+libperfkit_gui_la_SOURCES += pkg-channel-page.c
+libperfkit_gui_la_SOURCES += pkg-channels-page.c
+libperfkit_gui_la_SOURCES += pkg-closures.c
+libperfkit_gui_la_SOURCES += pkg-log.c
+libperfkit_gui_la_SOURCES += pkg-page.c
+libperfkit_gui_la_SOURCES += pkg-path.c
+libperfkit_gui_la_SOURCES += pkg-plugin-page.c
+libperfkit_gui_la_SOURCES += pkg-source-page.c
+libperfkit_gui_la_SOURCES += pkg-sources-page.c
+libperfkit_gui_la_SOURCES += pkg-subscription-page.c
+libperfkit_gui_la_SOURCES += pkg-util.c	
+libperfkit_gui_la_SOURCES += pkg-window.c
 
-perfkit_gui_SOURCES = main.c
+#
+# perfkit-gui executable
+#
+
+perfkit_gui_SOURCES =
+perfkit_gui_SOURCES += main.c
 
 perfkit_gui_LDADD =
 perfkit_gui_LDADD += libperfkit-gui.la
 perfkit_gui_LDADD += $(top_builddir)/perfkit/libperfkit-1.0.la
 perfkit_gui_LDADD += $(GTK_LIBS)
 
-perfkit_gui_LDFLAGS =							\
-	-export-dynamic							\
-	-no-undefined							\
-	-export-symbols-regex "^pkg_.*"					\
-	$(NULL)
+perfkit_gui_LDFLAGS =
+perfkit_gui_LDFLAGS += -export-dynamic
+perfkit_gui_LDFLAGS += -no-undefined
+perfkit_gui_LDFLAGS += -export-symbols-regex "^pkg_.*"
+
+#
+# development helpers
+#
 
 run:
-	PERFKIT_GUI_DATA_PATH=$(top_srcdir)/data			\
-	PERFKIT_CONNECTIONS_DIR=$(top_srcdir)/perfkit/connections/.libs	\
-	$(builddir)/perfkit-gui
+	@PERFKIT_GUI_DATA_PATH=$(top_srcdir)/data		\
+	PERFKIT_CONNECTIONS_DIR=$(top_srcdir)/perfkit/.libs	\
+	libtool --mode=execute $(builddir)/perfkit-gui
 
 debug:
-	$(builddir)/perfkit-gui --help > /dev/null
-	PERFKIT_GUI_DATA_PATH=$(top_srcdir)/data			\
-	PERFKIT_CONNECTIONS_DIR=$(top_srcdir)/perfkit/connections/.libs	\
-	gdb --args $(builddir)/.libs/lt-perfkit-gui --sync
+	@PERFKIT_GUI_DATA_PATH=$(top_srcdir)/data		\
+	PERFKIT_CONNECTIONS_DIR=$(top_srcdir)/perfkit/.libs	\
+	libtool --mode=execute gdb $(builddir)/perfkit-gui

@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
+
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <glib/gstdio.h>
@@ -25,6 +27,9 @@
 
 #include "pk-connection-dbus.h"
 #include "pk-log.h"
+
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "DBus"
 
 /**
  * SECTION:pk-connection-dbus:

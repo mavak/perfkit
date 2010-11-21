@@ -1,73 +1,38 @@
-#bin_PROGRAMS = perfkit-shell perfkit-support
-bin_PROGRAMS = perfkit-shell
+include $(top_srcdir)/Makefile.inc
 
-
-WARNINGS =								\
-	-Wall -Werror -Wold-style-definition				\
-	-Wdeclaration-after-statement					\
-	-Wredundant-decls -Wmissing-noreturn -Wshadow -Wcast-align	\
-	-Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security	\
-	-Wswitch-enum -Wswitch-default -Winit-self			\
-	-Wmissing-include-dirs -Wundef -Waggregate-return		\
-	-Wmissing-format-attribute -Wnested-externs			\
-	$(NULL)
-
-
-AM_CPPFLAGS =								\
-	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)s/locale"\"	\
-	-DPACKAGE_SRC_DIR=\""$(srcdir)"\"				\
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\"				\
-	-DPACKAGE_LIB_DIR=\""$(libdir)"\"				\
-	-DG_LOG_DOMAIN=\"PerfkitTools\"					\
-	-DGETTEXT_PACKAGE=\"PerfkitTools\"				\
-	-DLOCALEDIR=\""$(localedir)"\"					\
-	-I$(top_srcdir)/cut-n-paste					\
-	-I$(top_srcdir)/perfkit						\
-	-I$(top_srcdir)							\
-	$(GOBJECT_CFLAGS)						\
-	$(PERFKIT_DEBUG_CFLAGS)						\
-	$(WARNINGS)							\
-	$(NULL)
-
+bin_PROGRAMS =
+bin_PROGRAMS += perfkit-shell
 
 #
 # perfkit-shell
 #
 
-perfkit_shell_SOURCES =							\
-	$(top_srcdir)/cut-n-paste/egg-fmt.c				\
-	$(top_srcdir)/cut-n-paste/egg-line.c				\
-	perfkit-shell.c							\
-	$(NULL)
+perfkit_shell_SOURCES =
+perfkit_shell_SOURCES += perfkit-shell.c
+perfkit_shell_SOURCES += $(top_srcdir)/cut-n-paste/egg-fmt.c
+perfkit_shell_SOURCES += $(top_srcdir)/cut-n-paste/egg-line.c
 
-perfkit_shell_LDFLAGS =							\
-	$(PERFKIT_TOOLS_LIBS)						\
-	-lreadline							\
-	$(NULL)
+perfkit_shell_CPPFLAGS =
+perfkit_shell_CPPFLAGS += $(INCLUDE_CFLAGS)
+perfkit_shell_CPPFLAGS += $(GOBJECT_CFLAGS)
+perfkit_shell_CPPFLAGS += -I$(top_srcdir)/cut-n-paste
+perfkit_shell_CPPFLAGS += -I$(top_srcdir)
+perfkit_shell_CPPFLAGS += -DG_LOG_DOMAIN=\"Shell\"
+
+perfkit_shell_LDFLAGS =
+perfkit_shell_LDFLAGS += $(PERFKIT_TOOLS_LIBS)
+perfkit_shell_LDFLAGS += -lreadline
 
 perfkit_shell_LDADD = $(top_builddir)/perfkit/libperfkit-1.0.la
 
+#
+# development helpers
+
 debug-shell:
-	echo "quit" | PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs ./perfkit-shell
-	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs gdb ./.libs/lt-perfkit-shell
+	@PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/.libs			\
+	libtool --mode=execute gdb $(builddir)/perfkit-shell
 
 run-shell:
-	@PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/connections/.libs $(builddir)/perfkit-shell
+	@PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/.libs			\
+	libtool --mode=execute $(builddir)/perfkit-shell
 
-
-#
-# perfkit-support
-#
-
-#
-#perfkit_support_SOURCES =						\
-#	perfkit-support.c						\
-#	$(NULL)
-#
-#perfkit_support_LDFLAGS =						\
-#	$(PERFKIT_TOOLS_LIBS)						\
-#	-lreadline							\
-#	$(NULL)
-#
-#perfkit_support_LDADD = $(top_builddir)/perfkit/libperfkit-1.0.la
-#
