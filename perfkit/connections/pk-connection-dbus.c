@@ -170,6 +170,8 @@ typedef struct
 	GTree      *manifests;         /* Source manifests indexed by source id */
 } Handler;
 
+static GSList *sockets = NULL;
+
 static void
 handler_free (Handler *handler) /* IN */
 {
@@ -894,6 +896,7 @@ pk_connection_dbus_connect_finish (PkConnection  *connection, /* IN */
 	DBusMessage *reply;
 	gboolean ret = FALSE;
 	gchar *path;
+	gchar *socket;
 
 	g_return_val_if_fail(PK_IS_CONNECTION_DBUS(connection), FALSE);
 
@@ -992,9 +995,11 @@ pk_connection_dbus_connect_finish (PkConnection  *connection, /* IN */
 		}
 	}
 	g_free(path);
-	path = g_strdup_printf("unix:path=%s/perfkit-%s/dbus-%u-%d.socket",
-	                       g_get_tmp_dir(), g_get_user_name(), getpid(),
-	                       pk_connection_dbus_next_id());
+	socket = g_strdup_printf("%s/perfkit-%s/dbus-%u-%d.socket",
+	                         g_get_tmp_dir(), g_get_user_name(), getpid(),
+	                         pk_connection_dbus_next_id());
+	sockets = g_slist_prepend(sockets, socket);
+	path = g_strdup_printf("unix:path=%s", socket);
 	if (!(priv->server = dbus_server_listen(path, &db_error))) {
 		g_set_error(error, PK_CONNECTION_DBUS_ERROR,
 		            PK_CONNECTION_DBUS_ERROR_NOT_AVAILABLE,
@@ -9251,6 +9256,31 @@ pk_connection_dbus_finalize (GObject *object)
 }
 
 /**
+ * pk_connection_dbus_cleanup_sockets:
+ *
+ * Cleans up any UNIX sockets that were laying around for event delivery.
+ *
+ * Returns: None.
+ * Side effects: UNIX sockets are removed.
+ */
+static void
+pk_connection_dbus_cleanup_sockets (void)
+{
+	GSList *iter;
+	gchar *path;
+
+	for (iter = sockets; iter; iter = iter->next) {
+		path = iter->data;
+		DEBUG(DBus, "Removing unix socket %s", path);
+		g_unlink(path);
+		g_free(path);
+	}
+
+	g_slist_free(sockets);
+	sockets = NULL;
+}
+
+/**
  * pk_connection_dbus_class_init:
  * @klass: A #PkConnectionDBusClass
  *
@@ -9332,6 +9362,8 @@ pk_connection_dbus_class_init (PkConnectionDBusClass *klass)
 	OVERRIDE_VTABLE(subscription_set_handlers);
 	OVERRIDE_VTABLE(subscription_unmute);
 	#undef ADD_RPC
+
+	g_atexit(pk_connection_dbus_cleanup_sockets);
 }
 
 /**
