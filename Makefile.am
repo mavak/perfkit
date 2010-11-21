@@ -1,27 +1,26 @@
-SUBDIRS =			\
-	data			\
-	perfkit-agent		\
-	perfkit			\
-	tools			\
-	uber			\
-	perfkit-gui		\
-	perfkit-profiler	\
-	bindings		\
-	tests			\
-	doc
+SUBDIRS =
+SUBDIRS += data
+SUBDIRS += perfkit-agent
+SUBDIRS += perfkit
+SUBDIRS += tools
+SUBDIRS += uber
+SUBDIRS += perfkit-gui
+SUBDIRS += perfkit-profiler
+SUBDIRS += bindings
+SUBDIRS += tests
+SUBDIRS += doc
 
 ACLOCAL_AMFLAGS = -I build/m4 ${ACLOCAL_FLAGS}
 DISTCHECK_CONFIGURE_FLAGS = --enable-maintainer-flags --enable-gtk-doc --enable-introspection
 
 perfkitdocdir = ${prefix}/doc/perfkit
-perfkitdoc_DATA = \
-	README    \
-	COPYING   \
-	AUTHORS   \
-	ChangeLog \
-	INSTALL   \
-	NEWS      \
-	$(NULL)
+perfkitdoc_DATA =
+perfkitdoc_DATA += README
+perfkitdoc_DATA += COPYING
+perfkitdoc_DATA += AUTHORS
+perfkitdoc_DATA += ChangeLog
+perfkitdoc_DATA += INSTALL
+perfkitdoc_DATA += NEWS
 
 EXTRA_DIST = $(perfkitdoc_DATA)
 
