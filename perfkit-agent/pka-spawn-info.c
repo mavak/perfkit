@@ -80,7 +80,7 @@ pka_spawn_info_set_env (PkaSpawnInfo *spawn_info,
 	}
 
 	len = g_strv_length(spawn_info->env);
-	spawn_info->env = g_realloc_n(spawn_info->env, len, sizeof(gchar*));
+	spawn_info->env = g_realloc_n(spawn_info->env, len + 2, sizeof(gchar*));
 	spawn_info->env[len] = env;
 	spawn_info->env[len + 1] = NULL;
 	g_assert(g_strv_length(spawn_info->env) == len + 1);

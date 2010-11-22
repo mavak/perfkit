@@ -633,6 +633,9 @@ pka_channel_init_spawn_info_locked (PkaChannel    *channel,    /* IN */
 	spawn_info->target = g_strdup(priv->target);
 	spawn_info->working_dir = g_strdup(priv->working_dir);
 	spawn_info->env = g_strdupv(priv->env);
+	if (!spawn_info->env) {
+		spawn_info->env = g_new0(gchar*, 1);
+	}
 	spawn_info->args = g_strdupv(priv->args);
 	spawn_info->pid = priv->pid;
 	for (i = 0; i < priv->sources->len; i++) {
