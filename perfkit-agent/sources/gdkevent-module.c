@@ -16,18 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <gio/gio.h>
 #include <glib/gprintf.h>
 
 static void
 gdkevent_handle_destroy (GdkEvent   *event,
-                         GIOChannel *channel)
+                         GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[32];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p\n",
@@ -35,29 +34,38 @@ gdkevent_handle_destroy (GdkEvent   *event,
 	           event->any.window);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
-gdkevent_handle_expose (GdkEvent   *event,
-                        GIOChannel *channel)
+gdkevent_handle_expose (GdkEvent        *event,
+                        GDBusConnection *dbus)
 {
-	gchar buffer[128];
+	GdkEventExpose *expose = (GdkEventExpose *)event;
+	GDBusMessage *message;
+	GVariant *body;
 
-	g_snprintf(buffer, sizeof(buffer), "%d|%p|%d|%d|%d|%d\n",
-	           GDK_EXPOSE,
-	           event->expose.window,
-	           event->expose.area.x,
-	           event->expose.area.y,
-	           event->expose.area.width,
-	           event->expose.area.height);
-	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
-	g_io_channel_flush(channel, NULL);
+	message = g_dbus_message_new_method_call(
+			NULL, "/", "org.perfkit.Agent.GdkEvent", "Event");
+	body = g_variant_new("(uuu(iiii))",
+	                     event->type,
+	                     gtk_get_current_event_time(),
+	                     GDK_WINDOW_XID(expose->window),
+	                     expose->area.x, expose->area.y,
+	                     expose->area.width, expose->area.height);
+	g_dbus_message_set_body(message, body);
+	g_dbus_connection_send_message(dbus, message,
+	                               G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+	                               NULL, NULL);
+
+	g_debug("Sampled!");
 }
 
 static void
 gdkevent_handle_motion_notfiy (GdkEvent   *event,
-                               GIOChannel *channel)
+                               GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[128];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p|%0.1f|%0.1f|%u\n",
@@ -68,12 +76,14 @@ gdkevent_handle_motion_notfiy (GdkEvent   *event,
 	           event->motion.state);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_handle_button (GdkEvent   *event,
-                        GIOChannel *channel)
+                        GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[128];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p|%u|%0.1f|%0.1f|%u\n",
@@ -85,12 +95,14 @@ gdkevent_handle_button (GdkEvent   *event,
 	           event->button.state);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_handle_key (GdkEvent   *event,
-                     GIOChannel *channel)
+                     GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[128];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p|%u|%u\n",
@@ -100,12 +112,14 @@ gdkevent_handle_key (GdkEvent   *event,
 	           event->key.state);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_handle_crossing (GdkEvent   *event,
-                          GIOChannel *channel)
+                          GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[128];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p|%u|%u\n",
@@ -115,12 +129,14 @@ gdkevent_handle_crossing (GdkEvent   *event,
 	           event->crossing.state);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_handle_focus (GdkEvent   *event,
-                       GIOChannel *channel)
+                       GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[128];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p|%u\n",
@@ -129,12 +145,14 @@ gdkevent_handle_focus (GdkEvent   *event,
 	           event->focus_change.in);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_handle_configure (GdkEvent   *event,
-                           GIOChannel *channel)
+                           GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[128];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p|%d|%d|%d|%d\n",
@@ -146,12 +164,14 @@ gdkevent_handle_configure (GdkEvent   *event,
 	           event->configure.height);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_handle_any (GdkEvent   *event,
-                     GIOChannel *channel)
+                     GDBusConnection *channel)
 {
+#if 0
 	gchar buffer[32];
 
 	g_snprintf(buffer, sizeof(buffer), "%d|%p\n",
@@ -159,13 +179,14 @@ gdkevent_handle_any (GdkEvent   *event,
 	           event->configure.window);
 	g_io_channel_write_chars(channel, buffer, -1, NULL, NULL);
 	g_io_channel_flush(channel, NULL);
+#endif
 }
 
 static void
 gdkevent_dispatcher (GdkEvent *event,
                      gpointer  data)
 {
-	GIOChannel *channel = data;
+	GDBusConnection *channel = data;
 
 	switch (event->type) {
 	case GDK_NOTHING:
@@ -206,6 +227,28 @@ gdkevent_dispatcher (GdkEvent *event,
 	case GDK_UNMAP:
 		gdkevent_handle_any(event, channel);
 		break;
+	case GDK_PROPERTY_NOTIFY:
+	case GDK_SELECTION_CLEAR:
+	case GDK_SELECTION_REQUEST:
+	case GDK_SELECTION_NOTIFY:
+	case GDK_PROXIMITY_IN:
+	case GDK_PROXIMITY_OUT:
+	case GDK_DRAG_ENTER:
+	case GDK_DRAG_LEAVE:
+	case GDK_DRAG_MOTION:
+	case GDK_DRAG_STATUS:
+	case GDK_DROP_START:
+	case GDK_DROP_FINISHED:
+	case GDK_CLIENT_EVENT:
+	case GDK_VISIBILITY_NOTIFY:
+	case GDK_NO_EXPOSE:
+	case GDK_SCROLL:
+	case GDK_WINDOW_STATE:
+	case GDK_SETTING:
+	case GDK_OWNER_CHANGE:
+	case GDK_GRAB_BROKEN:
+	case GDK_DAMAGE:
+	case GDK_EVENT_LAST:
 	default:
 		/*
 		 * TODO: Handle more of these specificaly.
@@ -221,10 +264,25 @@ gint
 gtk_module_init (gint   argc,
                  gchar *argv[])
 {
-	GIOChannel *channel = NULL;
+	GDBusConnection *dbus;
+	gchar *address;
+	const gchar *socket;
+	GError *error = NULL;
 
-	channel = g_io_channel_unix_new(0);
-	gdk_event_handler_set(gdkevent_dispatcher, channel,
-	                      (GDestroyNotify)g_io_channel_unref);
+	if (!(socket = g_getenv("GDKEVENT_SOCKET"))) {
+		g_error("Failed to load gdkevent socket.");
+		return 0;
+	}
+
+	address = g_strdup_printf("unix:path=%s", socket);
+	dbus = g_dbus_connection_new_for_address_sync(
+			address, G_DBUS_CONNECTION_FLAGS_NONE, NULL, NULL, &error);
+	if (!dbus) {
+		g_error("Failed to load IPC socket: %s", error->message);
+	}
+
+	gdk_event_handler_set(gdkevent_dispatcher, dbus, g_object_unref);
+	g_free(address);
+
 	return 0;
 }

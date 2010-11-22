@@ -16,6 +16,9 @@ sources_LTLIBRARIES += netdev.la
 sources_LTLIBRARIES += sched.la
 sourcesdir = $(libdir)/perfkit-agent/plugins
 
+modules_LTLIBRARIES = libgdkevent-module.la
+modulesdir = $(libdir)/gtk-2.0/modules
+
 headerdir = $(prefix)/include/perfkit-1.0/perfkit-agent
 header_DATA = $(INST_H_FILES)
 
@@ -204,6 +207,7 @@ gdkevent_la_CPPFLAGS =
 gdkevent_la_CPPFLAGS += $(INCLUDE_CFLAGS)
 gdkevent_la_CPPFLAGS += $(GOBJECT_CFLAGS)
 gdkevent_la_CPPFLAGS += $(GIO_CFLAGS)
+gdkevent_la_CPPFLAGS += $(GTK_CFLAGS)
 
 gdkevent_la_SOURCES =
 gdkevent_la_SOURCES += sources/gdkevent.c
@@ -211,6 +215,20 @@ gdkevent_la_SOURCES += sources/gdkevent.c
 gdkevent_la_LDFLAGS =
 gdkevent_la_LDFLAGS += -module
 gdkevent_la_LDFLAGS += $(GIO_LIBS)
+gdkevent_la_LDFLAGS += $(GTK_LIBS)
+
+libgdkevent_module_la_SOURCES =
+libgdkevent_module_la_SOURCES += sources/gdkevent-module.c
+
+libgdkevent_module_la_CPPFLAGS =
+libgdkevent_module_la_CPPFLAGS += $(INCLUDE_CFLAGS)
+libgdkevent_module_la_CPPFLAGS += $(GIO_CFLAGS)
+libgdkevent_module_la_CPPFLAGS += $(GTK_CFLAGS)
+
+libgdkevent_module_la_LIBADD =
+libgdkevent_module_la_LIBADD += $(INCLUDE_LIBS)
+libgdkevent_module_la_LIBADD += $(GIO_LIBS)
+libgdkevent_module_la_LIBADD += $(GTK_LIBS)
 
 #
 # developement helpers
