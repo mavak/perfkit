@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glib/gstdio.h>
 #include <perfkit-agent/perfkit-agent.h>
 
 #define GDKEVENT_TYPE_SOURCE            (gdkevent_get_type())
@@ -47,6 +48,7 @@ G_DEFINE_TYPE(Gdkevent, gdkevent, PKA_TYPE_SOURCE)
 
 struct _GdkeventPrivate
 {
+	gchar       *socket;
 	GDBusServer *server;
 };
 
@@ -74,6 +76,8 @@ gdkevent_finalize (GObject *object)
 {
 	GdkeventPrivate *priv = GDKEVENT_SOURCE(object)->priv;
 
+	g_unlink(priv->socket);
+	g_free(priv->socket);
 	g_object_unref(priv->server);
 
 	G_OBJECT_CLASS(gdkevent_parent_class)->finalize(object);
@@ -108,9 +112,13 @@ gdkevent_init (Gdkevent *gdkevent)
 	                                   GdkeventPrivate);
 	gdkevent->priv = priv;
 
-	address = g_strdup_printf(
-			"unix:path=%s" G_DIR_SEPARATOR_S "gdkevent-%d-%d.socket",
+	/*
+	 * Create private IPC socket to communicate with inferior.
+	 */
+	priv->socket = g_strdup_printf(
+			"%s" G_DIR_SEPARATOR_S "gdkevent-%d-%d.socket",
 			pka_get_user_runtime_dir(), (gint)getpid(), instance++);
+	address = g_strdup_printf("unix:path=%s", priv->socket);
 	guid = g_dbus_generate_guid();
 	priv->server = g_dbus_server_new_sync(address,
 	                                      G_DBUS_SERVER_FLAGS_NONE,
@@ -123,7 +131,6 @@ gdkevent_init (Gdkevent *gdkevent)
 		g_error_free(error);
 		return;
 	}
-
 	g_dbus_server_start(priv->server);
 }
 
