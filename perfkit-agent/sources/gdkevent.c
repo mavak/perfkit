@@ -68,6 +68,14 @@ gdkevent_modify_spawn_info (PkaSource     *source,
                             PkaSpawnInfo  *spawn_info,
                             GError       **error)
 {
+	GdkeventPrivate *priv;
+
+	g_return_val_if_fail(GDKEVENT_IS_SOURCE(source), FALSE);
+
+	priv = GDKEVENT_SOURCE(source)->priv;
+
+	pka_spawn_info_set_env(spawn_info, "GDKEVENT_SOCKET", priv->socket);
+
 	return TRUE;
 }
 
