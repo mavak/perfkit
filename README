@@ -12,7 +12,7 @@ III.    Contributing
   0.    TL;DR
 ----------------------------------------------------------------------------
 
-./configure
+./configure --enable-silent-rules --enable-debug=minimum
 make
 cd perfkit-agent && make run
 cd perfkit-profiler && make run

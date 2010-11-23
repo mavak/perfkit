@@ -8,6 +8,16 @@ TL;DR Overview
   cd perfkit-agent && make run
   cd perfkit-profiler && make run
 
+  If the tracing and debugging code is too much for your system, you might
+  consider lowering the level at configure time. "no" disables asserts,
+  type checks (PPG_IS_WINDOW(), etc), and method guards (g_return_if_fai()).
+  It also disables the trace logging and extra debug checks in code.
+  "minimal" disables cast checks as well as all tracing.
+
+  Production builds will of course have these all disabled by default.
+
+  ./configure --enable-debug=[no,minimum] --enable-silent-rules
+
 Source Overview
 ===============
 
