@@ -16,6 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Some code in this file is borrowed from libsocial web.
+ *
+ * libsocialweb - social data store
+ * Copyright (C) 2009 Intel Corporation.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU Lesser General Public License,
+ * version 2.1, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -26,6 +46,9 @@
 
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "GdkEventModule"
+
+static GTimeVal last_time;
+static GPollFunc poll_func;
 
 static void
 gdkevent_handle_destroy (GdkEvent   *event,
@@ -281,6 +304,42 @@ gdkevent_module_unloaded (gpointer data)
 	EXIT;
 }
 
+static inline long
+time_val_difference (GTimeVal *a,
+                     GTimeVal *b)
+{
+	return ((a->tv_sec - b->tv_sec) * G_USEC_PER_SEC) +
+	       (a->tv_usec - b->tv_usec);
+}
+
+static gint
+gdkevent_poll (GPollFD *ufds,
+               guint    nfds,
+               gint     timeout_)
+{
+	GTimeVal now;
+	long diff;
+	gint ret;
+
+	g_get_current_time(&now);
+	diff = time_val_difference(&now, &last_time);
+
+	/* Log if the delay was more than a tenth of a second */
+	if (diff > (G_USEC_PER_SEC / 10)) {
+		/*
+		 * TODO: Send message via dbus.
+		 */
+		g_debug("WE GOT BLOCKED TOO LONG");
+	}
+
+	ret = poll_func(ufds, nfds, timeout_);
+
+	g_get_current_time(&now);
+	last_time = now;
+
+	return ret;
+}
+
 gint
 gtk_module_init (gint   argc,
                  gchar *argv[])
@@ -301,6 +360,8 @@ gtk_module_init (gint   argc,
 	dbus = g_dbus_connection_new_for_address_sync(address,
 	                                              G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT,
 	                                              NULL, NULL, &error);
+	g_free(address);
+
 	if (!dbus) {
 		CRITICAL(Gdk, "Failed to load IPC socket: %s", error->message);
 		g_error_free(error);
@@ -309,7 +370,10 @@ gtk_module_init (gint   argc,
 
 	gdk_event_handler_set(gdkevent_dispatcher, dbus,
 	                      gdkevent_module_unloaded);
-	g_free(address);
+
+	g_get_current_time(&last_time);
+	poll_func = g_main_context_get_poll_func(g_main_context_default());
+	g_main_context_set_poll_func(g_main_context_default(), gdkevent_poll);
 
 	RETURN(0);
 }
