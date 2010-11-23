@@ -293,8 +293,8 @@ ppg_cpu_instrument_set_handlers_cb (GObject *object,
  */
 static gboolean
 ppg_cpu_instrument_load (PpgInstrument  *instrument,
-                            PpgSession     *session,
-                            GError        **error)
+                         PpgSession     *session,
+                         GError        **error)
 {
 	PpgCpuInstrument *cpu = (PpgCpuInstrument *)instrument;
 	PpgCpuInstrumentPrivate *priv;
@@ -350,8 +350,8 @@ ppg_cpu_instrument_load (PpgInstrument  *instrument,
  */
 static gboolean
 ppg_cpu_instrument_unload (PpgInstrument  *instrument,
-                              PpgSession     *session,
-                              GError        **error)
+                           PpgSession     *session,
+                           GError        **error)
 {
 	PpgCpuInstrumentPrivate *priv;
 	PkConnection *conn;
