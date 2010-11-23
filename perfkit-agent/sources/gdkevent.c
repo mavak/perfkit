@@ -20,6 +20,9 @@
 #include <glib/gstdio.h>
 #include <perfkit-agent/perfkit-agent.h>
 
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "GdkEvent"
+
 #define GDKEVENT_TYPE_SOURCE            (gdkevent_get_type())
 #define GDKEVENT_SOURCE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GDKEVENT_TYPE_SOURCE, Gdkevent))
 #define GDKEVENT_SOURCE_CONST(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GDKEVENT_TYPE_SOURCE, Gdkevent const))
@@ -51,6 +54,7 @@ struct _GdkeventPrivate
 {
 	gchar       *socket;
 	GDBusServer *server;
+	GList       *conns;
 };
 
 enum
@@ -73,6 +77,8 @@ gdkevent_started (PkaSource    *source,
 {
 	PkaManifest *manifest;
 
+	ENTRY;
+
 	manifest = pka_manifest_new();
 	pka_manifest_append(manifest, "Type",   G_TYPE_INT);
 	pka_manifest_append(manifest, "Time",   G_TYPE_UINT);
@@ -83,13 +89,16 @@ gdkevent_started (PkaSource    *source,
 	pka_manifest_append(manifest, "Height", G_TYPE_INT);
 	pka_manifest_append(manifest, "XRoot",  G_TYPE_DOUBLE);
 	pka_manifest_append(manifest, "YRoot",  G_TYPE_DOUBLE);
-
 	pka_source_deliver_manifest(source, manifest);
+
+	EXIT;
 }
 
 static void
 gdkevent_stopped (PkaSource *source)
 {
+	ENTRY;
+	EXIT;
 }
 
 static gboolean
@@ -97,16 +106,17 @@ gdkevent_modify_spawn_info (PkaSource     *source,
                             PkaSpawnInfo  *spawn_info,
                             GError       **error)
 {
+	Gdkevent *gdkevent = (Gdkevent *)source;
 	GdkeventPrivate *priv;
 
-	g_return_val_if_fail(GDKEVENT_IS_SOURCE(source), FALSE);
+	ENTRY;
 
-	priv = GDKEVENT_SOURCE(source)->priv;
+	g_return_val_if_fail(GDKEVENT_IS_SOURCE(gdkevent), FALSE);
 
+	priv = gdkevent->priv;
 	pka_spawn_info_set_env(spawn_info, "GDKEVENT_SOCKET", priv->socket);
 	pka_spawn_info_set_env(spawn_info, "GTK_MODULES", "gdkevent-module");
-
-	return TRUE;
+	RETURN(TRUE);
 }
 
 static void
@@ -117,6 +127,8 @@ gdkevent_populate_expose (Gdkevent  *source,
 	guint32 window;
 	GdkRectangle area;
 
+	ENTRY;
+
 	g_variant_get_child(body, 2, "u", &window);
 	g_variant_get_child(body, 3, "(iiii)",
 	                    &area.x, &area.y, &area.width, &area.height);
@@ -126,6 +138,8 @@ gdkevent_populate_expose (Gdkevent  *source,
 	pka_sample_append_int(sample, FIELD_Y, area.y);
 	pka_sample_append_int(sample, FIELD_WIDTH, area.width);
 	pka_sample_append_int(sample, FIELD_HEIGHT, area.height);
+
+	EXIT;
 }
 
 static GDBusMessage *
@@ -137,15 +151,17 @@ gdkevent_filter_func (GDBusConnection *connection,
 	Gdkevent *source = (Gdkevent *)user_data;
 	PkaSample *sample;
 	GVariant *body;
-	guint32 msg_type;
-	guint32 msg_time;
+	guint32 msg_type = 0;
+	guint32 msg_time = 0;
+
+	ENTRY;
 
 	if (!(body = g_dbus_message_get_body(message))) {
-		return NULL;
+		RETURN(NULL);
 	}
 
-	g_variant_get_child(body, 0, "i", &msg_type);
-	g_variant_get_child(body, 1, "i", &msg_time);
+	g_variant_get_child(body, 0, "u", &msg_type);
+	g_variant_get_child(body, 1, "u", &msg_time);
 
 	sample = pka_sample_new();
 	pka_sample_append_int(sample, FIELD_TYPE, msg_type);
@@ -157,11 +173,12 @@ gdkevent_filter_func (GDBusConnection *connection,
 		break;
 	default:
 		g_assert_not_reached();
-		return NULL;
+		RETURN(NULL);
 	}
 
 	pka_source_deliver_sample(PKA_SOURCE(source), sample);
-	return NULL;
+
+	RETURN(NULL);
 }
 
 static gboolean
@@ -169,9 +186,17 @@ gdkevent_new_connection (GDBusServer     *server,
                          GDBusConnection *connection,
                          Gdkevent        *gdkevent)
 {
+	GdkeventPrivate *priv;
+
+	ENTRY;
+
+	g_return_val_if_fail(GDKEVENT_IS_SOURCE(gdkevent), FALSE);
+
+	priv = gdkevent->priv;
+	priv->conns = g_list_prepend(priv->conns, g_object_ref(connection));
 	g_dbus_connection_add_filter(connection, gdkevent_filter_func,
 	                             gdkevent, NULL);
-	return TRUE;
+	RETURN(TRUE);
 }
 
 static void
@@ -179,11 +204,17 @@ gdkevent_finalize (GObject *object)
 {
 	GdkeventPrivate *priv = GDKEVENT_SOURCE(object)->priv;
 
+	ENTRY;
+
+	g_list_foreach(priv->conns, (GFunc)g_object_unref, NULL);
+	g_list_free(priv->conns);
 	g_unlink(priv->socket);
 	g_object_unref(priv->server);
 	g_free(priv->socket);
 
 	G_OBJECT_CLASS(gdkevent_parent_class)->finalize(object);
+
+	EXIT;
 }
 
 static void
@@ -211,20 +242,20 @@ gdkevent_init (Gdkevent *gdkevent)
 	gchar *address;
 	GError *error = NULL;
 
+	ENTRY;
+
 	priv = G_TYPE_INSTANCE_GET_PRIVATE(gdkevent, GDKEVENT_TYPE_SOURCE,
 	                                   GdkeventPrivate);
 	gdkevent->priv = priv;
 
-	/*
-	 * Create private IPC socket to communicate with inferior.
-	 */
-	priv->socket = g_strdup_printf(
-			"%s" G_DIR_SEPARATOR_S "gdkevent-%d-%d.socket",
-			pka_get_user_runtime_dir(), (gint)getpid(), instance++);
-	address = g_strdup_printf("unix:path=%s", priv->socket);
+	priv->socket = g_strdup_printf("%s" G_DIR_SEPARATOR_S "gdkevent-%d-%d.socket;",
+	                               pka_get_user_runtime_dir(),
+	                               (gint)getpid(),
+	                               instance++);
+	address = g_strdup_printf("unix:path=%s;", priv->socket);
 	guid = g_dbus_generate_guid();
 	priv->server = g_dbus_server_new_sync(address,
-	                                      G_DBUS_SERVER_FLAGS_NONE,
+	                                      G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS,
 	                                      guid,
 	                                      NULL, NULL, &error);
 	g_free(guid);
@@ -237,6 +268,8 @@ gdkevent_init (Gdkevent *gdkevent)
 	g_signal_connect(priv->server, "new-connection",
 	                 G_CALLBACK(gdkevent_new_connection), gdkevent);
 	g_dbus_server_start(priv->server);
+
+	EXIT;
 }
 
 GObject *

@@ -22,6 +22,11 @@
 #include <gio/gio.h>
 #include <glib/gprintf.h>
 
+#include <perfkit-agent/pka-log.h>
+
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "GdkEventModule"
+
 static void
 gdkevent_handle_destroy (GdkEvent   *event,
                          GDBusConnection *channel)
@@ -44,9 +49,12 @@ gdkevent_handle_expose (GdkEvent        *event,
 	GdkEventExpose *expose = (GdkEventExpose *)event;
 	GDBusMessage *message;
 	GVariant *body;
+	GError *error = NULL;
 
-	message = g_dbus_message_new_method_call(
-			NULL, "/", "org.perfkit.Agent.GdkEvent", "Event");
+	ENTRY;
+	message = g_dbus_message_new_method_call(NULL, "/",
+	                                         "org.perfkit.Agent.GdkEvent",
+	                                         "Event");
 	body = g_variant_new("(uuu(iiii))",
 	                     event->type,
 	                     gtk_get_current_event_time(),
@@ -54,11 +62,14 @@ gdkevent_handle_expose (GdkEvent        *event,
 	                     expose->area.x, expose->area.y,
 	                     expose->area.width, expose->area.height);
 	g_dbus_message_set_body(message, body);
-	g_dbus_connection_send_message(dbus, message,
-	                               G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-	                               NULL, NULL);
-
-	g_debug("Sampled!");
+	if (!g_dbus_connection_send_message(dbus, message,
+	                                    G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+	                                    NULL, &error)) {
+		CRITICAL(Gdk, "Error sending message: %s", error->message);
+		g_error_free(error);
+		EXIT;
+	}
+	EXIT;
 }
 
 static void
@@ -260,6 +271,16 @@ gdkevent_dispatcher (GdkEvent *event,
 	gtk_main_do_event(event);
 }
 
+static void
+gdkevent_module_unloaded (gpointer data)
+{
+	GDBusConnection *dbus = (GDBusConnection *)data;
+
+	ENTRY;
+	g_object_unref(dbus);
+	EXIT;
+}
+
 gint
 gtk_module_init (gint   argc,
                  gchar *argv[])
@@ -269,20 +290,26 @@ gtk_module_init (gint   argc,
 	const gchar *socket;
 	GError *error = NULL;
 
+	ENTRY;
+
 	if (!(socket = g_getenv("GDKEVENT_SOCKET"))) {
-		g_error("Failed to load gdkevent socket.");
-		return 0;
+		CRITICAL(Gdk, "Failed to load gdkevent socket.");
+		RETURN(-1);
 	}
 
 	address = g_strdup_printf("unix:path=%s", socket);
-	dbus = g_dbus_connection_new_for_address_sync(
-			address, G_DBUS_CONNECTION_FLAGS_NONE, NULL, NULL, &error);
+	dbus = g_dbus_connection_new_for_address_sync(address,
+	                                              G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT,
+	                                              NULL, NULL, &error);
 	if (!dbus) {
-		g_error("Failed to load IPC socket: %s", error->message);
+		CRITICAL(Gdk, "Failed to load IPC socket: %s", error->message);
+		g_error_free(error);
+		RETURN(-1);
 	}
 
-	gdk_event_handler_set(gdkevent_dispatcher, dbus, g_object_unref);
+	gdk_event_handler_set(gdkevent_dispatcher, dbus,
+	                      gdkevent_module_unloaded);
 	g_free(address);
 
-	return 0;
+	RETURN(0);
 }
