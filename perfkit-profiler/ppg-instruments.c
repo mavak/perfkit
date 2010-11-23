@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "ppg-cpu-instrument.h"
+#include "ppg-gtk-instrument.h"
 #include "ppg-instrument.h"
 #include "ppg-instruments.h"
 #include "ppg-memory-instrument.h"
@@ -49,14 +50,12 @@ ppg_instruments_init (void)
 	factories = g_array_new(FALSE, FALSE, sizeof(PpgInstrumentFactory));
 	default_pixbuf = GET_ICON_NAMED("perfkit-plugin");
 
-	ppg_instruments_register("perfkit-memory",
-	                         _("Memory"),
-	                         "gnome-dev-memory",
+	ppg_instruments_register("perfkit-memory", _("Memory"), "gnome-dev-memory",
 	                         PPG_TYPE_MEMORY_INSTRUMENT);
-	ppg_instruments_register("perfkit-cpu",
-	                         _("CPU"),
-	                         NULL,
+	ppg_instruments_register("perfkit-cpu", _("CPU"), NULL,
 	                         PPG_TYPE_CPU_INSTRUMENT);
+	ppg_instruments_register("perfkit-gtk", _("Gtk+"), NULL,
+	                         PPG_TYPE_GTK_INSTRUMENT);
 	/*
 	ppg_instruments_register("perfkit-network",
 	                         _("Network"),
