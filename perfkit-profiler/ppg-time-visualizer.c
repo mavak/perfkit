@@ -174,12 +174,6 @@ ppg_time_visualizer_draw_fast (PpgVisualizer *visualizer,
 	             "height", &height,
 	             NULL);
 
-	{
-		guint w,h;
-		clutter_cairo_texture_get_surface_size((void *)priv->actor, &w, &h);
-		g_debug("SURFACE %u,%u", w, h);
-	}
-
 	if (end < real_begin || begin > real_end) {
 		return;
 	}
@@ -211,7 +205,6 @@ ppg_time_visualizer_draw_fast (PpgVisualizer *visualizer,
 	if (ppg_model_get_iter_at(priv->model, &iter, begin, end, PPG_RESOLUTION_FULL)) {
 		do {
 			x = get_x_offset(real_begin, real_end, width, iter.time);
-			g_debug("TIME: Drawing at offset %f h=%f", x, height);
 			cairo_move_to(cr, x, 0);
 			cairo_line_to(cr, x, height);
 			cairo_stroke(cr);
