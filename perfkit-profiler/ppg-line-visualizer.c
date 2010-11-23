@@ -158,12 +158,10 @@ ppg_line_visualizer_queue_resize (PpgLineVisualizer *visualizer)
 
 	priv = visualizer->priv;
 
-	if (priv->resize_handler) {
-		return;
+	if (!priv->resize_handler) {
+		priv->resize_handler =
+			g_timeout_add(0, ppg_line_visualizer_resize_timeout, visualizer);
 	}
-
-	priv->resize_handler =
-		g_timeout_add(0, ppg_line_visualizer_resize_timeout, visualizer);
 }
 
 static void
