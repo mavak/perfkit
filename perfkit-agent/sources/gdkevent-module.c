@@ -44,17 +44,12 @@ gdkevent_handle_destroy (GdkEvent   *event,
 
 static void
 gdkevent_handle_expose (GdkEvent        *event,
+                        GDBusMessage    *message,
                         GDBusConnection *dbus)
 {
 	GdkEventExpose *expose = (GdkEventExpose *)event;
-	GDBusMessage *message;
 	GVariant *body;
-	GError *error = NULL;
 
-	ENTRY;
-	message = g_dbus_message_new_method_call(NULL, "/",
-	                                         "org.perfkit.Agent.GdkEvent",
-	                                         "Event");
 	body = g_variant_new("(uuu(iiii))",
 	                     event->type,
 	                     gtk_get_current_event_time(),
@@ -62,14 +57,6 @@ gdkevent_handle_expose (GdkEvent        *event,
 	                     expose->area.x, expose->area.y,
 	                     expose->area.width, expose->area.height);
 	g_dbus_message_set_body(message, body);
-	if (!g_dbus_connection_send_message(dbus, message,
-	                                    G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-	                                    NULL, &error)) {
-		CRITICAL(Gdk, "Error sending message: %s", error->message);
-		g_error_free(error);
-		EXIT;
-	}
-	EXIT;
 }
 
 static void
@@ -197,46 +184,52 @@ static void
 gdkevent_dispatcher (GdkEvent *event,
                      gpointer  data)
 {
-	GDBusConnection *channel = data;
+	GDBusConnection *connection = data;
+	GDBusMessage *message;
+	GError *error = NULL;
+
+	message = g_dbus_message_new_method_call(NULL, "/",
+	                                         "org.perfkit.Agent.GdkEvent",
+	                                         "Event");
 
 	switch (event->type) {
 	case GDK_NOTHING:
 		break;
 	case GDK_DELETE:
-		gdkevent_handle_any(event, channel);
+		gdkevent_handle_any(event, connection);
 		break;
 	case GDK_DESTROY:
-		gdkevent_handle_destroy(event, channel);
+		gdkevent_handle_destroy(event, connection);
 		break;
 	case GDK_EXPOSE:
-		gdkevent_handle_expose(event, channel);
+		gdkevent_handle_expose(event, message, connection);
 		break;
 	case GDK_MOTION_NOTIFY:
-		gdkevent_handle_motion_notfiy(event, channel);
+		gdkevent_handle_motion_notfiy(event, connection);
 		break;
 	case GDK_BUTTON_PRESS:
 	case GDK_2BUTTON_PRESS:
 	case GDK_3BUTTON_PRESS:
 	case GDK_BUTTON_RELEASE:
-		gdkevent_handle_button(event, channel);
+		gdkevent_handle_button(event, connection);
 		break;
 	case GDK_KEY_PRESS:
 	case GDK_KEY_RELEASE:
-		gdkevent_handle_key(event, channel);
+		gdkevent_handle_key(event, connection);
 		break;
 	case GDK_ENTER_NOTIFY:
 	case GDK_LEAVE_NOTIFY:
-		gdkevent_handle_crossing(event, channel);
+		gdkevent_handle_crossing(event, connection);
 		break;
 	case GDK_FOCUS_CHANGE:
-		gdkevent_handle_focus(event, channel);
+		gdkevent_handle_focus(event, connection);
 		break;
 	case GDK_CONFIGURE:
-		gdkevent_handle_configure(event, channel);
+		gdkevent_handle_configure(event, connection);
 		break;
 	case GDK_MAP:
 	case GDK_UNMAP:
-		gdkevent_handle_any(event, channel);
+		gdkevent_handle_any(event, connection);
 		break;
 	case GDK_PROPERTY_NOTIFY:
 	case GDK_SELECTION_CLEAR:
@@ -264,8 +257,15 @@ gdkevent_dispatcher (GdkEvent *event,
 		/*
 		 * TODO: Handle more of these specificaly.
 		 */
-		gdkevent_handle_any(event, channel);
+		gdkevent_handle_any(event, connection);
 		break;
+	}
+
+	if (!g_dbus_connection_send_message(connection, message,
+	                                    G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+	                                    NULL, &error)) {
+		CRITICAL(Gdk, "Error sending message: %s", error->message);
+		g_error_free(error);
 	}
 
 	gtk_main_do_event(event);
