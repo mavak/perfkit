@@ -20,7 +20,7 @@
 
 #include "ppg-color.h"
 #include "ppg-gtk-instrument.h"
-#include "ppg-line-visualizer.h"
+#include "ppg-time-visualizer.h"
 #include "ppg-log.h"
 #include "ppg-model.h"
 
@@ -43,6 +43,7 @@ struct _PpgGtkInstrumentPrivate
 {
 	PpgSession *session;
 	PpgModel   *model;
+	GList      *visualizers;
 	gint        channel;
 	gint        source;
 	gint        sub;
@@ -59,26 +60,23 @@ static PpgVisualizer*
 ppg_gtk_instrument_events_cb (PpgGtkInstrument *instrument)
 {
 	PpgGtkInstrumentPrivate *priv;
-	PpgLineVisualizer *visualizer;
-	PpgColorIter color;
+	PpgTimeVisualizer *visualizer;
+
+	ENTRY;
 
 	g_return_val_if_fail(PPG_IS_GTK_INSTRUMENT(instrument), NULL);
 
 	priv = instrument->priv;
 
-	visualizer = g_object_new(PPG_TYPE_LINE_VISUALIZER,
+	visualizer = g_object_new(PPG_TYPE_TIME_VISUALIZER,
 	                          "name", "events",
 	                          "title", _("Gtk+ Events"),
 	                          NULL);
-
-	/*
-	 * FIXME: Create PpgColumnVisualizer or something.
-	 */
-	ppg_color_iter_init(&color);
-	ppg_line_visualizer_append(visualizer, "Gtk+ Events", &color.color,
-	                           TRUE, NULL, COLUMN_TYPE);
-
-	return PPG_VISUALIZER(visualizer);
+	priv->visualizers = g_list_prepend(priv->visualizers, visualizer);
+	if (priv->model) {
+		ppg_time_visualizer_set_model(visualizer, priv->model);
+	}
+	RETURN(PPG_VISUALIZER(visualizer));
 }
 
 static PpgVisualizerEntry visualizer_entries[] = {
@@ -107,16 +105,17 @@ ppg_gtk_instrument_sample_cb (PkManifest *manifest,
 	PpgGtkInstrument *instrument = (PpgGtkInstrument *)user_data;
 	PpgGtkInstrumentPrivate *priv;
 
+	ENTRY;
+
 	g_return_if_fail(PPG_IS_GTK_INSTRUMENT(instrument));
 
 	priv = instrument->priv;
-
 #ifdef PERFKIT_DEBUG
 	g_assert_cmpint(pk_sample_get_source_id(sample), ==, priv->source);
 	g_assert_cmpint(pk_manifest_get_source_id(manifest), ==, priv->source);
 #endif
-
 	ppg_model_insert_sample(priv->model, manifest, sample);
+	EXIT;
 }
 
 /**
@@ -183,6 +182,7 @@ ppg_gtk_instrument_load (PpgInstrument  *instrument,
 	PpgGtkInstrumentPrivate *priv;
 	PkConnection *conn;
 	gboolean ret = FALSE;
+	GList *iter;
 	gint channel;
 
 	ENTRY;
@@ -203,6 +203,10 @@ ppg_gtk_instrument_load (PpgInstrument  *instrument,
 	ppg_model_add_mapping(priv->model, COLUMN_TIME, "Time", G_TYPE_UINT, PPG_MODEL_RAW);
 	ppg_model_set_track_range(priv->model, COLUMN_TYPE, TRUE);
 	ppg_model_set_track_range(priv->model, COLUMN_TIME, TRUE);
+
+	for (iter = priv->visualizers; iter; iter = iter->next) {
+		ppg_time_visualizer_set_model(iter->data, priv->model);
+	}
 
 	RPC_OR_FAILURE(manager_add_source,
 	               (conn, "GdkEvent", &priv->source, error));
