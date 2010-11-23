@@ -165,7 +165,7 @@ gdkevent_filter_func (GDBusConnection *connection,
 
 	sample = pka_sample_new();
 	pka_sample_append_int(sample, FIELD_TYPE, msg_type);
-	pka_sample_append_int(sample, FIELD_TIME, msg_time);
+	pka_sample_append_uint(sample, FIELD_TIME, msg_time);
 
 	switch (msg_type) {
 	case GDK_EXPOSE:
