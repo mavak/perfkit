@@ -21,6 +21,7 @@
 #include "ppg-color.h"
 #include "ppg-gtk-instrument.h"
 #include "ppg-time-visualizer.h"
+#include "ppg-time-span-visualizer.h"
 #include "ppg-log.h"
 #include "ppg-model.h"
 
@@ -41,18 +42,21 @@ G_DEFINE_TYPE(PpgGtkInstrument, ppg_gtk_instrument, PPG_TYPE_INSTRUMENT)
 
 struct _PpgGtkInstrumentPrivate
 {
-	PpgSession *session;
-	PpgModel   *model;
-	GList      *visualizers;
-	gint        channel;
-	gint        source;
-	gint        sub;
+	PpgModel *model;
+	GList    *visualizers;
+	gint      channel;
+	gint      source;
+	gint      sub;
 };
 
 enum
 {
 	COLUMN_TYPE,
 	COLUMN_TIME,
+	COLUMN_REAL_BEGIN,
+	COLUMN_REAL_END,
+	COLUMN_BEGIN,
+	COLUMN_END,
 	COLUMN_LAST
 };
 
@@ -79,11 +83,40 @@ ppg_gtk_instrument_events_cb (PpgGtkInstrument *instrument)
 	RETURN(PPG_VISUALIZER(visualizer));
 }
 
+static PpgVisualizer*
+ppg_gtk_instrument_delay_cb (PpgGtkInstrument *instrument)
+{
+	PpgGtkInstrumentPrivate *priv;
+	PpgTimeSpanVisualizer *visualizer;
+
+	ENTRY;
+
+	g_return_val_if_fail(PPG_IS_GTK_INSTRUMENT(instrument), NULL);
+
+	priv = instrument->priv;
+
+	visualizer = g_object_new(PPG_TYPE_TIME_SPAN_VISUALIZER,
+	                          "span-begin-key", COLUMN_BEGIN,
+	                          "span-end-key", COLUMN_END,
+	                          "name", "delay",
+	                          "title", _("Gtk+ Main Loop Delays"),
+	                          NULL);
+	priv->visualizers = g_list_prepend(priv->visualizers, visualizer);
+	if (priv->model) {
+		g_object_set(visualizer, "model", priv->model, NULL);
+	}
+	RETURN(PPG_VISUALIZER(visualizer));
+}
+
 static PpgVisualizerEntry visualizer_entries[] = {
 	{ "events",
 	  N_("Gtk+ Events"),
 	  NULL,
 	  G_CALLBACK(ppg_gtk_instrument_events_cb) },
+	{ "delay",
+	  N_("Gtk+ Main Loop Delays"),
+	  NULL,
+	  G_CALLBACK(ppg_gtk_instrument_delay_cb) },
 };
 
 /**
@@ -175,6 +208,34 @@ ppg_gtk_instrument_set_handlers_cb (GObject      *object,
 }
 
 static gboolean
+ppg_gtk_instrument_get_sample_range (PpgModel     *model,
+                                     PpgModelIter *iter,
+                                     gint          key,
+                                     GValue       *value,
+                                     gpointer      user_data)
+{
+	PpgSession *session = ppg_instrument_get_session(user_data);
+	gboolean ret;
+
+	if (!session) {
+		CRITICAL(GtkInstrument, "Asking for cooked sample with no session");
+		return FALSE;
+	}
+
+	ret = ppg_model_get_value(model, iter,
+	                          (key == COLUMN_BEGIN) ? COLUMN_REAL_BEGIN
+	                                                : COLUMN_REAL_END,
+	                          value);
+	if (ret) {
+		g_value_set_double(value,
+		                   ppg_session_convert_time(session,
+		                                            g_value_get_double(value)));
+	}
+
+	return ret;
+}
+
+static gboolean
 ppg_gtk_instrument_load (PpgInstrument  *instrument,
                          PpgSession     *session,
                          GError        **error)
@@ -201,11 +262,13 @@ ppg_gtk_instrument_load (PpgInstrument  *instrument,
 	                           NULL);
 	ppg_model_add_mapping(priv->model, COLUMN_TYPE, "Type", G_TYPE_UINT, PPG_MODEL_RAW);
 	ppg_model_add_mapping(priv->model, COLUMN_TIME, "Time", G_TYPE_UINT, PPG_MODEL_RAW);
-	ppg_model_set_track_range(priv->model, COLUMN_TYPE, TRUE);
-	ppg_model_set_track_range(priv->model, COLUMN_TIME, TRUE);
+	ppg_model_add_mapping(priv->model, COLUMN_REAL_BEGIN, "Begin", G_TYPE_DOUBLE, PPG_MODEL_RAW);
+	ppg_model_add_mapping(priv->model, COLUMN_REAL_END, "End", G_TYPE_DOUBLE, PPG_MODEL_RAW);
+	ppg_model_add_mapping_func(priv->model, COLUMN_BEGIN, ppg_gtk_instrument_get_sample_range, instrument);
+	ppg_model_add_mapping_func(priv->model, COLUMN_END, ppg_gtk_instrument_get_sample_range, instrument);
 
 	for (iter = priv->visualizers; iter; iter = iter->next) {
-		ppg_time_visualizer_set_model(iter->data, priv->model);
+		g_object_set(iter->data, "model", priv->model, NULL);
 	}
 
 	RPC_OR_FAILURE(manager_add_source,
@@ -228,6 +291,7 @@ ppg_gtk_instrument_load (PpgInstrument  *instrument,
 			ppg_gtk_instrument_set_handlers_cb, instrument);
 
 	ppg_instrument_add_visualizer(instrument, "events");
+	ppg_instrument_add_visualizer(instrument, "delay");
 
   failure:
 	g_object_unref(conn);
