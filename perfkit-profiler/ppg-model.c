@@ -569,9 +569,9 @@ ppg_model_get_value (PpgModel     *model,
 	PpgModelPrivate *priv;
 	Mapping *mapping;
 
-	g_return_if_fail(PPG_IS_MODEL(model));
-	g_return_if_fail(iter != NULL);
-	g_return_if_fail(value != NULL);
+	g_return_val_if_fail(PPG_IS_MODEL(model), FALSE);
+	g_return_val_if_fail(iter != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
 
 	priv = model->priv;
 

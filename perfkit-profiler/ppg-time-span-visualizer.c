@@ -64,7 +64,7 @@ ppg_time_span_visualizer_set_model (PpgTimeSpanVisualizer *visualizer,
 {
 	PpgTimeSpanVisualizerPrivate *priv;
 
-	g_return_if_fail(PPG_IS_TIME_VISUALIZER(visualizer));
+	g_return_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(visualizer));
 
 	priv = visualizer->priv;
 	priv->model = model;
@@ -75,7 +75,7 @@ ppg_time_span_visualizer_set_model (PpgTimeSpanVisualizer *visualizer,
 static ClutterActor*
 ppg_time_span_visualizer_get_actor (PpgVisualizer *visualizer)
 {
-	g_return_val_if_fail(PPG_IS_TIME_VISUALIZER(visualizer), NULL);
+	g_return_val_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(visualizer), NULL);
 
 	return PPG_TIME_SPAN_VISUALIZER(visualizer)->priv->actor;
 }
@@ -89,7 +89,7 @@ ppg_time_span_visualizer_resize_surface (PpgTimeSpanVisualizer *visualizer)
 
 	ENTRY;
 
-	g_return_if_fail(PPG_IS_TIME_VISUALIZER(visualizer));
+	g_return_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(visualizer));
 
 	priv = visualizer->priv;
 
@@ -115,7 +115,7 @@ ppg_time_span_visualizer_resize_timeout (gpointer user_data)
 
 	ENTRY;
 
-	g_return_val_if_fail(PPG_IS_TIME_VISUALIZER(visualizer), FALSE);
+	g_return_val_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(visualizer), FALSE);
 
 	visualizer->priv->resize_handler = 0;
 	ppg_time_span_visualizer_resize_surface(visualizer);
@@ -127,7 +127,7 @@ ppg_time_span_visualizer_queue_resize (PpgTimeSpanVisualizer *visualizer)
 {
 	PpgTimeSpanVisualizerPrivate *priv;
 
-	g_return_if_fail(PPG_IS_TIME_VISUALIZER(visualizer));
+	g_return_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(visualizer));
 
 	priv = visualizer->priv;
 
@@ -176,7 +176,7 @@ ppg_time_span_visualizer_draw_fast (PpgVisualizer *visualizer,
 
 	ENTRY;
 
-	g_return_if_fail(PPG_IS_TIME_VISUALIZER(visualizer));
+	g_return_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(visualizer));
 
 	priv = PPG_TIME_SPAN_VISUALIZER(visualizer)->priv;
 
@@ -276,7 +276,7 @@ ppg_time_span_visualizer_draw (PpgVisualizer *visualizer)
 	gdouble begin;
 	gdouble end;
 
-	g_return_if_fail(PPG_IS_TIME_VISUALIZER(_time));
+	g_return_if_fail(PPG_IS_TIME_SPAN_VISUALIZER(_time));
 
 	priv = _time->priv;
 
