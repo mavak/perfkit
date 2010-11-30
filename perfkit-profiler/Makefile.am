@@ -159,6 +159,6 @@ debug: perfkit-profiler
 	@PPG_DATA_DIR=$(top_builddir)/data				\
 	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/.libs		\
 	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings		\
-	libtool --mode=execute gdb $(builddir)/perfkit-profiler		\
+	libtool --mode=execute gdb --args $(builddir)/perfkit-profiler	\
 	--log=perfkit-profiler.log					\
 	$(PERFKIT_OPTIONS)
