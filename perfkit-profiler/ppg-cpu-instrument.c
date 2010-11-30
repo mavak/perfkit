@@ -56,7 +56,7 @@ enum
 	COLUMN_LAST
 };
 
-static void
+static gboolean
 ppg_cpu_instrument_calc_cpu (PpgModel *model,
                              PpgModelIter *iter,
                              gint key,
@@ -81,6 +81,8 @@ ppg_cpu_instrument_calc_cpu (PpgModel *model,
 	          (gdouble)(user + nice_ + system + idle) *
 	          100.0;
 	g_value_set_double(value, percent);
+
+	return TRUE;
 }
 
 static PpgVisualizer*

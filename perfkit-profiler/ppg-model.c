@@ -142,7 +142,7 @@ _g_value_subtract (GValue *left,
 	}
 }
 
-static void
+static gboolean
 mapping_get_value (Mapping *mapping,
                    PpgModel *model,
                    PpgModelIter *iter,
@@ -156,16 +156,16 @@ mapping_get_value (Mapping *mapping,
 	GType type;
 	gint row;
 
-	g_return_if_fail(mapping != NULL);
-	g_return_if_fail(manifest != NULL);
-	g_return_if_fail(sample != NULL);
-	g_return_if_fail(value != NULL);
+	g_return_val_if_fail(mapping != NULL, FALSE);
+	g_return_val_if_fail(manifest != NULL, FALSE);
+	g_return_val_if_fail(sample != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
 
 	priv = model->priv;
 
 	if (mapping->func) {
-		mapping->func(model, iter, mapping->key, value, mapping->user_data);
-		return;
+		return mapping->func(model, iter, mapping->key, value,
+		                     mapping->user_data);
 	}
 
 	/*
@@ -178,7 +178,7 @@ mapping_get_value (Mapping *mapping,
 			g_critical("Incoming type %s does not match %s",
 			           g_type_name(type),
 			           g_type_name(mapping->expected_type));
-			return;
+			return FALSE;
 		}
 	}
 
@@ -188,7 +188,7 @@ mapping_get_value (Mapping *mapping,
 		 */
 		if (!iter->index) {
 			g_value_init(value, mapping->expected_type);
-			return;
+			return FALSE;
 		}
 
 		last = g_ptr_array_index(priv->samples, iter->index - 1);
@@ -203,10 +203,15 @@ mapping_get_value (Mapping *mapping,
 		} else {
 			_g_value_subtract(value, &last_value);
 		}
+
+		return TRUE;
 	} else {
 		if (!pk_sample_get_value(sample, row, value)) {
 			g_value_init(value, pk_manifest_get_row_type(manifest, row));
+			return FALSE;
 		}
+
+		return TRUE;
 	}
 }
 
@@ -553,7 +558,7 @@ ppg_model_get (PpgModel     *model,
 	va_end(args);
 }
 
-void
+gboolean
 ppg_model_get_value (PpgModel     *model,
                      PpgModelIter *iter,
                      gint          key,
@@ -574,8 +579,8 @@ ppg_model_get_value (PpgModel     *model,
 	g_assert(iter->sample);
 	g_assert(mapping);
 
-	mapping_get_value(mapping, model, iter, iter->manifest,
-	                  iter->sample, value);
+	return mapping_get_value(mapping, model, iter, iter->manifest,
+	                         iter->sample, value);
 }
 
 gboolean

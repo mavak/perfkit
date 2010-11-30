@@ -38,11 +38,11 @@ typedef struct _PpgModelIter    PpgModelIter;
 typedef enum   _PpgModelType    PpgModelType;
 typedef enum   _PpgResolution   PpgResolution;
 
-typedef void (*PpgModelValueFunc) (PpgModel     *model,
-                                   PpgModelIter *iter,
-                                   gint          key,
-                                   GValue       *value,
-                                   gpointer      user_data);
+typedef gboolean (*PpgModelValueFunc) (PpgModel     *model,
+                                       PpgModelIter *iter,
+                                       gint          key,
+                                       GValue       *value,
+                                       gpointer      user_data);
 
 struct _PpgModelIter
 {
@@ -108,7 +108,7 @@ void     ppg_model_get_range        (PpgModel          *model,
                                      gint               key,
                                      gdouble           *lower,
                                      gdouble           *upper);
-void     ppg_model_get_value        (PpgModel          *model,
+gboolean ppg_model_get_value        (PpgModel          *model,
                                      PpgModelIter      *iter,
                                      gint               key,
                                      GValue            *value);
