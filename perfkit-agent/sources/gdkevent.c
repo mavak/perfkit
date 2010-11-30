@@ -60,6 +60,7 @@ struct _GdkeventPrivate
 enum
 {
 	FIELD_0,
+	FIELD_FEATURE,
 	FIELD_TYPE,
 	FIELD_TIME,
 	FIELD_WINDOW,
@@ -69,7 +70,18 @@ enum
 	FIELD_HEIGHT,
 	FIELD_XROOT,
 	FIELD_YROOT,
+	FIELD_DELAY_BEGIN,
+	FIELD_DELAY_END,
 };
+
+enum
+{
+	EVENT,
+	DELAY,
+};
+
+static GQuark event_quark (void) G_GNUC_CONST;
+static GQuark delay_quark (void) G_GNUC_CONST;
 
 static void
 gdkevent_started (PkaSource    *source,
@@ -80,15 +92,18 @@ gdkevent_started (PkaSource    *source,
 	ENTRY;
 
 	manifest = pka_manifest_new();
-	pka_manifest_append(manifest, "Type",   G_TYPE_INT);
-	pka_manifest_append(manifest, "Time",   G_TYPE_UINT);
-	pka_manifest_append(manifest, "Window", G_TYPE_UINT);
-	pka_manifest_append(manifest, "X",      G_TYPE_INT);
-	pka_manifest_append(manifest, "Y",      G_TYPE_INT);
-	pka_manifest_append(manifest, "Width",  G_TYPE_INT);
-	pka_manifest_append(manifest, "Height", G_TYPE_INT);
-	pka_manifest_append(manifest, "XRoot",  G_TYPE_DOUBLE);
-	pka_manifest_append(manifest, "YRoot",  G_TYPE_DOUBLE);
+	pka_manifest_append(manifest, "Feature",    G_TYPE_UINT);
+	pka_manifest_append(manifest, "Type",       G_TYPE_INT);
+	pka_manifest_append(manifest, "Time",       G_TYPE_UINT);
+	pka_manifest_append(manifest, "Window",     G_TYPE_UINT);
+	pka_manifest_append(manifest, "X",          G_TYPE_INT);
+	pka_manifest_append(manifest, "Y",          G_TYPE_INT);
+	pka_manifest_append(manifest, "Width",      G_TYPE_INT);
+	pka_manifest_append(manifest, "Height",     G_TYPE_INT);
+	pka_manifest_append(manifest, "XRoot",      G_TYPE_DOUBLE);
+	pka_manifest_append(manifest, "YRoot",      G_TYPE_DOUBLE);
+	pka_manifest_append(manifest, "Begin",      G_TYPE_DOUBLE);
+	pka_manifest_append(manifest, "End",        G_TYPE_DOUBLE);
 	pka_source_deliver_manifest(source, manifest);
 
 	EXIT;
@@ -142,6 +157,18 @@ gdkevent_populate_expose (Gdkevent  *source,
 	EXIT;
 }
 
+static GQuark
+event_quark (void)
+{
+	return g_quark_from_static_string("Event");
+}
+
+static GQuark
+delay_quark (void)
+{
+	return g_quark_from_static_string("Delay");
+}
+
 static GDBusMessage *
 gdkevent_filter_func (GDBusConnection *connection,
                       GDBusMessage    *message,
@@ -153,6 +180,9 @@ gdkevent_filter_func (GDBusConnection *connection,
 	GVariant *body;
 	guint32 msg_type = 0;
 	guint32 msg_time = 0;
+	gdouble begin;
+	gdouble end;
+	GQuark quark;
 
 	ENTRY;
 
@@ -160,23 +190,41 @@ gdkevent_filter_func (GDBusConnection *connection,
 		RETURN(NULL);
 	}
 
-	g_variant_get_child(body, 0, "u", &msg_type);
-	g_variant_get_child(body, 1, "u", &msg_time);
+	quark = g_quark_from_string(g_dbus_message_get_member(message));
 
-	sample = pka_sample_new();
-	pka_sample_append_int(sample, FIELD_TYPE, msg_type);
-	pka_sample_append_uint(sample, FIELD_TIME, msg_time);
+	if (quark == event_quark()) {
+		g_variant_get_child(body, 0, "u", &msg_type);
+		g_variant_get_child(body, 1, "u", &msg_time);
 
-	switch (msg_type) {
-	case GDK_EXPOSE:
-		gdkevent_populate_expose(source, body, sample);
-		break;
-	default:
+		sample = pka_sample_new();
+		pka_sample_append_int(sample, FIELD_FEATURE, EVENT);
+		pka_sample_append_int(sample, FIELD_TYPE, msg_type);
+		pka_sample_append_uint(sample, FIELD_TIME, msg_time);
+
+		switch (msg_type) {
+		case GDK_EXPOSE:
+			gdkevent_populate_expose(source, body, sample);
+			break;
+		default:
+			g_assert_not_reached();
+			RETURN(NULL);
+		}
+
+		pka_source_deliver_sample(PKA_SOURCE(source), sample);
+	} else if (quark == delay_quark()) {
+		g_variant_get_child(body, 0, "d", &begin);
+		g_variant_get_child(body, 1, "d", &end);
+
+		sample = pka_sample_new();
+		pka_sample_append_int(sample, FIELD_FEATURE, DELAY);
+		pka_sample_append_double(sample, FIELD_DELAY_BEGIN, begin);
+		pka_sample_append_double(sample, FIELD_DELAY_END, end);
+
+		pka_source_deliver_sample(PKA_SOURCE(source), sample);
+	} else {
 		g_assert_not_reached();
 		RETURN(NULL);
 	}
-
-	pka_source_deliver_sample(PKA_SOURCE(source), sample);
 
 	RETURN(NULL);
 }

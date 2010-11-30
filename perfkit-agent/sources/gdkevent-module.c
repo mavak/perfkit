@@ -47,8 +47,11 @@
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "GdkEventModule"
 
-static GTimeVal last_time;
-static GPollFunc poll_func;
+#define TV2DOUBLE(tv) ((tv).tv_sec + ((tv).tv_usec / (gdouble)G_USEC_PER_SEC))
+
+static GTimeVal         last_time;
+static GPollFunc        poll_func;
+static GDBusConnection *connection;
 
 static void
 gdkevent_handle_destroy (GdkEvent   *event,
@@ -207,7 +210,6 @@ static void
 gdkevent_dispatcher (GdkEvent *event,
                      gpointer  data)
 {
-	GDBusConnection *connection = data;
 	GDBusMessage *message;
 	GError *error = NULL;
 
@@ -317,6 +319,9 @@ gdkevent_poll (GPollFD *ufds,
                guint    nfds,
                gint     timeout_)
 {
+	GDBusMessage *message;
+	GVariant *body;
+	GError *error = NULL;
 	GTimeVal now;
 	long diff;
 	gint ret;
@@ -326,10 +331,19 @@ gdkevent_poll (GPollFD *ufds,
 
 	/* Log if the delay was more than a tenth of a second */
 	if (diff > (G_USEC_PER_SEC / 10)) {
-		/*
-		 * TODO: Send message via dbus.
-		 */
-		g_debug("WE GOT BLOCKED TOO LONG");
+		message = g_dbus_message_new_method_call(NULL, "/",
+		                                         "org.perfkit.Agent.GdkEvent",
+		                                         "Delay");
+		body = g_variant_new("(dd)",
+		                     TV2DOUBLE(last_time),
+		                     TV2DOUBLE(now));
+		g_dbus_message_set_body(message, body);
+		if (!g_dbus_connection_send_message(connection, message,
+		                                    G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+		                                    NULL, &error)) {
+			CRITICAL(Gdk, "Error sending message: %s", error->message);
+			g_error_free(error);
+		}
 	}
 
 	ret = poll_func(ufds, nfds, timeout_);
@@ -367,6 +381,8 @@ gtk_module_init (gint   argc,
 		g_error_free(error);
 		RETURN(-1);
 	}
+
+	connection = dbus;
 
 	gdk_event_handler_set(gdkevent_dispatcher, dbus,
 	                      gdkevent_module_unloaded);
