@@ -541,7 +541,9 @@ ppg_model_get_valist (PpgModel     *model,
 			g_free(error);
 			error = NULL;
 		}
-		g_value_unset(&value);
+		if (value.g_type) {
+			g_value_unset(&value);
+		}
 	} while (-1 != (key = va_arg(args, gint)));
 }
 
