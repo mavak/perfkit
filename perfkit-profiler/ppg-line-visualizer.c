@@ -178,7 +178,8 @@ get_x_offset (gdouble begin,
               gdouble width,
               gdouble value)
 {
-	return (value - begin) / (end - begin) * width;
+	value = (value - begin) / (end - begin) * width;
+	return CLAMP(value, 0.0, width);
 }
 
 static inline gdouble
