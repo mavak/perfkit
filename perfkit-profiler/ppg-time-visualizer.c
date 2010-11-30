@@ -31,6 +31,12 @@ struct _PpgTimeVisualizerPrivate
 	gdouble       last_time; /* time of last sample */
 };
 
+enum
+{
+	PROP_0,
+	PROP_MODEL,
+};
+
 static void
 model_changed_cb (PpgModel          *model,
                   PpgTimeVisualizer *time_visualizer)
@@ -254,6 +260,32 @@ ppg_time_visualizer_finalize (GObject *object)
 }
 
 /**
+ * ppg_time_visualizer_set_property:
+ * @object: (in): A #GObject.
+ * @prop_id: (in): The property identifier.
+ * @value: (in): The given property.
+ * @pspec: (in): A #ParamSpec.
+ *
+ * Set a given #GObject property.
+ */
+static void
+ppg_time_visualizer_set_property (GObject      *object,
+                                  guint         prop_id,
+                                  const GValue *value,
+                                  GParamSpec   *pspec)
+{
+	PpgTimeVisualizer *visualizer = PPG_TIME_VISUALIZER(object);
+
+	switch (prop_id) {
+	case PROP_MODEL:
+		ppg_time_visualizer_set_model(visualizer, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+	}
+}
+
+/**
  * ppg_time_visualizer_class_init:
  * @klass: (in): A #PpgTimeVisualizerClass.
  *
@@ -270,12 +302,21 @@ ppg_time_visualizer_class_init (PpgTimeVisualizerClass *klass)
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_time_visualizer_finalize;
+	object_class->set_property = ppg_time_visualizer_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgTimeVisualizerPrivate));
 
 	visualizer_class = PPG_VISUALIZER_CLASS(klass);
 	visualizer_class->get_actor = ppg_time_visualizer_get_actor;
 	visualizer_class->draw = ppg_time_visualizer_draw;
 	visualizer_class->draw_fast = ppg_time_visualizer_draw_fast;
+
+	g_object_class_install_property(object_class,
+	                                PROP_MODEL,
+	                                g_param_spec_object("model",
+	                                                    "model",
+	                                                    "model",
+	                                                    PPG_TYPE_MODEL,
+	                                                    G_PARAM_WRITABLE));
 }
 
 /**
