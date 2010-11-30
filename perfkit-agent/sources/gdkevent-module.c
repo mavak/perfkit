@@ -17,7 +17,7 @@
  */
 
 /*
- * Some code in this file is borrowed from libsocial web.
+ * Some code in this file is borrowed from libsocialweb.
  *
  * libsocialweb - social data store
  * Copyright (C) 2009 Intel Corporation.
