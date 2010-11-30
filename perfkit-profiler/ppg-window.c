@@ -1237,6 +1237,7 @@ ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
 	gdouble lower;
 	gdouble upper;
 	gdouble scale;
+	gdouble page_size;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
@@ -1271,8 +1272,10 @@ ppg_window_zoom_value_changed (GtkAdjustment *adjustment,
 
 	ppg_window_notify_position(priv->session, NULL, window);
 
+	page_size = MAX(1.0, upper - lower);
 	g_object_set(priv->hadj,
-	             "page-size", MAX(1.0, upper - lower),
+	             "page-size", page_size,
+	             "step-increment", page_size / 10.0,
 	             "value", lower,
 	             NULL);
 }
