@@ -26,13 +26,14 @@ G_DEFINE_TYPE(PpgTimeSpanVisualizer, ppg_time_span_visualizer,
 
 struct _PpgTimeSpanVisualizerPrivate
 {
-	ClutterActor *actor;
-	PpgModel     *model;
-	guint         paint_handler;
-	guint         resize_handler;
-	gdouble       last_time; /* time of last sample */
-	gint          begin_key;
-	gint          end_key;
+	ClutterActor         *actor;
+	PangoFontDescription *font_desc;
+	PpgModel             *model;
+	guint                 paint_handler;
+	guint                 resize_handler;
+	gdouble               last_time; /* time of last sample */
+	gint                  begin_key;
+	gint                  end_key;
 };
 
 enum
@@ -164,6 +165,7 @@ ppg_time_span_visualizer_draw_fast (PpgVisualizer *visualizer,
 {
 	PpgTimeSpanVisualizerPrivate *priv;
 	PpgModelIter iter;
+	PangoLayout *layout;
 	cairo_t *cr;
 	cairo_pattern_t *p;
 	gdouble real_begin;
@@ -173,6 +175,10 @@ ppg_time_span_visualizer_draw_fast (PpgVisualizer *visualizer,
 	gfloat height;
 	gfloat width;
 	GValue value = { 0 };
+	gchar text[32];
+	gdouble diff;
+	gint w;
+	gint h;
 
 	ENTRY;
 
@@ -197,6 +203,8 @@ ppg_time_span_visualizer_draw_fast (PpgVisualizer *visualizer,
 	}
 
 	cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->actor));
+	layout = pango_cairo_create_layout(cr);
+	pango_layout_set_font_description(layout, priv->font_desc);
 	p = cairo_pattern_create_linear(0, 0, 0, height);
 	cairo_pattern_add_color_stop_rgba(p, 0, 1, 1, 1, 0.4);
 	cairo_pattern_add_color_stop_rgba(p, .61803, 1, 1, 1, 0.0);
@@ -242,6 +250,11 @@ ppg_time_span_visualizer_draw_fast (PpgVisualizer *visualizer,
 			g_value_unset(&value);
 
 			/*
+			 * Real time difference in msec.
+			 */
+			diff = (x2 - x1) * 1000.0;
+
+			/*
 			 * Get X offsets.
 			 */
 			x1 = get_x_offset(real_begin, real_end, width, x1);
@@ -252,16 +265,33 @@ ppg_time_span_visualizer_draw_fast (PpgVisualizer *visualizer,
 			 */
 			cairo_rectangle(cr, x1, 0, x2 - x1, height);
 			cairo_set_source_rgb(cr, 0.9607, 0.4745, 0);
-			cairo_fill_preserve(cr);
+			cairo_fill(cr);
+
+			/*
+			 * Draw the time span text if we can. Don't even try if we don't
+			 * have at least 10 pixels.
+			 */
+			if ((x2 - x1) > 10.0) {
+				g_snprintf(text, sizeof text, "%.0f msec", diff);
+				pango_layout_set_text(layout, text, -1);
+				pango_layout_get_pixel_size(layout, &w, &h);
+				if ((x2 - x1) >= w) {
+					cairo_set_source_rgb(cr, 0, 0, 0);
+					cairo_move_to(cr, x1, height - h);
+					pango_cairo_show_layout(cr, layout);
+				}
+			}
 
 			/*
 			 * Draw highlight.
 			 */
 			cairo_set_source(cr, p);
+			cairo_rectangle(cr, x1, 0, x2 - x1, height);
 			cairo_fill(cr);
 		} while (ppg_model_iter_next(priv->model, &iter));
 	}
 
+	g_object_unref(layout);
 	cairo_pattern_destroy(p);
 	cairo_destroy(cr);
 
@@ -302,6 +332,10 @@ ppg_time_span_visualizer_draw (PpgVisualizer *visualizer)
 static void
 ppg_time_span_visualizer_finalize (GObject *object)
 {
+	PpgTimeSpanVisualizerPrivate *priv = PPG_TIME_SPAN_VISUALIZER(object)->priv;
+
+	pango_font_description_free(priv->font_desc);
+
 	G_OBJECT_CLASS(ppg_time_span_visualizer_parent_class)->finalize(object);
 }
 
@@ -414,6 +448,10 @@ ppg_time_span_visualizer_init (PpgTimeSpanVisualizer *visualizer)
 	                           "surface-height", 1,
 	                           "natural-height", 45.0f,
 	                           NULL);
+
+	priv->font_desc = pango_font_description_new();
+	pango_font_description_set_family_static(priv->font_desc, "Monospace");
+	pango_font_description_set_size(priv->font_desc, PANGO_SCALE * 8);
 
 	g_signal_connect_after(priv->actor, "notify::allocation",
 	                       G_CALLBACK(ppg_time_span_visualizer_notify_allocation),
