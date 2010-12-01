@@ -104,15 +104,6 @@
       	RETURN(ret);                                                        \
 	} G_STMT_END
 
-#define g_clear_io_channel(_c)                         \
-	G_STMT_START {                                     \
-		if (*(_c)) {                                   \
-			g_io_channel_shutdown(*(_c), FALSE, NULL); \
-			g_io_channel_unref(*(_c));                 \
-			*(_c) = NULL;                              \
-		} \
-	} G_STMT_END
-
 /**
  * SECTION:pka-channel
  * @title: PkaChannel
@@ -146,9 +137,12 @@ struct _PkaChannelPrivate
 	gint          exit_status; /* The inferiors exit status */
 	GTimeVal      created_at;  /* When the channel was created */
 	GTimeVal      started_at;  /* When the channel was started */
+
 	GIOChannel   *stdin;       /* IOChannel (pipe) for standard input */
 	GIOChannel   *stdout;      /* IOChannel (pipe) for standard output */
 	GIOChannel   *stderr;      /* IOChannel (pipe) for standard error */
+	guint         stdout_id;   /* IO watch source for stdout */
+	guint         stderr_id;   /* IO watch source for stderr */
 };
 
 enum
@@ -163,6 +157,25 @@ enum
 };
 
 static guint signals[LAST_SIGNAL] = { 0 };
+
+static inline void
+g_clear_io_channel (GIOChannel **channel,
+                    guint       *source_id)
+{
+	if (channel) {
+		if (*channel) {
+			g_io_channel_shutdown(*channel, FALSE, NULL);
+			g_io_channel_unref(*channel);
+			*channel = NULL;
+		}
+	}
+	if (source_id) {
+		if (*source_id) {
+			g_source_remove(*source_id);
+			*source_id = 0;
+		}
+	}
+}
 
 /**
  * pka_channel_new:
@@ -926,10 +939,10 @@ pka_channel_start (PkaChannel  *channel,
 		priv->stdin = g_io_channel_unix_new(standard_input);
 		priv->stdout = g_io_channel_unix_new(standard_output);
 		priv->stderr = g_io_channel_unix_new(standard_error);
-		g_io_add_watch(priv->stdout, G_IO_IN | G_IO_HUP,
-		               pka_channel_stdout_cb, channel);
-		g_io_add_watch(priv->stderr, G_IO_IN | G_IO_HUP,
-		               pka_channel_stderr_cb, channel);
+		priv->stdout_id = g_io_add_watch(priv->stdout, G_IO_IN | G_IO_HUP,
+		                                 pka_channel_stdout_cb, channel);
+		priv->stderr_id = g_io_add_watch(priv->stderr, G_IO_IN | G_IO_HUP,
+		                                 pka_channel_stderr_cb, channel);
 
 		/*
 		 * Register callback upon child exit.
@@ -1020,9 +1033,9 @@ pka_channel_stop (PkaChannel  *channel, /* IN */
 		/*
 		 * Close the file descriptors.
 		 */
-		g_clear_io_channel(&priv->stdin);
-		g_clear_io_channel(&priv->stdout);
-		g_clear_io_channel(&priv->stderr);
+		g_clear_io_channel(&priv->stdin, NULL);
+		g_clear_io_channel(&priv->stdout, &priv->stdout_id);
+		g_clear_io_channel(&priv->stderr, &priv->stderr_id);
 
 		BREAK;
 	CASE(PKA_CHANNEL_READY);
@@ -1302,9 +1315,9 @@ pka_channel_finalize (GObject *object)
 	g_ptr_array_free(priv->sources, TRUE);
 	g_mutex_free(priv->mutex);
 
-	g_clear_io_channel(&priv->stdin);
-	g_clear_io_channel(&priv->stdout);
-	g_clear_io_channel(&priv->stderr);
+	g_clear_io_channel(&priv->stdin, NULL);
+	g_clear_io_channel(&priv->stdout, &priv->stdout_id);
+	g_clear_io_channel(&priv->stderr, &priv->stderr_id);
 
 	G_OBJECT_CLASS(pka_channel_parent_class)->finalize(object);
 
