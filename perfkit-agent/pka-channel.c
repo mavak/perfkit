@@ -104,6 +104,15 @@
       	RETURN(ret);                                                        \
 	} G_STMT_END
 
+#define g_clear_io_channel(_c)                         \
+	G_STMT_START {                                     \
+		if (*(_c)) {                                   \
+			g_io_channel_shutdown(*(_c), FALSE, NULL); \
+			g_io_channel_unref(*(_c));                 \
+			*(_c) = NULL;                              \
+		} \
+	} G_STMT_END
+
 /**
  * SECTION:pka-channel
  * @title: PkaChannel
@@ -1011,12 +1020,9 @@ pka_channel_stop (PkaChannel  *channel, /* IN */
 		/*
 		 * Close the file descriptors.
 		 */
-		g_io_channel_unref(priv->stdin);
-		g_io_channel_unref(priv->stdout);
-		g_io_channel_unref(priv->stderr);
-		priv->stdin = NULL;
-		priv->stdout = NULL;
-		priv->stderr = NULL;
+		g_clear_io_channel(&priv->stdin);
+		g_clear_io_channel(&priv->stdout);
+		g_clear_io_channel(&priv->stderr);
 
 		BREAK;
 	CASE(PKA_CHANNEL_READY);
@@ -1296,20 +1302,9 @@ pka_channel_finalize (GObject *object)
 	g_ptr_array_free(priv->sources, TRUE);
 	g_mutex_free(priv->mutex);
 
-	if (priv->stdin) {
-		g_io_channel_shutdown(priv->stdin, FALSE, NULL);
-		g_io_channel_unref(priv->stdin);
-	}
-
-	if (priv->stdout) {
-		g_io_channel_shutdown(priv->stdout, FALSE, NULL);
-		g_io_channel_unref(priv->stdout);
-	}
-
-	if (priv->stderr) {
-		g_io_channel_shutdown(priv->stderr, FALSE, NULL);
-		g_io_channel_unref(priv->stderr);
-	}
+	g_clear_io_channel(&priv->stdin);
+	g_clear_io_channel(&priv->stdout);
+	g_clear_io_channel(&priv->stderr);
 
 	G_OBJECT_CLASS(pka_channel_parent_class)->finalize(object);
 
