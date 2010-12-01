@@ -26,7 +26,7 @@
 #include "ppg-model.h"
 
 #undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "GtkInstrument"
+#define G_LOG_DOMAIN "GtkInst"
 
 #define RPC_OR_GOTO(_rpc, _args, _label)  \
     G_STMT_START {                        \

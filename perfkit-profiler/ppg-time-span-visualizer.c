@@ -21,6 +21,9 @@
 #include "ppg-model.h"
 #include "ppg-time-span-visualizer.h"
 
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "Visualizers"
+
 G_DEFINE_TYPE(PpgTimeSpanVisualizer, ppg_time_span_visualizer,
               PPG_TYPE_VISUALIZER)
 
