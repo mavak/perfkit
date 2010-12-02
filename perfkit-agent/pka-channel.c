@@ -729,6 +729,7 @@ pka_channel_stdio_cb (GIOChannel   *io,
 		 * FIXME: We should be sending the data to any subscribing client
 		 *        here instead of immediately discarding it.
 		 */
+		write(STDOUT_FILENO, buf, n_bytes);
 	}
 
 	if (error) {
