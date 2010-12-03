@@ -122,8 +122,11 @@ struct _PpgWindowPrivate
 	ClutterActor *container;
 	ClutterActor *top_shadow;
 	ClutterActor *bottom_shadow;
+	ClutterActor *selection_actor;
 
 	ClutterLayoutManager *box_layout;
+
+	gboolean in_grab;
 };
 
 enum
@@ -1432,6 +1435,7 @@ ppg_window_size_allocate (GtkWidget     *widget,
 		                    embed_alloc.height - SHADOW_HEIGHT);
 		clutter_actor_set_width(priv->bottom_shadow, embed_alloc.width);
 		clutter_actor_set_width(priv->top_shadow, embed_alloc.width);
+		clutter_actor_set_height(priv->selection_actor, embed_alloc.height);
 
 		g_object_set(priv->vadj,
 		             "page-increment", (embed_alloc.height / 2.0),
@@ -1724,6 +1728,7 @@ ppg_window_style_set (GtkWidget *widget,
 	ClutterColor mid;
 	ClutterColor dark;
 	ClutterColor bg;
+	ClutterColor selbg;
 	GtkStyle *style;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
@@ -1749,11 +1754,13 @@ ppg_window_style_set (GtkWidget *widget,
 	             "color", &bg,
 	             NULL);
 
+	gtk_clutter_get_bg_color(widget, GTK_STATE_SELECTED, &selbg);
 	gtk_clutter_get_mid_color(widget, GTK_STATE_NORMAL, &mid);
 	gtk_clutter_get_dark_color(widget, GTK_STATE_NORMAL, &dark);
 
 	g_object_set(priv->header_bg, "color", &mid, NULL);
 	g_object_set(priv->header_sep, "color", &dark, NULL);
+	g_object_set(priv->selection_actor, "color", &selbg, NULL);
 
 	clutter_container_foreach(CLUTTER_CONTAINER(priv->rows_box),
 	                          (ClutterCallback)ppg_window_set_row_style,
@@ -1858,6 +1865,40 @@ ppg_window_embed_key_press (GtkWidget   *embed,
 	}
 
 	return FALSE;
+}
+
+static gboolean
+ppg_window_stage_captured_event (ClutterActor *stage,
+                                 ClutterEvent *event,
+                                 PpgWindow    *window)
+{
+	PpgWindowPrivate *priv;
+	gboolean ret = FALSE;
+
+	g_return_val_if_fail(PPG_IS_WINDOW(window), FALSE);
+
+	priv = window->priv;
+
+	switch ((gint)event->type) {
+	case CLUTTER_BUTTON_PRESS:
+		if (event->button.modifier_state & CLUTTER_SHIFT_MASK) {
+			priv->in_grab = TRUE;
+		}
+		break;
+	case CLUTTER_BUTTON_RELEASE:
+		priv->in_grab = FALSE;
+		break;
+	case CLUTTER_MOTION:
+		if (priv->in_grab) {
+			clutter_actor_set_x(priv->selection_actor,
+			                    MAX(200.0, event->motion.x));
+		}
+		break;
+	default:
+		break;
+	}
+
+	return ret;
 }
 
 /**
@@ -2452,6 +2493,9 @@ ppg_window_init (PpgWindow *window)
 	g_signal_connect(priv->clutter_embed, "motion-notify-event",
 	                 G_CALLBACK(ppg_window_embed_motion_notify),
 	                 window);
+	g_signal_connect(priv->stage, "captured-event",
+	                 G_CALLBACK(ppg_window_stage_captured_event),
+	                 window);
 
 	clutter_color_from_string(&black, "#000000");
 
@@ -2511,6 +2555,13 @@ ppg_window_init (PpgWindow *window)
 	                                  NULL);
 	priv->top_shadow = ppg_window_create_shadow(TRUE);
 	priv->bottom_shadow = ppg_window_create_shadow(FALSE);
+	priv->selection_actor = g_object_new(CLUTTER_TYPE_RECTANGLE,
+	                                     "color", &black,
+	                                     "opacity", 128,
+	                                     "width", 200.0f,
+	                                     "height", 200.0f,
+	                                     "x", 200.0f,
+	                                     NULL);
 
 	clutter_container_add(CLUTTER_CONTAINER(priv->stage),
 	                      priv->header_bg,
@@ -2520,6 +2571,7 @@ ppg_window_init (PpgWindow *window)
 	                      priv->bottom_shadow,
 	                      priv->container,
 	                      priv->timer_sep,
+	                      priv->selection_actor,
 	                      priv->status_actor,
 	                      NULL);
 
