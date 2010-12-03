@@ -16,21 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#ifdef G_LOG_DOMAIN
-#undef G_LOG_DOMAIN
-#endif
-#define G_LOG_DOMAIN "Sample"
-
 #include <egg-buffer.h>
 #include <egg-time.h>
 #include <string.h>
 
 #include "pka-log.h"
 #include "pka-sample.h"
+
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "Sample"
 
 /**
  * SECTION:pka-sample

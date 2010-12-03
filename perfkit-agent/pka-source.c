@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gi18n.h>
@@ -29,6 +25,9 @@
 #include "pka-private.h"
 #include "pka-source.h"
 #include "pka-subscription.h"
+
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "Source"
 
 /**
  * SECTION:pka-source
