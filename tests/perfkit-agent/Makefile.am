@@ -20,6 +20,7 @@ AM_CPPFLAGS =								\
 	$(GOBJECT_CFLAGS)						\
 	-I$(top_srcdir)							\
 	-I$(top_srcdir)/cut-n-paste					\
+	-I$(top_builddir)/perfkit-agent					\
 	$(WARNINGS)							\
 	$(NULL)
 

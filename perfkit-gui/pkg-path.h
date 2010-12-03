@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined (__PERFKIT_GUI_INSIDE__) && !defined (PERFKIT_GUI_COMPILATION)
+#if !defined (__PERFKIT_INSIDE__) && !defined (PERFKIT_COMPILATION)
 #error "Only <perfkit-gui/perfkit-gui.h> can be included directly."
 #endif
 

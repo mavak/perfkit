@@ -1,10 +1,10 @@
-all: gschemas.compiled
+all: $(builddir)/gschemas.compiled
 
 SCHEMAS =					\
 	org.perfkit.profiler.gschema.xml	\
 	$(NULL)
 
-gschemas.compiled: $(SCHEMAS)
-	glib-compile-schemas $(top_srcdir)/data/settings
+$(builddir)/gschemas.compiled: $(SCHEMAS)
+	glib-compile-schemas $(top_srcdir)/data/settings --targetdir=$(builddir)
 
 # TODO: Make this shiz install

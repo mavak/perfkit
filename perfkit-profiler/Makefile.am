@@ -149,7 +149,7 @@ perfkit_profiler_DEPENDENCIES += libprofiler.la
 
 run: perfkit-profiler
 	@rm -f perfkit-profiler.log
-	@PPG_DATA_DIR=$(top_builddir)/data				\
+	@PPG_DATA_DIR=$(top_srcdir)/data				\
 	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/.libs		\
 	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings		\
 	libtool --mode=execute $(builddir)/perfkit-profiler		\
@@ -158,7 +158,7 @@ run: perfkit-profiler
 
 debug: perfkit-profiler
 	@rm -f perfkit-profiler.log
-	@PPG_DATA_DIR=$(top_builddir)/data				\
+	@PPG_DATA_DIR=$(top_srcdir)/data				\
 	PERFKIT_CONNECTIONS_DIR=$(top_builddir)/perfkit/.libs		\
 	GSETTINGS_SCHEMA_DIR=$(top_builddir)/data/settings		\
 	libtool --mode=execute gdb --args $(builddir)/perfkit-profiler	\

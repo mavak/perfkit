@@ -12,6 +12,7 @@ AM_CPPFLAGS =								\
 	$(GIO_CFLAGS)							\
 	-I$(top_srcdir)							\
 	-I$(top_srcdir)/cut-n-paste					\
+	-I$(top_builddir)/perfkit					\
 	$(WARNINGS)							\
 	-DPERFKIT_CONNECTIONS_DIR="\"$(top_builddir)/perfkit/connections/.libs\"" \
 	$(NULL)
