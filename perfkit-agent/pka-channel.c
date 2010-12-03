@@ -19,6 +19,7 @@
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "Channel"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <glib-object.h>
@@ -725,7 +726,7 @@ pka_channel_stdio_cb (GIOChannel   *io,
 		 * FIXME: We should be sending the data to any subscribing client
 		 *        here instead of immediately discarding it.
 		 */
-		write(STDOUT_FILENO, buf, n_bytes);
+		TEMP_FAILURE_RETRY(write(STDOUT_FILENO, buf, n_bytes));
 	}
 
 	if (error) {
