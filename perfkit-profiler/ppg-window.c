@@ -1445,6 +1445,43 @@ ppg_window_size_allocate (GtkWidget     *widget,
 	priv->last_height = alloc->height;
 }
 
+static void
+ppg_window_update_instrument_actions (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GList *list;
+	guint n_children;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	/*
+	 * Count the number of instruments we have. It would be nice to just keep
+	 * track of this manually in the instance private data; but this will work
+	 * for now.
+	 */
+	list = clutter_container_get_children(CLUTTER_CONTAINER(priv->rows_box));
+	n_children = g_list_length(list);
+	g_list_free(list);
+
+	ppg_window_action_set(window, "configure-instrument",
+	                      "sensitive", !!priv->selected,
+	                      NULL);
+	ppg_window_action_set(window, "zoom-in-instrument",
+	                      "sensitive", !!priv->selected,
+	                      NULL);
+	ppg_window_action_set(window, "zoom-out-instrument",
+	                      "sensitive", !!priv->selected,
+	                      NULL);
+	ppg_window_action_set(window, "next-instrument",
+	                      "sensitive", !!n_children,
+	                      NULL);
+	ppg_window_action_set(window, "previous-instrument",
+	                      "sensitive", !!n_children,
+	                      NULL);
+}
+
 /**
  * ppg_window_unselect_row:
  * @window: (in): A #PpgWindow.
@@ -1458,7 +1495,6 @@ static void
 ppg_window_unselect_row (PpgWindow *window)
 {
 	PpgWindowPrivate *priv;
-	GtkAction *action;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
@@ -1471,8 +1507,7 @@ ppg_window_unselect_row (PpgWindow *window)
 		priv->selected = NULL;
 	}
 
-	action = ppg_window_get_action(window, "configure-instrument");
-	g_object_set(action, "sensitive", FALSE, NULL);
+	ppg_window_update_instrument_actions(window);
 }
 
 /**
@@ -1491,14 +1526,13 @@ ppg_window_select_row (PpgWindow *window,
 {
 	PpgWindowPrivate *priv;
 	PpgInstrument *instrument;
-	GtkAction *action;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 	g_return_if_fail(!row || PPG_IS_ROW(row));
 
 	priv = window->priv;
 
-	if (priv->selected == CLUTTER_ACTOR(row)) {
+	if (priv->selected == (gpointer)row) {
 		return;
 	}
 
@@ -1509,12 +1543,6 @@ ppg_window_select_row (PpgWindow *window,
 		g_object_set(priv->selected,
 		             "selected", TRUE,
 		             NULL);
-
-		action = ppg_window_get_action(window, "configure-instrument");
-		g_object_set(action,
-		             "sensitive", TRUE,
-		             NULL);
-
 		g_object_get(priv->selected,
 		             "instrument", &instrument,
 		             NULL);
@@ -1526,6 +1554,8 @@ ppg_window_select_row (PpgWindow *window,
 		             NULL);
 		g_object_unref(instrument);
 	}
+
+	ppg_window_update_instrument_actions(window);
 }
 
 /**
@@ -2184,6 +2214,10 @@ ppg_window_init (PpgWindow *window)
 	ppg_window_action_set(window, "copy", "sensitive", FALSE, NULL);
 	ppg_window_action_set(window, "paste", "sensitive", FALSE, NULL);
 	ppg_window_action_set(window, "configure-instrument", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "next-instrument", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "previous-instrument", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "zoom-in-instrument", "sensitive", FALSE, NULL);
+	ppg_window_action_set(window, "zoom-out-instrument", "sensitive", FALSE, NULL);
 
 	priv->vadj = g_object_new(GTK_TYPE_ADJUSTMENT,
 	                          "lower", 0.0,

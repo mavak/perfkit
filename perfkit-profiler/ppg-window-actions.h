@@ -101,10 +101,6 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "visualizers", NULL, N_("_Visualizers") },
 	{ "next-instrument", NULL, N_("Next"), "j", NULL, G_CALLBACK(ppg_window_next_activate) },
 	{ "previous-instrument", NULL, N_("Previous"), "k", NULL, G_CALLBACK(ppg_window_previous_activate) },
-	{ "go-forward", NULL, N_("Move Forward in Time"), "l", NULL, G_CALLBACK(ppg_window_go_forward_activate) },
-	{ "go-back", NULL, N_("Move Backward in Time"), "h", NULL, G_CALLBACK(ppg_window_go_back_activate) },
-	{ "zoom-in-instrument", NULL, N_("Zoom In Instrument"), "space", NULL, G_CALLBACK(ppg_window_zoom_in_instrument_activate) },
-	{ "zoom-out-instrument", NULL, N_("Zoom Out Instrument"), "<shift>space", NULL, G_CALLBACK(ppg_window_zoom_out_instrument_activate) },
 
 	{ "target-spawn", NULL, N_("Spawn a new process"), "<control>t", NULL, G_CALLBACK(ppg_window_target_spawn_activate) },
 	{ "target-existing", NULL, N_("Select an existing process"), NULL, NULL, NULL },
@@ -117,9 +113,13 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "monitor-net", NULL, N_("Network Usage"), NULL, NULL, G_CALLBACK(ppg_window_monitor_net_activate) },
 
 	{ "view", NULL, N_("_View") },
-	{ "zoom-in", GTK_STOCK_ZOOM_IN, N_("Zoom In"), "<control>equal", NULL, G_CALLBACK(ppg_window_zoom_in_activate) },
+	{ "zoom-in", GTK_STOCK_ZOOM_IN, N_("Zoom In"), "<control>plus", NULL, G_CALLBACK(ppg_window_zoom_in_activate) },
 	{ "zoom-out", GTK_STOCK_ZOOM_OUT, N_("Zoom Out"), "<control>minus", NULL, G_CALLBACK(ppg_window_zoom_out_activate) },
 	{ "zoom-one", GTK_STOCK_ZOOM_100, N_("Normal Size"), "<control>0", NULL, G_CALLBACK(ppg_window_zoom_one_activate) },
+	{ "go-forward", NULL, N_("Move Forward in Time"), "l", NULL, G_CALLBACK(ppg_window_go_forward_activate) },
+	{ "go-back", NULL, N_("Move Backward in Time"), "h", NULL, G_CALLBACK(ppg_window_go_back_activate) },
+	{ "zoom-in-instrument", NULL, N_("Zoom In Instrument"), "space", NULL, G_CALLBACK(ppg_window_zoom_in_instrument_activate) },
+	{ "zoom-out-instrument", NULL, N_("Zoom Out Instrument"), "<shift>space", NULL, G_CALLBACK(ppg_window_zoom_out_instrument_activate) },
 
 	{ "help", NULL, N_("_Help") },
 	{ "about", GTK_STOCK_ABOUT, N_("About " PRODUCT_NAME), NULL, NULL, G_CALLBACK(ppg_window_about_activate) },
