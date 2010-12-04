@@ -54,6 +54,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	             "border-width", 6,
 	             "resizable", FALSE,
 	             "title", _("About " PRODUCT_NAME),
+	             "window-position", GTK_WIN_POS_CENTER_ON_PARENT,
 	             NULL);
 
 	content = g_object_new(GTK_TYPE_VBOX,
