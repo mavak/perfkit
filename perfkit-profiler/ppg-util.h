@@ -21,25 +21,34 @@
 
 #include <gtk/gtk.h>
 
+#include "ppg-animation.h"
+
 G_BEGIN_DECLS
 
-const gchar* ppg_util_uname (void);
-gsize ppg_util_get_total_memory (void);
-
-void ppg_util_load_ui (GtkWidget       *widget,
-                       GtkActionGroup **actions,
-                       const gchar     *ui_data,
-                       const gchar     *first_widget,
-                       ...);
-
-gboolean ppg_util_base_expose_event (GtkWidget       *widget,
-                                     GdkEventExpose  *event);
-gboolean ppg_util_bg_expose_event   (GtkWidget       *widget,
-                                     GdkEventExpose  *event);
-gboolean ppg_util_fg_expose_event   (GtkWidget       *widget,
-                                     GdkEventExpose  *event);
-
-GtkWidget* ppg_util_header_item_new (const gchar     *label);
+const gchar* ppg_util_uname             (void);
+gsize        ppg_util_get_total_memory  (void);
+void         ppg_util_load_ui           (GtkWidget       *widget,
+                                         GtkActionGroup **actions,
+                                         const gchar     *ui_data,
+                                         const gchar     *first_widget,
+                                         ...);
+gboolean     ppg_util_base_expose_event (GtkWidget        *widget,
+                                         GdkEventExpose   *event);
+gboolean     ppg_util_bg_expose_event   (GtkWidget        *widget,
+                                         GdkEventExpose   *event);
+gboolean     ppg_util_fg_expose_event   (GtkWidget        *widget,
+                                         GdkEventExpose   *event);
+GtkWidget*   ppg_util_header_item_new   (const gchar      *label);
+void         ppg_widget_animate         (GtkWidget        *widget,
+                                         guint             duration_msec,
+                                         PpgAnimationMode  mode,
+                                         const gchar      *first_property,
+                                         ...) G_GNUC_NULL_TERMINATED;
+void         ppg_widget_animatev        (GtkWidget        *widget,
+                                         guint             duration_msec,
+                                         PpgAnimationMode  mode,
+                                         const gchar      *first_property,
+                                         va_list           args);
 
 G_END_DECLS
 

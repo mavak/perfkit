@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glib-object.h>
+#include <gobject/gvaluecollector.h>
 #include <sys/utsname.h>
 
 #include "ppg-actions.h"
@@ -186,4 +188,90 @@ ppg_util_header_item_new (const gchar *label)
 	gtk_menu_item_select(GTK_MENU_ITEM(item));
 
 	return item;
+}
+
+void
+ppg_widget_animate (GtkWidget        *widget,
+                    guint             duration_msec,
+                    PpgAnimationMode  mode,
+                    const gchar      *first_property,
+                    ...)
+{
+	va_list args;
+
+	va_start(args, first_property);
+	ppg_widget_animatev(widget, duration_msec, mode, first_property, args);
+	va_end(args);
+}
+
+void
+ppg_widget_animatev (GtkWidget        *widget,
+                     guint             duration_msec,
+                     PpgAnimationMode  mode,
+                     const gchar      *first_property,
+                     va_list           args)
+{
+	PpgAnimation *animation;
+	GObjectClass *klass;
+	GObjectClass *pklass;
+	const gchar *name;
+	GParamSpec *pspec;
+	GtkWidget *parent;
+	GValue value = { 0 };
+	gchar *error = NULL;
+	GType type;
+	GType ptype;
+
+	g_return_if_fail(GTK_IS_WIDGET(widget));
+	g_return_if_fail(mode == PPG_ANIMATION_LINEAR);
+	g_return_if_fail(first_property != NULL);
+
+	name = first_property;
+	type = G_TYPE_FROM_INSTANCE(widget);
+	klass = G_OBJECT_GET_CLASS(widget);
+	animation = g_object_new(PPG_TYPE_ANIMATION,
+	                         "duration", duration_msec,
+	                         "mode", mode,
+	                         "target", widget,
+	                         NULL);
+
+	do {
+		/*
+		 * First check for the property on the object. If that does not exist
+		 * then check if the widget has a parent and look at its child
+		 * properties.
+		 */
+		if (!(pspec = g_object_class_find_property(klass, name))) {
+			if (!(parent = gtk_widget_get_parent(widget))) {
+				g_critical("Failed to find property %s in %s",
+				           name, g_type_name(type));
+				goto failure;
+			}
+			pklass = G_OBJECT_GET_CLASS(parent);
+			ptype = G_TYPE_FROM_INSTANCE(parent);
+			if (!(pspec = gtk_container_class_find_child_property(pklass, name))) {
+				g_critical("Failed to find property %s in %s or parent %s",
+				           name, g_type_name(type), g_type_name(ptype));
+				goto failure;
+			}
+		}
+
+		G_VALUE_COLLECT_INIT(&value, pspec->value_type, args, 0, &error);
+		if (error != NULL) {
+			g_critical("Failed to retrieve va_list value: %s", error);
+			g_free(error);
+			goto failure;
+		}
+
+		ppg_animation_add_property(animation, pspec, &value);
+		g_value_unset(&value);
+	} while ((name = va_arg(args, const gchar *)));
+
+	ppg_animation_start(animation);
+
+	return;
+
+failure:
+	g_object_ref_sink(animation);
+	g_object_unref(animation);
 }
