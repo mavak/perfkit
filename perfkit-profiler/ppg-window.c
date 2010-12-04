@@ -127,6 +127,7 @@ struct _PpgWindowPrivate
 	ClutterLayoutManager *box_layout;
 
 	gboolean in_grab;
+	gfloat   selection_epoch;
 };
 
 enum
@@ -138,6 +139,33 @@ enum
 };
 
 static guint instances = 0;
+
+static gdouble
+ppg_window_x_to_time (PpgWindow *window,
+                      gdouble    x)
+{
+	PpgWindowPrivate *priv;
+	GtkAllocation alloc;
+	gdouble width;
+	gdouble lower;
+	gdouble upper;
+	gdouble ratio;
+	gdouble pos;
+
+	g_return_val_if_fail(PPG_IS_WINDOW(window), 0.0);
+
+	priv = window->priv;
+
+	gtk_widget_get_allocation(priv->clutter_embed, &alloc);
+	width = alloc.width - 200.0;
+	g_object_get(priv->ruler,
+	             "lower", &lower,
+	             "upper", &upper,
+	             NULL);
+	ratio = x / width;
+	pos = lower + ((upper - lower) * ratio);
+	return pos;
+}
 
 static void
 ppg_window_session_stopped (PpgSession *session,
@@ -1867,6 +1895,92 @@ ppg_window_embed_key_press (GtkWidget   *embed,
 	return FALSE;
 }
 
+static void
+ppg_window_start_selection (PpgWindow *window,
+                            gfloat     x)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	if (x < 200.0) {
+		return;
+	}
+
+	priv->in_grab = TRUE;
+	priv->selection_epoch = x;
+
+	g_object_set(priv->selection_actor,
+	             "x", MAX(200.0f, x),
+	             "width", 1.0f,
+	             "visible", TRUE,
+	             NULL);
+}
+
+static void
+ppg_window_extend_selection (PpgWindow *window,
+                             gfloat     x)
+{
+	PpgWindowPrivate *priv;
+	gfloat width;
+	gfloat x1;
+	gfloat x2;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	x = MAX(200.0f, x);
+
+	if (x < priv->selection_epoch) {
+		x1 = x;
+		x2 = priv->selection_epoch;
+	} else {
+		x1 = priv->selection_epoch;
+		x2 = x;
+	}
+
+	width = MAX(1.0f, x2 - x1);
+
+	g_object_set(priv->selection_actor,
+	             "x", x1,
+	             "width", width,
+	             NULL);
+}
+
+static void
+ppg_window_end_selection (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	priv->in_grab = FALSE;
+}
+
+static void
+ppg_window_clear_selection (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	priv->in_grab = FALSE;
+	priv->selection_epoch = 0.0f;
+
+	g_object_set(priv->selection_actor,
+	             "x", 200.0f,
+	             "width", 0.0f,
+	             "visible", FALSE,
+	             NULL);
+}
+
 static gboolean
 ppg_window_stage_captured_event (ClutterActor *stage,
                                  ClutterEvent *event,
@@ -1881,17 +1995,22 @@ ppg_window_stage_captured_event (ClutterActor *stage,
 
 	switch ((gint)event->type) {
 	case CLUTTER_BUTTON_PRESS:
-		if (event->button.modifier_state & CLUTTER_SHIFT_MASK) {
-			priv->in_grab = TRUE;
+		if (event->button.button == 1) {
+			if (event->button.modifier_state & CLUTTER_SHIFT_MASK) {
+				ppg_window_start_selection(window, event->button.x);
+				ret = TRUE;
+			}
 		}
 		break;
 	case CLUTTER_BUTTON_RELEASE:
-		priv->in_grab = FALSE;
+		if (priv->in_grab) {
+			ppg_window_end_selection(window);
+			ret = TRUE;
+		}
 		break;
 	case CLUTTER_MOTION:
 		if (priv->in_grab) {
-			clutter_actor_set_x(priv->selection_actor,
-			                    MAX(200.0, event->motion.x));
+			ppg_window_extend_selection(window, event->button.x);
 		}
 		break;
 	default:
@@ -1917,26 +2036,17 @@ ppg_window_embed_motion_notify (GtkWidget      *embed,
                                 PpgWindow      *window)
 {
 	PpgWindowPrivate *priv;
-	GtkAllocation alloc;
-	gdouble x = motion->x - 200.0f;
-	gdouble width;
-	gdouble ratio;
 	gdouble lower;
-	gdouble upper;
-	gdouble pos;
+	gdouble x;
 
 	priv = window->priv;
 
+	x = motion->x - 200.0f;
+
 	if (x > 0) {
-		gtk_widget_get_allocation(embed, &alloc);
-		width = alloc.width - 200.0;
-		g_object_get(priv->ruler,
-		             "lower", &lower,
-		             "upper", &upper,
+		g_object_set(priv->ruler,
+		             "position", ppg_window_x_to_time(window, x),
 		             NULL);
-		ratio = x / width;
-		pos = lower + ((upper - lower) * ratio);
-		g_object_set(priv->ruler, "position", pos, NULL);
 	} else {
 		g_object_get(priv->ruler, "lower", &lower, NULL);
 		g_object_set(priv->ruler, "position", lower, NULL);
@@ -2493,6 +2603,9 @@ ppg_window_init (PpgWindow *window)
 	g_signal_connect(priv->clutter_embed, "motion-notify-event",
 	                 G_CALLBACK(ppg_window_embed_motion_notify),
 	                 window);
+	g_signal_connect_swapped(priv->stage, "button-press-event",
+	                         G_CALLBACK(ppg_window_clear_selection),
+	                         window);
 	g_signal_connect(priv->stage, "captured-event",
 	                 G_CALLBACK(ppg_window_stage_captured_event),
 	                 window);
@@ -2557,9 +2670,10 @@ ppg_window_init (PpgWindow *window)
 	priv->bottom_shadow = ppg_window_create_shadow(FALSE);
 	priv->selection_actor = g_object_new(CLUTTER_TYPE_RECTANGLE,
 	                                     "color", &black,
-	                                     "opacity", 128,
-	                                     "width", 200.0f,
 	                                     "height", 200.0f,
+	                                     "opacity", 128,
+	                                     "visible", FALSE,
+	                                     "width", 200.0f,
 	                                     "x", 200.0f,
 	                                     NULL);
 
