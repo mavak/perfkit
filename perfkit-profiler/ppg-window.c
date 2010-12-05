@@ -1713,6 +1713,12 @@ ppg_window_instrument_added (PpgSession *session,
 	                           "begin", lower,
 	                           "end", upper,
 	                           NULL);
+	ppg_window_action_set(window, "next-instrument",
+	                      "sensitive", TRUE,
+	                      NULL);
+	ppg_window_action_set(window, "previous-instrument",
+	                      "sensitive", TRUE,
+	                      NULL);
 	if (CLUTTER_ACTOR_IS_VISIBLE(priv->add_instrument_actor)) {
 		clutter_actor_hide(priv->add_instrument_actor);
 	}
