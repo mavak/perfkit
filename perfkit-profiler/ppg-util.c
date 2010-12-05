@@ -223,8 +223,8 @@ ppg_widget_animatev (GtkWidget        *widget,
 	GType ptype;
 
 	g_return_if_fail(GTK_IS_WIDGET(widget));
-	g_return_if_fail(mode == PPG_ANIMATION_LINEAR);
 	g_return_if_fail(first_property != NULL);
+	g_return_if_fail(mode < PPG_ANIMATION_LAST);
 
 	name = first_property;
 	type = G_TYPE_FROM_INSTANCE(widget);

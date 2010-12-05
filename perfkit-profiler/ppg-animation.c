@@ -20,27 +20,27 @@
 
 #include "ppg-animation.h"
 
-#define TIMEVAL_TO_MSEC(t) (((t).tv_sec * 1000UL) + ((t).tv_usec / 1000UL))
-
 G_DEFINE_TYPE(PpgAnimation, ppg_animation, G_TYPE_INITIALLY_UNOWNED)
 
-typedef void (*TweenFunc) (const GValue *begin,
-                           const GValue *end,
-                           GValue       *value,
-                           gdouble       offset);
+#define TIMEVAL_TO_MSEC(t) (((t).tv_sec * 1000UL) + ((t).tv_usec / 1000UL))
+#define LAST_FUNDAMENTAL 64
+#define TWEEN(type)                                         \
+    static void                                             \
+    tween_##type (const GValue *begin,                      \
+                  const GValue *end,                        \
+                  GValue *value,                            \
+                  gdouble offset)                           \
+    {                                                       \
+    	g##type x = g_value_get_##type(begin);              \
+    	g##type y = g_value_get_##type(end);                \
+    	g_value_set_##type(value, x + ((y - x) * offset));  \
+    }
 
-typedef struct
-{
-	TweenFunc tween_int;
-	TweenFunc tween_uint;
-	TweenFunc tween_long;
-	TweenFunc tween_ulong;
-	TweenFunc tween_float;
-	TweenFunc tween_double;
-	/*
-	 * TODO: Add more types.
-	 */
-} TweenVTable;
+typedef gdouble (*AlphaFunc) (gdouble offset);
+typedef void    (*TweenFunc) (const GValue *begin,
+                              const GValue *end,
+                              GValue       *value,
+                              gdouble       offset);
 
 typedef struct
 {
@@ -68,26 +68,33 @@ enum
 	PROP_TARGET,
 };
 
-static TweenVTable tween_vtable[1];
+static AlphaFunc alpha_funcs[PPG_ANIMATION_LAST];
+static TweenFunc tween_funcs[LAST_FUNDAMENTAL];
 
-#define LINEAR_TWEEN(type)                                  \
-    static void                                             \
-    ppg_animation_tween_linear_##type (const GValue *begin, \
-                                       const GValue *end,   \
-                                       GValue *value,       \
-                                       gdouble offset)      \
-    {                                                       \
-    	g##type x = g_value_get_##type(begin);              \
-    	g##type y = g_value_get_##type(end);                \
-    	g_value_set_##type(value, x + ((y - x) * offset));  \
-    }
+TWEEN(int);
+TWEEN(uint);
+TWEEN(long);
+TWEEN(ulong);
+TWEEN(float);
+TWEEN(double);
 
-LINEAR_TWEEN(int);
-LINEAR_TWEEN(uint);
-LINEAR_TWEEN(long);
-LINEAR_TWEEN(ulong);
-LINEAR_TWEEN(float);
-LINEAR_TWEEN(double);
+static gdouble
+alpha_linear (gdouble offset)
+{
+	return offset;
+}
+
+static gdouble
+alpha_ease_in_quad (gdouble offset)
+{
+	return offset * offset;
+}
+
+static gdouble
+alpha_ease_out_quad (gdouble offset)
+{
+	return -1.0 * offset * (offset - 2.0);
+}
 
 static void
 ppg_animation_load_begin_values (PpgAnimation *animation)
@@ -164,11 +171,13 @@ ppg_animation_update_property (PpgAnimation *animation,
 static void
 ppg_animation_update_child_property (PpgAnimation *animation,
                                      gpointer      target,
-                                     gpointer      child,
                                      Tween        *tween,
                                      const GValue *value)
 {
-	gtk_container_child_set_property(target, child,
+	GtkWidget *parent;
+
+	parent = gtk_widget_get_parent(GTK_WIDGET(target)),
+	gtk_container_child_set_property(GTK_CONTAINER(parent), target,
 	                                 tween->pspec->name, value);
 }
 
@@ -189,24 +198,20 @@ ppg_animation_get_value_at_offset (PpgAnimation *animation,
 
 	priv = animation->priv;
 
-#define CASE_TWEEN_FUNC(TYPE, type) \
-	case G_TYPE_##TYPE: \
-		tween_vtable[priv->mode].tween_##type( \
-			&tween->begin, &tween->end, value, offset); \
-		break
-
-	switch (tween->pspec->value_type) {
-	CASE_TWEEN_FUNC(INT, int);
-	CASE_TWEEN_FUNC(UINT, uint);
-	CASE_TWEEN_FUNC(LONG, long);
-	CASE_TWEEN_FUNC(ULONG, ulong);
-	CASE_TWEEN_FUNC(DOUBLE, double);
-	CASE_TWEEN_FUNC(FLOAT, float);
-	default:
+	if (value->g_type < LAST_FUNDAMENTAL) {
+		/*
+		 * XXX: If you hit the following assertion, you need to add a function
+		 *      to create the new value at the given offset.
+		 */
+		g_assert(tween_funcs[value->g_type]);
+		tween_funcs[value->g_type](&tween->begin, &tween->end, value, offset);
+	} else {
+		/*
+		 * TODO: Support complex transitions.
+		 */
 		if (offset >= 1.0) {
 			g_value_copy(&tween->end, value);
 		}
-		break;
 	}
 }
 
@@ -215,6 +220,7 @@ ppg_animation_tick (PpgAnimation *animation)
 {
 	PpgAnimationPrivate *priv;
 	gdouble offset;
+	gdouble alpha;
 	GValue value = { 0 };
 	Tween *tween;
 	gint i;
@@ -223,20 +229,22 @@ ppg_animation_tick (PpgAnimation *animation)
 
 	priv = animation->priv;
 	offset = ppg_animation_get_offset(animation);
+	alpha = alpha_funcs[priv->mode](offset);
 
 	for (i = 0; i < priv->tweens->len; i++) {
 		tween = &g_array_index(priv->tweens, Tween, i);
+
 		g_value_init(&value, tween->pspec->value_type);
-		ppg_animation_get_value_at_offset(animation, offset, tween, &value);
+		ppg_animation_get_value_at_offset(animation, alpha, tween, &value);
+
 		if (!tween->is_child) {
 			ppg_animation_update_property(animation, priv->target,
 			                              tween, &value);
 		} else {
-			ppg_animation_update_child_property(
-					animation, priv->target,
-					gtk_widget_get_parent(GTK_WIDGET(priv->target)),
-					tween, &value);
+			ppg_animation_update_child_property(animation, priv->target,
+			                                    tween, &value);
 		}
+
 		g_value_unset(&value);
 	}
 
@@ -252,6 +260,7 @@ ppg_animation_timeout (gpointer data)
 	if (!(ret = ppg_animation_tick(animation))) {
 		ppg_animation_stop(animation);
 	}
+
 	return ret;
 }
 
@@ -412,7 +421,7 @@ ppg_animation_class_init (PpgAnimationClass *klass)
 	                                                  "Mode",
 	                                                  "The animation mode",
 	                                                  0,
-	                                                  0,
+	                                                  PPG_ANIMATION_LAST,
 	                                                  0,
 	                                                  G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
@@ -424,18 +433,25 @@ ppg_animation_class_init (PpgAnimationClass *klass)
 	                                                    G_TYPE_OBJECT,
 	                                                    G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
-#define SET_VTABLE(MODE, mode, type) \
-	tween_vtable[PPG_ANIMATION_##MODE].tween_##type = \
-		ppg_animation_tween_##mode##_##type
+#define SET_ALPHA(_T, _t) \
+	alpha_funcs[PPG_ANIMATION_##_T] = alpha_##_t
 
-	SET_VTABLE(LINEAR, linear, int);
-	SET_VTABLE(LINEAR, linear, uint);
-	SET_VTABLE(LINEAR, linear, long);
-	SET_VTABLE(LINEAR, linear, ulong);
-	SET_VTABLE(LINEAR, linear, float);
-	SET_VTABLE(LINEAR, linear, double);
+	SET_ALPHA(LINEAR, linear);
+	SET_ALPHA(EASE_IN_QUAD, ease_in_quad);
+	SET_ALPHA(EASE_OUT_QUAD, ease_out_quad);
 
-#undef SET_VTABLE
+#define SET_TWEEN(_T, _t) \
+	G_STMT_START { \
+		guint idx = G_TYPE_##_T; \
+		tween_funcs[idx] = tween_##_t; \
+	} G_STMT_END
+
+	SET_TWEEN(INT, int);
+	SET_TWEEN(UINT, uint);
+	SET_TWEEN(LONG, long);
+	SET_TWEEN(ULONG, ulong);
+	SET_TWEEN(FLOAT, float);
+	SET_TWEEN(DOUBLE, double);
 }
 
 static void

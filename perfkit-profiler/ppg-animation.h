@@ -39,6 +39,10 @@ typedef enum   _PpgAnimationMode    PpgAnimationMode;
 enum _PpgAnimationMode
 {
 	PPG_ANIMATION_LINEAR,
+	PPG_ANIMATION_EASE_IN_QUAD,
+	PPG_ANIMATION_EASE_OUT_QUAD,
+
+	PPG_ANIMATION_LAST
 };
 
 struct _PpgAnimation
