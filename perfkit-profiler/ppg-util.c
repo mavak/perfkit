@@ -190,21 +190,44 @@ ppg_util_header_item_new (const gchar *label)
 	return item;
 }
 
-void
+PpgAnimation*
 ppg_widget_animate (GtkWidget        *widget,
                     guint             duration_msec,
                     PpgAnimationMode  mode,
                     const gchar      *first_property,
                     ...)
 {
+	PpgAnimation *animation;
 	va_list args;
 
 	va_start(args, first_property);
-	ppg_widget_animatev(widget, duration_msec, mode, first_property, args);
+	animation = ppg_widget_animatev(widget, duration_msec, mode,
+	                                first_property, args);
 	va_end(args);
+	return animation;
 }
 
-void
+PpgAnimation*
+ppg_widget_animate_full (GtkWidget        *widget,
+                         guint             duration_msec,
+                         PpgAnimationMode  mode,
+                         GDestroyNotify    notify,
+                         gpointer          notify_data,
+                         const gchar      *first_property,
+                         ...)
+{
+	PpgAnimation *animation;
+	va_list args;
+
+	va_start(args, first_property);
+	animation = ppg_widget_animatev(widget, duration_msec, mode,
+	                                first_property, args);
+	va_end(args);
+	g_object_weak_ref(G_OBJECT(animation), (GWeakNotify)notify, notify_data);
+	return animation;
+}
+
+PpgAnimation*
 ppg_widget_animatev (GtkWidget        *widget,
                      guint             duration_msec,
                      PpgAnimationMode  mode,
@@ -222,9 +245,9 @@ ppg_widget_animatev (GtkWidget        *widget,
 	GType type;
 	GType ptype;
 
-	g_return_if_fail(GTK_IS_WIDGET(widget));
-	g_return_if_fail(first_property != NULL);
-	g_return_if_fail(mode < PPG_ANIMATION_LAST);
+	g_return_val_if_fail(GTK_IS_WIDGET(widget), NULL);
+	g_return_val_if_fail(first_property != NULL, NULL);
+	g_return_val_if_fail(mode < PPG_ANIMATION_LAST, NULL);
 
 	name = first_property;
 	type = G_TYPE_FROM_INSTANCE(widget);
@@ -269,9 +292,10 @@ ppg_widget_animatev (GtkWidget        *widget,
 
 	ppg_animation_start(animation);
 
-	return;
+	return animation;
 
 failure:
 	g_object_ref_sink(animation);
 	g_object_unref(animation);
+	return NULL;
 }
