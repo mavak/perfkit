@@ -96,6 +96,18 @@ alpha_ease_out_quad (gdouble offset)
 	return -1.0 * offset * (offset - 2.0);
 }
 
+static gdouble
+alpha_ease_in_out_quad (gdouble offset)
+{
+	gdouble p = offset * 2.0;
+
+	if (p < 1.0) {
+		return 0.5 * p * p;
+	}
+	p -= 1.0;
+	return -0.5 * (p * (p - 2.0) - 1.0);
+}
+
 static void
 ppg_animation_load_begin_values (PpgAnimation *animation)
 {
@@ -439,6 +451,7 @@ ppg_animation_class_init (PpgAnimationClass *klass)
 	SET_ALPHA(LINEAR, linear);
 	SET_ALPHA(EASE_IN_QUAD, ease_in_quad);
 	SET_ALPHA(EASE_OUT_QUAD, ease_out_quad);
+	SET_ALPHA(EASE_IN_OUT_QUAD, ease_in_out_quad);
 
 #define SET_TWEEN(_T, _t) \
 	G_STMT_START { \
