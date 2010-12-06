@@ -1422,20 +1422,12 @@ ppg_window_stage_relayout (PpgWindow *window)
 	ppg_window_zoom_value_changed(priv->zadj, window);
 }
 
-static gboolean
-ppg_window_do_stage_relayout (gpointer data)
-{
-	ppg_window_stage_relayout(data);
-	return FALSE;
-}
-
 static void
-ppg_window_hide_data_container (PpgWindow *window)
+ppg_window_paned_position_notify (PpgWindow  *window,
+                                  GParamSpec *pspec,
+                                  GtkPaned   *paned)
 {
-	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	gtk_widget_hide(window->priv->data_container);
-	g_timeout_add(20, ppg_window_do_stage_relayout, window);
+	ppg_window_stage_relayout(window);
 }
 
 static void
@@ -1462,12 +1454,10 @@ ppg_window_show_data_activate (GtkAction *action,
 		                          "position", (alloc.height / 2),
 		                          NULL);
 	} else {
-		anim = ppg_widget_animate_full(priv->paned, 500,
-		                               PPG_ANIMATION_EASE_IN_OUT_QUAD,
-		                               (GDestroyNotify)ppg_window_hide_data_container,
-		                               window,
-		                               "position", alloc.height,
-		                               NULL);
+		anim = ppg_widget_animate(priv->paned, 500,
+		                          PPG_ANIMATION_EASE_IN_OUT_QUAD,
+		                          "position", alloc.height,
+		                          NULL);
 	}
 
 	g_signal_connect_swapped(anim, "tick",
@@ -2355,6 +2345,9 @@ ppg_window_init (PpgWindow *window)
 	gtk_container_add_with_properties(GTK_CONTAINER(vbox), priv->paned,
 	                                  "position", 2,
 	                                  NULL);
+	g_signal_connect_swapped(priv->paned, "notify::position",
+	                         G_CALLBACK(ppg_window_paned_position_notify),
+	                         window);
 
 	table = g_object_new(GTK_TYPE_TABLE,
 	                     "n-columns", 3,
