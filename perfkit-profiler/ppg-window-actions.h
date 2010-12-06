@@ -77,6 +77,8 @@ static void ppg_window_go_back_activate              (GtkAction *action,
                                                       PpgWindow *window);
 static void ppg_window_new_session_activate          (GtkAction *action,
                                                       PpgWindow *window);
+static void ppg_window_show_data_activate            (GtkAction *action,
+                                                      PpgWindow *window);
 
 static GtkActionEntry ppg_window_action_entries[] = {
 	{ "file", NULL, N_("Per_fkit") },
@@ -130,6 +132,7 @@ static GtkToggleActionEntry ppg_window_toggle_action_entries[] = {
 	{ "pause", GTK_STOCK_MEDIA_PAUSE, N_("_Pause"), "<control>z", N_("Pause the current profiling session"), G_CALLBACK(ppg_window_pause_activate) },
 	{ "run", "media-playback-start", N_("_Run"), "<control>b", N_("Run the current profiling session"), G_CALLBACK(ppg_window_run_activate) },
 	{ "fullscreen", GTK_STOCK_FULLSCREEN, NULL, "F11", NULL, G_CALLBACK(ppg_window_fullscreen_activate), FALSE },
+	{ "show-data", NULL, N_("Show extended data"), NULL, NULL, G_CALLBACK(ppg_window_show_data_activate) },
 };
 
 G_END_DECLS

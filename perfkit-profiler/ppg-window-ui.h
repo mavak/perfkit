@@ -33,6 +33,8 @@ static char ppg_window_ui[] =
 	"      <menuitem action=\"preferences\"/>"
 	"    </menu>"
 	"    <menu action=\"view\">"
+	"      <menuitem action=\"show-data\"/>"
+	"      <separator/>"
 	"      <menuitem action=\"zoom-in\"/>"
 	"      <menuitem action=\"zoom-out\"/>"
 	"      <menuitem action=\"zoom-one\"/>"

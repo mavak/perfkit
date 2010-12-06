@@ -106,6 +106,7 @@ struct _PpgWindowPrivate
 	GtkWidget *visualizers_menu2;
 	GtkWidget *process_menu;
 	GtkWidget *process_menu2;
+	GtkWidget *data_container;
 
 	GtkAdjustment *hadj;
 	GtkAdjustment *vadj;
@@ -1382,6 +1383,100 @@ ppg_window_hadj_value_changed (GtkAdjustment *adj,
 	g_timeout_add(0, ppg_window_hadj_value_changed_timeout, window);
 }
 
+static void
+ppg_window_stage_relayout (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GtkAllocation embed_alloc;
+	gfloat width;
+	gfloat height;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	gtk_widget_get_allocation(priv->clutter_embed, &embed_alloc);
+
+	clutter_actor_get_size(priv->add_instrument_actor, &width, &height);
+	clutter_actor_set_x(priv->add_instrument_actor,
+	                    200.0f + floor((embed_alloc.width - 200.0f - width) / 2));
+	clutter_actor_set_y(priv->add_instrument_actor,
+	                    floor((embed_alloc.height - height) / 2));
+
+	clutter_actor_set_height(priv->header_bg, embed_alloc.height);
+	clutter_actor_set_height(priv->header_sep, embed_alloc.height);
+	clutter_actor_set_width(priv->rows_box, embed_alloc.width);
+	clutter_actor_set_height(priv->timer_sep, embed_alloc.height);
+	clutter_actor_set_y(priv->status_actor,
+	                    embed_alloc.height - clutter_actor_get_height(priv->status_actor));
+	clutter_actor_set_y(priv->bottom_shadow,
+	                    embed_alloc.height - SHADOW_HEIGHT);
+	clutter_actor_set_width(priv->bottom_shadow, embed_alloc.width);
+	clutter_actor_set_width(priv->top_shadow, embed_alloc.width);
+
+	g_object_set(priv->vadj,
+	             "page-increment", (embed_alloc.height / 2.0),
+	             "page-size", (gdouble)embed_alloc.height,
+	             NULL);
+
+	ppg_window_zoom_value_changed(priv->zadj, window);
+}
+
+static gboolean
+ppg_window_do_stage_relayout (gpointer data)
+{
+	ppg_window_stage_relayout(data);
+	return FALSE;
+}
+
+static void
+ppg_window_hide_data_container (PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	gtk_widget_hide(window->priv->data_container);
+	g_timeout_add(20, ppg_window_do_stage_relayout, window);
+}
+
+static void
+ppg_window_show_data_activate (GtkAction *action,
+                               PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GtkAllocation alloc;
+	PpgAnimation *anim;
+	gboolean active;
+
+	ENTRY;
+
+	priv = window->priv;
+
+	g_object_get(action, "active", &active, NULL);
+	gtk_widget_get_allocation(priv->paned, &alloc);
+
+	if (active) {
+		gtk_paned_set_position(GTK_PANED(priv->paned), alloc.height);
+		gtk_widget_show(priv->data_container);
+		anim = ppg_widget_animate(priv->paned, 500,
+		                          PPG_ANIMATION_EASE_IN_OUT_QUAD,
+		                          "position", (alloc.height / 2),
+		                          NULL);
+	} else {
+		anim = ppg_widget_animate_full(priv->paned, 500,
+		                               PPG_ANIMATION_EASE_IN_OUT_QUAD,
+		                               (GDestroyNotify)ppg_window_hide_data_container,
+		                               window,
+		                               "position", alloc.height,
+		                               NULL);
+	}
+
+	g_signal_connect_swapped(anim, "tick",
+	                         G_CALLBACK(ppg_window_stage_relayout),
+	                         window);
+
+	EXIT;
+}
+
 /**
  * ppg_window_size_allocate:
  * @widget: (in): A #PpgWindow.
@@ -1400,9 +1495,6 @@ ppg_window_size_allocate (GtkWidget     *widget,
 	PpgWindow *window = (PpgWindow *)widget;
 	PpgWindowPrivate *priv;
 	GtkWidgetClass *widget_class;
-	GtkAllocation embed_alloc;
-	gfloat width;
-	gfloat height;
 
 	g_return_if_fail(PPG_IS_WINDOW(widget));
 
@@ -1414,31 +1506,7 @@ ppg_window_size_allocate (GtkWidget     *widget,
 	}
 
 	if (priv->last_width != alloc->width || priv->last_height != alloc->height) {
-		gtk_widget_get_allocation(priv->clutter_embed, &embed_alloc);
-
-		clutter_actor_get_size(priv->add_instrument_actor, &width, &height);
-		clutter_actor_set_x(priv->add_instrument_actor,
-		                    200.0f + floor((embed_alloc.width - 200.0f - width) / 2));
-		clutter_actor_set_y(priv->add_instrument_actor,
-		                    floor((embed_alloc.height - height) / 2));
-
-		clutter_actor_set_height(priv->header_bg, embed_alloc.height);
-		clutter_actor_set_height(priv->header_sep, embed_alloc.height);
-		clutter_actor_set_width(priv->rows_box, embed_alloc.width);
-		clutter_actor_set_height(priv->timer_sep, embed_alloc.height);
-		clutter_actor_set_y(priv->status_actor,
-		                    embed_alloc.height - clutter_actor_get_height(priv->status_actor));
-		clutter_actor_set_y(priv->bottom_shadow,
-		                    embed_alloc.height - SHADOW_HEIGHT);
-		clutter_actor_set_width(priv->bottom_shadow, embed_alloc.width);
-		clutter_actor_set_width(priv->top_shadow, embed_alloc.width);
-
-		g_object_set(priv->vadj,
-		             "page-increment", (embed_alloc.height / 2.0),
-		             "page-size", (gdouble)embed_alloc.height,
-		             NULL);
-
-		ppg_window_zoom_value_changed(priv->zadj, window);
+		ppg_window_stage_relayout(window);
 	}
 
 	priv->last_width = alloc->width;
@@ -2281,7 +2349,7 @@ ppg_window_init (PpgWindow *window)
 	                                  "homogeneous", FALSE,
 	                                  NULL);
 
-	priv->paned = g_object_new(GTK_TYPE_HPANED,
+	priv->paned = g_object_new(GTK_TYPE_VPANED,
 	                           "visible", TRUE,
 	                           NULL);
 	gtk_container_add_with_properties(GTK_CONTAINER(vbox), priv->paned,
@@ -2293,7 +2361,19 @@ ppg_window_init (PpgWindow *window)
 	                     "n-rows", 4,
 	                     "visible", TRUE,
 	                     NULL);
-	gtk_container_add(GTK_CONTAINER(priv->paned), table);
+	gtk_container_add_with_properties(GTK_CONTAINER(priv->paned), table,
+	                                  "resize", TRUE,
+	                                  "shrink", FALSE,
+	                                  NULL);
+
+	priv->data_container = g_object_new(GTK_TYPE_ALIGNMENT,
+	                                    "visible", FALSE,
+	                                    NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(priv->paned),
+	                                  priv->data_container,
+	                                  "resize", FALSE,
+	                                  "shrink", TRUE,
+	                                  NULL);
 
 	scroll = g_object_new(GTK_TYPE_VSCROLLBAR,
 	                      "adjustment", priv->vadj,
