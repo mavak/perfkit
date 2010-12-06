@@ -68,8 +68,15 @@ enum
 	PROP_TARGET,
 };
 
+enum
+{
+	TICK,
+	LAST_SIGNAL
+};
+
 static AlphaFunc alpha_funcs[PPG_ANIMATION_LAST];
 static TweenFunc tween_funcs[LAST_FUNDAMENTAL];
+static guint     signals[LAST_SIGNAL];
 
 TWEEN(int);
 TWEEN(uint);
@@ -260,6 +267,8 @@ ppg_animation_tick (PpgAnimation *animation)
 		g_value_unset(&value);
 	}
 
+	g_signal_emit(animation, signals[TICK], 0);
+
 	return (offset < 1.0);
 }
 
@@ -444,6 +453,16 @@ ppg_animation_class_init (PpgAnimationClass *klass)
 	                                                    "The target of the animation",
 	                                                    G_TYPE_OBJECT,
 	                                                    G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+
+	signals[TICK] = g_signal_new("tick",
+	                             PPG_TYPE_ANIMATION,
+	                             G_SIGNAL_RUN_FIRST,
+	                             0,
+	                             NULL,
+	                             NULL,
+	                             g_cclosure_marshal_VOID__VOID,
+	                             G_TYPE_NONE,
+	                             0);
 
 #define SET_ALPHA(_T, _t) \
 	alpha_funcs[PPG_ANIMATION_##_T] = alpha_##_t
