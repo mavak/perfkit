@@ -9233,6 +9233,23 @@ finish:
 
 
 /**
+ * pk_connection_dbus_is_local:
+ * @dbus: (in): A #PkConnectionDbus.
+ *
+ * Determines if the connection is to the local host.
+ *
+ * Returns: %TRUE if the connection is local.
+ * Side effects: None.
+ */
+static gboolean
+pk_connection_dbus_is_local (PkConnection *connection)
+{
+	g_return_val_if_fail(PK_IS_CONNECTION_DBUS(dbus), FALSE);
+	return g_str_equal(pk_connection_get_uri(connection), "dbus://");
+}
+
+
+/**
  * pk_connection_dbus_finalize:
  * @object: A #PkConnectionDBus.
  *
@@ -9300,6 +9317,8 @@ pk_connection_dbus_class_init (PkConnectionDBusClass *klass)
 
 	object_class->finalize = pk_connection_dbus_finalize;
 	g_type_class_add_private(object_class, sizeof(PkConnectionDBusPrivate));
+
+	connection_class->is_local = pk_connection_dbus_is_local;
 
 	#define OVERRIDE_VTABLE(_n) G_STMT_START {                                \
             connection_class->_n##_async = pk_connection_dbus_##_n##_async;   \

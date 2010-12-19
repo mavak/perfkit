@@ -299,6 +299,7 @@ struct _PkConnectionClass
 	                                                     GAsyncResult          *result,
 	                                                     gchar                **plugin,
 	                                                     GError               **error);
+	gboolean      (*is_local)                           (PkConnection          *connection);
 	void          (*manager_add_channel_async)          (PkConnection          *connection,
 	                                                     GCancellable          *cancellable,
 	                                                     GAsyncReadyCallback    callback,
@@ -636,6 +637,7 @@ GType         pk_connection_get_type                          (void) G_GNUC_CONS
 const gchar*  pk_connection_get_uri                           (PkConnection          *connection);
 guint         pk_connection_hash                              (PkConnection          *connection);
 gboolean      pk_connection_is_connected                      (PkConnection          *connection);
+gboolean      pk_connection_is_local                          (PkConnection          *connection);
 PkConnection* pk_connection_new_from_uri                      (const gchar           *uri);
 
 G_END_DECLS

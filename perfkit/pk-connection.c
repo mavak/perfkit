@@ -7726,6 +7726,26 @@ pk_connection_hash (PkConnection *connection) /* IN */
 }
 
 /**
+ * pk_connection_is_local:
+ * @connection: (in): A #PkConnection.
+ *
+ * Determines if the connection is to localhost.
+ *
+ * Returns: %TRUE if the connection is local.
+ * Side effects: None.
+ */
+gboolean
+pk_connection_is_local (PkConnection *connection)
+{
+	g_return_val_if_fail(PK_IS_CONNECTION(connection), FALSE);
+
+	if (PK_CONNECTION_GET_CLASS(connection)->is_local) {
+		return PK_CONNECTION_GET_CLASS(connection)->is_local(connection);
+	}
+	return FALSE;
+}
+
+/**
  * pk_connection_emit_state_changed:
  * @connection: A #PkConnection.
  * @state: The new #PkConnectionState.
