@@ -9244,7 +9244,7 @@ finish:
 static gboolean
 pk_connection_dbus_is_local (PkConnection *connection)
 {
-	g_return_val_if_fail(PK_IS_CONNECTION_DBUS(dbus), FALSE);
+	g_return_val_if_fail(PK_IS_CONNECTION_DBUS(connection), FALSE);
 	return g_str_equal(pk_connection_get_uri(connection), "dbus://");
 }
 
