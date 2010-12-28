@@ -81,6 +81,30 @@ pk_model_accumulate (PkModel     *model,
 }
 
 
+void
+pk_model_insert_manifest (PkModel    *model,
+                          PkManifest *manifest)
+{
+	g_return_if_fail(PK_IS_MODEL(model));
+	g_return_if_fail(manifest != NULL);
+
+	PK_MODEL_GET_CLASS(model)->insert_manifest(model, manifest);
+}
+
+
+void
+pk_model_insert_sample (PkModel    *model,
+                        PkManifest *manifest,
+                        PkSample   *sample)
+{
+	g_return_if_fail(PK_IS_MODEL(model));
+	g_return_if_fail(manifest != NULL);
+	g_return_if_fail(sample != NULL);
+
+	PK_MODEL_GET_CLASS(model)->insert_sample(model, manifest, sample);
+}
+
+
 gboolean
 pk_model_get_iter_first (PkModel     *model,
                          PkModelIter *iter)

@@ -74,12 +74,17 @@ struct _PkModelClass
 	                                gdouble      begin_time,
 	                                gdouble      end_time,
 	                                gdouble      aggregate_time);
-	gboolean (*iter_next)          (PkModel     *model,
-	                                PkModelIter *iter);
 	void     (*get_value)          (PkModel     *model,
 	                                PkModelIter *iter,
 	                                GQuark       key,
 	                                GValue      *value);
+	void     (*insert_manifest)    (PkModel     *model,
+	                                PkManifest  *manifest);
+	void     (*insert_sample)      (PkModel     *model,
+	                                PkManifest  *manifest,
+	                                PkSample    *sample);
+	gboolean (*iter_next)          (PkModel     *model,
+	                                PkModelIter *iter);
 };
 
 void     pk_model_accumulate           (PkModel             *model,
@@ -140,6 +145,11 @@ void     pk_model_get_value            (PkModel             *model,
                                         PkModelIter         *iter,
                                         GQuark               key,
                                         GValue              *value);
+void     pk_model_insert_manifest      (PkModel             *model,
+                                        PkManifest          *manifest);
+void     pk_model_insert_sample        (PkModel             *model,
+                                        PkManifest          *manifest,
+                                        PkSample            *sample);
 gboolean pk_model_iter_next            (PkModel             *model,
                                         PkModelIter         *iter);
 void     pk_model_register_accumulator (PkModel             *model,
