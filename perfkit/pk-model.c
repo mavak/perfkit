@@ -177,11 +177,16 @@ pk_model_register_accumulator (PkModel             *model,
 
 	priv = model->priv;
 
+	if (!!g_hash_table_lookup(priv->accumulators, &key)) {
+		g_warning("An accumulator named \"%s\" is already registered",
+		          g_quark_to_string(key));
+		return;
+	}
+
 	pkey = g_new(GQuark, 1);
 	*pkey = key;
 	closure = g_cclosure_new(G_CALLBACK(accumulator), user_data,
 	                         (GClosureNotify)notify);
-
 	g_hash_table_insert(priv->accumulators, pkey, closure);
 }
 
