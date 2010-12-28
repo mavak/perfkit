@@ -44,6 +44,12 @@ typedef void (*PkModelAccumulator) (PkModel     *model,
                                     GValue      *return_value,
                                     gpointer     user_data);
 
+typedef void (*PkValueBuilder) (PkModel     *model,
+                                PkModelIter *iter,
+                                GQuark       key,
+                                GValue      *return_value,
+                                gpointer     user_data);
+
 struct _PkModelIter
 {
 	gdouble time;
@@ -155,6 +161,11 @@ gboolean pk_model_iter_next            (PkModel             *model,
 void     pk_model_register_accumulator (PkModel             *model,
                                         GQuark               key,
                                         PkModelAccumulator   accumulator,
+                                        gpointer             user_data,
+                                        GDestroyNotify       notify);
+void     pk_model_register_builder     (PkModel             *model,
+                                        GQuark               key,
+                                        PkValueBuilder       builder,
                                         gpointer             user_data,
                                         GDestroyNotify       notify);
 

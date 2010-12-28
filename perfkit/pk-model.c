@@ -22,6 +22,7 @@
 struct _PkModelPrivate
 {
 	GHashTable *accumulators;
+	GHashTable *builders;
 };
 
 
@@ -185,6 +186,37 @@ pk_model_register_accumulator (PkModel             *model,
 }
 
 
+void
+pk_model_register_builder (PkModel        *model,
+                           GQuark          key,
+                           PkValueBuilder  builder,
+                           gpointer        user_data,
+                           GDestroyNotify  notify)
+{
+	PkModelPrivate *priv;
+	GClosure *closure;
+	GQuark *pkey;
+
+	g_return_if_fail(PK_IS_MODEL(model));
+	g_return_if_fail(key > 0);
+	g_return_if_fail(builder != NULL);
+
+	priv = model->priv;
+
+	if (!!g_hash_table_lookup(priv->builders, &key)) {
+		g_warning("A builder for \"%s\" is already registered",
+		          g_quark_to_string(key));
+		return;
+	}
+
+	pkey = g_new0(GQuark, 1);
+	*pkey = key;
+	closure = g_cclosure_new(G_CALLBACK(builder), user_data,
+	                         (GClosureNotify)notify);
+	g_hash_table_insert(priv->builders, pkey, closure);
+}
+
+
 #define GETTER(_name, _type, _TYPE)               \
 _type                                             \
 pk_model_get_##_name (PkModel     *model,         \
@@ -291,6 +323,10 @@ pk_model_init (PkModel *model)
 	                                          PkModelPrivate);
 
 	model->priv->accumulators =
+		g_hash_table_new_full(g_int_hash, g_int_equal,
+		                      g_free, (GDestroyNotify)g_closure_unref);
+
+	model->priv->builders =
 		g_hash_table_new_full(g_int_hash, g_int_equal,
 		                      g_free, (GDestroyNotify)g_closure_unref);
 }
