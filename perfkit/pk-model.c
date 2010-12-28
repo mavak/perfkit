@@ -26,7 +26,19 @@ struct _PkModelPrivate
 };
 
 
+enum
+{
+	ACCUMULATOR_ADDED,
+	BUILDER_ADDED,
+
+	LAST_SIGNAL
+};
+
+
 G_DEFINE_ABSTRACT_TYPE(PkModel, pk_model, G_TYPE_OBJECT)
+
+
+static guint signals[LAST_SIGNAL] = { 0 };
 
 
 void
@@ -188,6 +200,7 @@ pk_model_register_accumulator (PkModel             *model,
 	closure = g_cclosure_new(G_CALLBACK(accumulator), user_data,
 	                         (GClosureNotify)notify);
 	g_hash_table_insert(priv->accumulators, pkey, closure);
+	g_signal_emit(model, signals[ACCUMULATOR_ADDED], 0, key);
 }
 
 
@@ -219,6 +232,7 @@ pk_model_register_builder (PkModel        *model,
 	closure = g_cclosure_new(G_CALLBACK(builder), user_data,
 	                         (GClosureNotify)notify);
 	g_hash_table_insert(priv->builders, pkey, closure);
+	g_signal_emit(model, signals[BUILDER_ADDED], 0, key);
 }
 
 
@@ -309,6 +323,28 @@ pk_model_class_init (PkModelClass *klass)
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = pk_model_finalize;
 	g_type_class_add_private(object_class, sizeof(PkModelPrivate));
+
+	signals[ACCUMULATOR_ADDED] = g_signal_new("accumulator-added",
+	                                          PK_TYPE_MODEL,
+	                                          G_SIGNAL_RUN_FIRST,
+	                                          G_STRUCT_OFFSET(PkModelClass, accumulator_added),
+	                                          NULL,
+	                                          NULL,
+	                                          g_cclosure_marshal_VOID__INT,
+	                                          G_TYPE_NONE,
+	                                          1,
+	                                          G_TYPE_INT);
+
+	signals[BUILDER_ADDED] = g_signal_new("builder-added",
+	                                      PK_TYPE_MODEL,
+	                                      G_SIGNAL_RUN_FIRST,
+	                                      G_STRUCT_OFFSET(PkModelClass, builder_added),
+	                                      NULL,
+	                                      NULL,
+	                                      g_cclosure_marshal_VOID__INT,
+	                                      G_TYPE_NONE,
+	                                      1,
+	                                      G_TYPE_INT);
 }
 
 

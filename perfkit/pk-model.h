@@ -73,6 +73,10 @@ struct _PkModelClass
 {
 	GObjectClass parent_class;
 
+	void     (*accumulator_added)  (PkModel     *model,
+	                                GQuark       key);
+	void     (*builder_added)      (PkModel     *model,
+	                                GQuark       key);
 	gboolean (*get_iter_first)     (PkModel     *model,
 	                                PkModelIter *iter);
 	gboolean (*get_iter_for_range) (PkModel     *model,
