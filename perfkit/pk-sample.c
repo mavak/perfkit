@@ -44,6 +44,7 @@ struct _PkSample
 	volatile gint    ref_count;
 	gint             source_id;
 	struct timespec  ts;
+	gdouble          time;
 	GArray          *ar;
 };
 
@@ -91,12 +92,8 @@ pk_sample_new (void)
 gdouble
 pk_sample_get_time (PkSample *sample)
 {
-	gdouble time_;
-
-	time_ = sample->ts.tv_sec;
-	time_ += sample->ts.tv_nsec / (G_USEC_PER_SEC * 1000.0);
-
-	return time_;
+	g_return_val_if_fail(sample != NULL, 0.0);
+	return sample->time;
 }
 
 static gboolean
@@ -142,6 +139,8 @@ pk_sample_decode_timespec (PkSample   *sample,   /* IN */
 	timespec_from_usec(&sts, u64);
 	pk_manifest_get_timespec(manifest, &mts);
 	timespec_add(&sts, &mts, &sample->ts);
+	sample->time = sample->ts.tv_sec
+	             + sample->ts.tv_nsec / (G_USEC_PER_SEC * 1000.0);
 	RETURN(TRUE);
 }
 
