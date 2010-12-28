@@ -39,6 +39,11 @@ typedef struct _PkModelClass   PkModelClass;
 typedef struct _PkModelPrivate PkModelPrivate;
 typedef struct _PkModelIter    PkModelIter;
 
+typedef void (*PpgModelAccumulator) (PkModel     *model,
+                                     GValueArray *values,
+                                     GValue      *return_value,
+                                     gpointer     user_data);
+
 struct _PkModelIter
 {
 	gdouble time;
@@ -77,38 +82,47 @@ struct _PkModelClass
 	                                GValue      *value);
 };
 
-GType    pk_model_get_type           (void) G_GNUC_CONST;
-gboolean pk_model_get_iter_first     (PkModel     *model,
-                                      PkModelIter *iter);
-gboolean pk_model_get_iter_for_range (PkModel     *model,
-                                      PkModelIter *iter,
-                                      gdouble      begin_time,
-                                      gdouble      end_time,
-                                      gdouble      aggregate_time);
-gboolean pk_model_iter_next          (PkModel     *model,
-                                      PkModelIter *iter);
-void     pk_model_get_value          (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key,
-                                      GValue      *value);
-gdouble  pk_model_get_double         (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key);
-gfloat   pk_model_get_float          (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key);
-gint32   pk_model_get_int            (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key);
-guint32  pk_model_get_uint           (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key);
-gint64   pk_model_get_int64          (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key);
-guint64  pk_model_get_uint64         (PkModel     *model,
-                                      PkModelIter *iter,
-                                      GQuark       key);
+void     pk_model_accumulate           (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key,
+                                        GValue              *return_value);
+gdouble  pk_model_get_double           (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key);
+gfloat   pk_model_get_float            (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key);
+gint32   pk_model_get_int              (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key);
+gint64   pk_model_get_int64            (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key);
+gboolean pk_model_get_iter_first       (PkModel             *model,
+                                        PkModelIter         *iter);
+gboolean pk_model_get_iter_for_range   (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        gdouble              begin_time,
+                                        gdouble              end_time,
+                                        gdouble              aggregate_time);
+GType    pk_model_get_type             (void) G_GNUC_CONST;
+guint32  pk_model_get_uint             (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key);
+guint64  pk_model_get_uint64           (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key);
+void     pk_model_get_value            (PkModel             *model,
+                                        PkModelIter         *iter,
+                                        GQuark               key,
+                                        GValue              *value);
+gboolean pk_model_iter_next            (PkModel             *model,
+                                        PkModelIter         *iter);
+void     pk_model_register_accumulator (PkModel             *model,
+                                        GQuark               key,
+                                        PpgModelAccumulator  accumulator,
+                                        gpointer             user_data,
+                                        GDestroyNotify       notify);
 
 G_END_DECLS
 

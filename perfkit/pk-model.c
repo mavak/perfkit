@@ -21,11 +21,64 @@
 
 struct _PkModelPrivate
 {
-	gpointer dummy;
+	GHashTable *accumulators;
 };
 
 
 G_DEFINE_ABSTRACT_TYPE(PkModel, pk_model, G_TYPE_OBJECT)
+
+
+void
+pk_model_accumulate (PkModel     *model,
+                     PkModelIter *iter,
+                     GQuark       key,
+                     GValue      *return_value)
+{
+	PkModelPrivate *priv;
+	GValueArray *values;
+	GClosure *closure;
+	GValue params[2] = {{ 0 }};
+	GValue *value;
+
+	g_return_if_fail(PK_IS_MODEL(model));
+	g_return_if_fail(iter != NULL);
+	g_return_if_fail(return_value != NULL);
+
+	priv = model->priv;
+
+	if (!(closure = g_hash_table_lookup(priv->accumulators, &key))) {
+		g_warning("No accumulator registered for key \"%s\"",
+		          g_quark_to_string(key));
+		return;
+	}
+
+	values = g_value_array_new(8);
+	g_value_init(&params[0], G_TYPE_VALUE);
+	g_value_init(&params[1], G_TYPE_VALUE_ARRAY);
+
+	/*
+	 * Retrieve values from iterator.
+	 */
+	do {
+		g_value_array_append(values, NULL);
+		value = g_value_array_get_nth(values, values->n_values - 1);
+		pk_model_get_value(model, iter, key, value);
+	} while (pk_model_iter_next(model, iter));
+
+	/*
+	 * Call accumulator to reduce values.
+	 */
+	g_value_set_boxed(&params[0], return_value);
+	g_value_set_boxed(&params[1], values);
+	g_closure_invoke(closure, NULL, 2, params, NULL);
+
+	/*
+	 * Clean up allocations.
+	 */
+	g_value_unset(&params[0]);
+	g_value_unset(&params[1]);
+	g_value_array_free(values);
+}
 
 
 gboolean
@@ -79,6 +132,32 @@ pk_model_get_value (PkModel     *model,
 	g_return_if_fail(G_VALUE_TYPE(value));
 
 	return PK_MODEL_GET_CLASS(model)->get_value(model, iter, key, value);
+}
+
+
+void
+pk_model_register_accumulator (PkModel             *model,
+                               GQuark               key,
+                               PpgModelAccumulator  accumulator,
+                               gpointer             user_data,
+                               GDestroyNotify       notify)
+{
+	PkModelPrivate *priv;
+	GClosure *closure;
+	GQuark *pkey;
+
+	g_return_if_fail(PK_IS_MODEL(model));
+	g_return_if_fail(key > 0);
+	g_return_if_fail(accumulator != NULL);
+
+	priv = model->priv;
+
+	pkey = g_new(GQuark, 1);
+	*pkey = key;
+	closure = g_cclosure_new(G_CALLBACK(accumulator), user_data,
+	                         (GClosureNotify)notify);
+
+	g_hash_table_insert(priv->accumulators, pkey, closure);
 }
 
 
@@ -158,4 +237,8 @@ pk_model_init (PkModel *model)
 {
 	model->priv = G_TYPE_INSTANCE_GET_PRIVATE(model, PK_TYPE_MODEL,
 	                                          PkModelPrivate);
+
+	model->priv->accumulators =
+		g_hash_table_new_full(g_int_hash, g_int_equal,
+		                      g_free, (GDestroyNotify)g_closure_unref);
 }
