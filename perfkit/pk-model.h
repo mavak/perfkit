@@ -86,6 +86,30 @@ void     pk_model_accumulate           (PkModel             *model,
                                         PkModelIter         *iter,
                                         GQuark               key,
                                         GValue              *return_value);
+void     pk_model_accumulate_double    (PkModel             *model,
+                                        GValueArray         *values,
+                                        GValue              *return_value,
+                                        gpointer             user_data);
+void     pk_model_accumulate_float     (PkModel             *model,
+                                        GValueArray         *values,
+                                        GValue              *return_value,
+                                        gpointer             user_data);
+void     pk_model_accumulate_int       (PkModel             *model,
+                                        GValueArray         *values,
+                                        GValue              *return_value,
+                                        gpointer             user_data);
+void     pk_model_accumulate_int64     (PkModel             *model,
+                                        GValueArray         *values,
+                                        GValue              *return_value,
+                                        gpointer             user_data);
+void     pk_model_accumulate_uint      (PkModel             *model,
+                                        GValueArray         *values,
+                                        GValue              *return_value,
+                                        gpointer             user_data);
+void     pk_model_accumulate_uint64    (PkModel             *model,
+                                        GValueArray         *values,
+                                        GValue              *return_value,
+                                        gpointer             user_data);
 gdouble  pk_model_get_double           (PkModel             *model,
                                         PkModelIter         *iter,
                                         GQuark               key);

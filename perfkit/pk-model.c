@@ -186,6 +186,34 @@ GETTER(int64, gint64, G_TYPE_INT64)
 GETTER(uint64, guint64, G_TYPE_UINT64)
 
 
+#define ACCUMULATOR(_name, _type)                                \
+void                                                             \
+pk_model_accumulate_##_name (PkModel     *model,                 \
+                             GValueArray *values,                \
+                             GValue      *return_value,          \
+                             gpointer     user_data)             \
+{                                                                \
+	_type total = 0;                                             \
+	GValue *value;                                               \
+	gint i;                                                      \
+                                                                 \
+	for (i = 0; i < values->n_values; i++) {                     \
+		value = g_value_array_get_nth(values, i);                \
+		total += g_value_get_##_name(value);                     \
+	}                                                            \
+                                                                 \
+	g_value_set_##_name(return_value, total / values->n_values); \
+}
+
+
+ACCUMULATOR(double, gdouble)
+ACCUMULATOR(float, gfloat)
+ACCUMULATOR(int, gint32)
+ACCUMULATOR(int64, gint64)
+ACCUMULATOR(uint, guint32)
+ACCUMULATOR(uint64, guint64)
+
+
 /**
  * pk_model_finalize:
  * @object: (in): A #PkModel.
