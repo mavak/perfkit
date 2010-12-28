@@ -39,10 +39,10 @@ typedef struct _PkModelClass   PkModelClass;
 typedef struct _PkModelPrivate PkModelPrivate;
 typedef struct _PkModelIter    PkModelIter;
 
-typedef void (*PpgModelAccumulator) (PkModel     *model,
-                                     GValueArray *values,
-                                     GValue      *return_value,
-                                     gpointer     user_data);
+typedef void (*PkModelAccumulator) (PkModel     *model,
+                                    GValueArray *values,
+                                    GValue      *return_value,
+                                    gpointer     user_data);
 
 struct _PkModelIter
 {
@@ -154,7 +154,7 @@ gboolean pk_model_iter_next            (PkModel             *model,
                                         PkModelIter         *iter);
 void     pk_model_register_accumulator (PkModel             *model,
                                         GQuark               key,
-                                        PpgModelAccumulator  accumulator,
+                                        PkModelAccumulator   accumulator,
                                         gpointer             user_data,
                                         GDestroyNotify       notify);
 

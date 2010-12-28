@@ -162,7 +162,7 @@ pk_model_get_value (PkModel     *model,
 void
 pk_model_register_accumulator (PkModel             *model,
                                GQuark               key,
-                               PpgModelAccumulator  accumulator,
+                               PkModelAccumulator   accumulator,
                                gpointer             user_data,
                                GDestroyNotify       notify)
 {
