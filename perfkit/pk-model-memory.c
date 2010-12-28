@@ -66,6 +66,94 @@ pk_model_memory_insert_sample (PkModel    *model,
 }
 
 
+static void
+set_iter (PkModelMemory *memory,
+          PkModelIter   *iter,
+          PkSample      *sample)
+{
+	g_assert_not_reached();
+}
+
+
+static void
+get_iter (PkModelMemory  *memory,
+          PkModelIter    *iter,
+          PkManifest    **manifest,
+          PkSample      **sample)
+{
+	*manifest = NULL;
+	*sample = NULL;
+
+	g_assert_not_reached();
+}
+
+
+static gboolean
+pk_model_memory_get_iter_first (PkModel     *model,
+                                PkModelIter *iter)
+{
+	PkModelMemoryPrivate *priv;
+	PkModelMemory *memory = (PkModelMemory *)model;
+	gboolean ret;
+
+	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), FALSE);
+	g_return_val_if_fail(iter != NULL, FALSE);
+
+	priv = memory->priv;
+
+	if ((ret = !!priv->samples->len)) {
+		set_iter(memory, iter, g_ptr_array_index(priv->samples, 0));
+	}
+	return ret;
+}
+
+
+static gboolean
+pk_model_memory_get_iter_for_range (PkModel     *model,
+                                    PkModelIter *iter,
+                                    gdouble      begin_time,
+                                    gdouble      end_time,
+                                    gdouble      aggregate_time)
+{
+	PkModelMemoryPrivate *priv;
+	PkModelMemory *memory = (PkModelMemory *)model;
+
+	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), FALSE);
+	g_return_val_if_fail(iter != NULL, FALSE);
+
+	priv = memory->priv;
+
+	/*
+	 * TODO: Binary search for time ranges.
+	 *       Store time range
+	 */
+
+	return FALSE;
+}
+
+
+static void
+pk_model_memory_get_value (PkModel     *model,
+                           PkModelIter *iter,
+                           GQuark       key,
+                           GValue      *value)
+{
+	PkModelMemoryPrivate *priv;
+	PkModelMemory *memory = (PkModelMemory *)model;
+	PkManifest *manifest;
+	PkSample *sample;
+	gint row_id;
+
+	g_return_if_fail(PK_IS_MODEL_MEMORY(memory));
+
+	priv = memory->priv;
+
+	get_iter(memory, iter, &manifest, &sample);
+	row_id = pk_manifest_get_row_id_from_quark(manifest, key);
+	pk_sample_get_value(sample, row_id, value);
+}
+
+
 /**
  * pk_model_memory_finalize:
  * @object: (in): A #PkModelMemory.
@@ -116,6 +204,9 @@ pk_model_memory_class_init (PkModelMemoryClass *klass)
 	g_type_class_add_private(object_class, sizeof(PkModelMemoryPrivate));
 
 	model_class = PK_MODEL_CLASS(klass);
+	model_class->get_iter_first = pk_model_memory_get_iter_first;
+	model_class->get_iter_for_range = pk_model_memory_get_iter_for_range;
+	model_class->get_value = pk_model_memory_get_value;
 	model_class->insert_manifest = pk_model_memory_insert_manifest;
 	model_class->insert_sample = pk_model_memory_insert_sample;
 }

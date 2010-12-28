@@ -33,6 +33,7 @@ struct _PkManifest
 {
 	volatile gint   ref_count;
 	struct timespec ts;
+	gdouble         time;
 	PkResolution    resolution;
 	gint            source_id;
 	gint            n_rows;
@@ -43,22 +44,15 @@ typedef struct
 {
 	gint   id;
 	GType  type;
-	gchar *name;
+	GQuark name;
 } PkManifestRow;
 
 static void
 pk_manifest_destroy (PkManifest *manifest) /* IN */
 {
-	gint i;
-
 	g_return_if_fail(manifest != NULL);
 
 	ENTRY;
-
-	/* free row names */
-	for (i = 0; i < manifest->n_rows; i++) {
-		g_free(g_array_index(manifest->rows, PkManifestRow, i).name);
-	}
 
 	/* free row array */
 	g_array_unref(manifest->rows);
@@ -92,16 +86,33 @@ gint
 pk_manifest_get_row_id (PkManifest  *manifest,
                         const gchar *name)
 {
-	PkManifestRow *row;
-	gint i;
+	GQuark quark;
 
 	g_return_val_if_fail(manifest != NULL, -1);
 	g_return_val_if_fail(manifest->rows != NULL, -1);
 	g_return_val_if_fail(name != NULL, -1);
 
+	if (!(quark = g_quark_try_string(name))) {
+		return -1;
+	}
+	return pk_manifest_get_row_id_from_quark(manifest, quark);
+}
+
+
+gint
+pk_manifest_get_row_id_from_quark (PkManifest  *manifest,
+                                   GQuark       quark)
+{
+	PkManifestRow *row;
+	gint i;
+
+	g_return_val_if_fail(manifest != NULL, -1);
+	g_return_val_if_fail(manifest->rows != NULL, -1);
+	g_return_val_if_fail(quark > 0, -1);
+
 	for (i = 0; i < manifest->rows->len; i++) {
 		row = &g_array_index(manifest->rows, PkManifestRow, i);
-		if (!g_strcmp0(name, row->name)) {
+		if (quark == row->name) {
 			return i + 1;
 		}
 	}
@@ -263,12 +274,15 @@ const gchar*
 pk_manifest_get_row_name (PkManifest *manifest, /* IN */
                           gint        row)      /* IN */
 {
+	PkManifestRow *mrow;
+
 	g_return_val_if_fail(manifest != NULL, NULL);
 	g_return_val_if_fail(row > 0, NULL);
 	g_return_val_if_fail(row <= manifest->n_rows, NULL);
 
 	ENTRY;
-	RETURN(g_array_index(manifest->rows, PkManifestRow, row - 1).name);
+	mrow = &g_array_index(manifest->rows, PkManifestRow, row - 1);
+	RETURN(g_quark_to_string(mrow->name));
 }
 
 /**
@@ -304,13 +318,8 @@ pk_manifest_get_timespec (PkManifest      *manifest, /* IN */
 gdouble
 pk_manifest_get_time (PkManifest *manifest)
 {
-	gdouble time_;
-
 	g_return_val_if_fail(manifest != NULL, 0.0);
-
-	time_ = manifest->ts.tv_sec;
-	time_ += manifest->ts.tv_nsec / 1000000000.0;
-	return time_;
+	return manifest->time;
 }
 
 GType
@@ -362,6 +371,8 @@ decode (PkManifest *manifest,
 		return FALSE;
 	}
 	timespec_from_usec(&manifest->ts, u64);
+	manifest->time = manifest->ts.tv_sec
+	               + manifest->ts.tv_nsec / 1000000000.0;
 
 	/* resolution */
 	if (!egg_buffer_read_tag(buffer, &field, &tag)) {
@@ -453,7 +464,7 @@ decode (PkManifest *manifest,
 
 		row.id = row_id;
 		row.type = row_type;
-		row.name = name;
+		row.name = g_quark_from_string(name);
 
 		g_array_append_val(manifest->rows, row);
 		g_array_sort(manifest->rows, sort_func);

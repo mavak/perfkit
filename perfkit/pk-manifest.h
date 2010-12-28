@@ -56,6 +56,8 @@ const gchar*    pk_manifest_get_row_name   (PkManifest      *manifest,
                                             gint             row);
 gint            pk_manifest_get_row_id     (PkManifest      *manifest,
                                             const gchar     *name);
+gint            pk_manifest_get_row_id_from_quark (PkManifest *manifest,
+                                                   GQuark      quark);
 void            pk_manifest_get_timespec   (PkManifest      *manifest,
                                             struct timespec *ts);
 gdouble         pk_manifest_get_time       (PkManifest      *manifest);
