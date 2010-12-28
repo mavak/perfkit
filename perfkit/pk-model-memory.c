@@ -20,6 +20,12 @@
 #include "pk-model-memory.h"
 
 
+#define IS_RELAXED(f)      ((0x2 & f) == 0)
+#define IS_RELAXED_LEFT(f) (IS_RELAXED(f) && ((RELAXED_LEFT & f) == 0))
+#define RELAXED_LEFT       (0x0)
+#define RELAXED_RIGHT      (0x1)
+
+
 struct _PkModelMemoryPrivate
 {
 	GPtrArray  *manifests;
@@ -29,6 +35,105 @@ struct _PkModelMemoryPrivate
 
 
 G_DEFINE_TYPE(PkModelMemory, pk_model_memory, G_TYPE_OBJECT)
+
+
+static inline gint
+compare_double (const gdouble *xp,
+                const gdouble *yp)
+{
+	const gdouble x = *xp;
+	const gdouble y = *yp;
+
+	if (x < y) return -1;
+	else if (x > y) return 1;
+	else return 0;
+}
+
+
+static gint
+pk_model_memory_binary_search (PkModelMemory *memory,
+                               gdouble        target,
+                               gdouble        other,
+                               guint32        flags)
+{
+	PkModelMemoryPrivate *priv;
+	GPtrArray *ar;
+	PkSample **samples;
+	gdouble current;
+	gint left;
+	gint middle = 0;
+	gint ret;
+	gint right;
+
+	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), -1);
+
+	priv = memory->priv;
+
+	ar = priv->samples;
+	if (!ar->len) {
+		return -1;
+	}
+
+	samples = (PkSample **)ar->pdata;
+	left = 0;
+	right = ar->len - 1;
+
+	while (left <= right) {
+		/*
+		 * Get the new middle for this iteration.
+		 */
+		middle = (left + right) / 2;
+
+		/*
+		 * Retrieve the time of this sample and compare it to our target.
+		 */
+		current = pk_sample_get_time(samples[middle]);
+		ret = compare_double(&current, &target);
+
+		switch (ret) {
+		case -1:
+			left = middle + 1;
+			break;
+		case 1:
+			right = middle - 1;
+			break;
+		case 0:
+			if (!IS_RELAXED(flags)) {
+				return middle;
+			}
+			goto walk;
+		default:
+			g_assert_not_reached();
+			return -1;
+		}
+	}
+
+  walk:
+
+	if (IS_RELAXED_LEFT(flags)) {
+		while (middle >= 0 && pk_sample_get_time(samples[middle]) >= target) {
+			middle--;
+		}
+		if (middle < 0) {
+			if (pk_sample_get_time(samples[0]) < other) {
+				return 0;
+			}
+			return -1;
+		}
+		return middle;
+	} else {
+		while (middle < ar->len && pk_sample_get_time(samples[middle]) <= target) {
+			middle++;
+		}
+		if (middle >= ar->len) {
+			if (pk_sample_get_time(samples[ar->len - 1]) > other) {
+				return ar->len - 1;
+			}
+			return -1;
+		}
+		return middle;
+	}
+}
 
 
 static void
@@ -66,25 +171,31 @@ pk_model_memory_insert_sample (PkModel    *model,
 }
 
 
-static void
+static inline void
 set_iter (PkModelMemory *memory,
           PkModelIter   *iter,
           PkSample      *sample)
 {
+	PkManifest *manifest = NULL;
+
+	/*
+	 * TODO: Binary search for manifest owning this time.
+	 */
 	g_assert_not_reached();
+
+	iter->user_data = manifest;
+	iter->user_data2 = sample;
 }
 
 
-static void
+static inline void
 get_iter (PkModelMemory  *memory,
           PkModelIter    *iter,
           PkManifest    **manifest,
           PkSample      **sample)
 {
-	*manifest = NULL;
-	*sample = NULL;
-
-	g_assert_not_reached();
+	*manifest = iter->user_data;
+	*sample = iter->user_data2;
 }
 
 
@@ -117,6 +228,8 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 {
 	PkModelMemoryPrivate *priv;
 	PkModelMemory *memory = (PkModelMemory *)model;
+	gint begin_idx;
+	gint end_idx;
 
 	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), FALSE);
 	g_return_val_if_fail(iter != NULL, FALSE);
@@ -126,6 +239,24 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 	/*
 	 * TODO: Binary search for time ranges.
 	 *       Store time range
+	 */
+
+	begin_idx =
+		pk_model_memory_binary_search(memory, begin_time, end_time,
+		                              RELAXED_LEFT);
+	end_idx =
+		pk_model_memory_binary_search(memory, begin_time, end_time,
+		                              RELAXED_LEFT);
+
+	if (begin_idx < 0 || end_idx < 0) {
+		return FALSE;
+	}
+
+	g_assert_cmpint(begin_idx, <, priv->samples->len);
+	g_assert_cmpint(end_idx, <, priv->samples->len);
+
+	/*
+	 * Create for index range.
 	 */
 
 	return FALSE;
@@ -148,9 +279,40 @@ pk_model_memory_get_value (PkModel     *model,
 
 	priv = memory->priv;
 
+	/*
+	 * TODO: This is likely to be a hot method that could use some optimization
+	 *       on how we determine the row id for lookup. Alternatively, we could
+	 *       use a quark like system for all keys and use them.
+	 */
+
 	get_iter(memory, iter, &manifest, &sample);
 	row_id = pk_manifest_get_row_id_from_quark(manifest, key);
 	pk_sample_get_value(sample, row_id, value);
+}
+
+
+gboolean
+pk_model_memory_iter_next (PkModel     *model,
+                           PkModelIter *iter)
+{
+	PkModelMemoryPrivate *priv;
+	PkModelMemory *memory = (PkModelMemory *)model;
+	PkManifest *manifest;
+	PkSample *sample;
+
+	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), FALSE);
+	g_return_val_if_fail(iter != NULL, FALSE);
+
+	priv = memory->priv;
+
+	get_iter(memory, iter, &manifest, &sample);
+
+	/*
+	 * TODO: Get the next sample in the array. Update the manifest
+	 *       if necessary.
+	 */
+
+	return FALSE;
 }
 
 
@@ -209,6 +371,7 @@ pk_model_memory_class_init (PkModelMemoryClass *klass)
 	model_class->get_value = pk_model_memory_get_value;
 	model_class->insert_manifest = pk_model_memory_insert_manifest;
 	model_class->insert_sample = pk_model_memory_insert_sample;
+	model_class->iter_next = pk_model_memory_iter_next;
 }
 
 
