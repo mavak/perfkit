@@ -446,16 +446,16 @@ pk_sample_unref (PkSample *sample)
  * pk_sample_get_value:
  * @sample: A #PkSample
  * @row_id: The row within the manifest.
- * @value: A #GValue to initialize and set.
+ * @value: (out): A #GValue to initialize and set.
  *
  * Retrieves the value for a given row in the sample.
  *
  * Returns: %TRUE if successful; otherwise %FALSE.
  */
 gboolean
-pk_sample_get_value (PkSample *sample,  // IN
-                     guint     row_id,  // IN
-                     GValue   *value)   // OUT
+pk_sample_get_value (PkSample *sample,
+                     guint     row_id,
+                     GValue   *value)
 {
 	PkSampleReal *real = (PkSampleReal *)sample;
 	PkSampleField *f;
@@ -468,8 +468,14 @@ pk_sample_get_value (PkSample *sample,  // IN
 	for (i = 0; i < real->ar->len; i++) {
 		f = &g_array_index(real->ar, PkSampleField, i);
 		if (f->field == row_id) {
-			g_value_init(value, G_VALUE_TYPE(&f->value));
-			g_value_copy(&f->value, value);
+			if (!value->g_type) {
+				g_value_init(value, G_VALUE_TYPE(&f->value));
+				g_value_copy(&f->value, value);
+			} else if (value->g_type == f->value.g_type) {
+				g_value_copy(&f->value, value);
+			} else {
+				g_value_transform(&f->value, value);
+			}
 			return TRUE;
 		}
 	}
