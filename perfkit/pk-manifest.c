@@ -35,9 +35,15 @@ static gboolean decode (PkManifest *manifest,
                         EggBuffer  *buffer);
 
 
+#define MANIFEST_MAGIC 0x0BADFACE
+#define PK_IS_MANIFEST(_m) \
+    ((_m) && (((PkManifestReal *)(_m))->magic == MANIFEST_MAGIC))
+
+
 struct _PkManifestReal
 {
 	gdouble         time;       /* Must stay in sync with PkManifest */
+	guint32         magic;      /* Magic bytes to check instance */
 	volatile gint   ref_count;  /* The structures reference count */
 	struct timespec ts;         /* Timespec matching time field */
 	PkResolution    resolution; /* Resolution of sample time precision */
@@ -77,6 +83,7 @@ pk_manifest_new (void)
 	PkManifestReal *real;
 
 	real = g_slice_new0(PkManifestReal);
+	real->magic = MANIFEST_MAGIC;
 	real->ref_count = 1;
 	real->rows = g_array_new(FALSE, FALSE, sizeof(PkManifestRow));
 	return (PkManifest *)real;
@@ -86,7 +93,7 @@ gint
 pk_manifest_get_source_id (PkManifest *manifest) /* IN */
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
-	g_return_val_if_fail(real != NULL, -1);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), -1);
 	return real->source_id;
 }
 
@@ -96,7 +103,7 @@ pk_manifest_get_row_id (PkManifest  *manifest,
 {
 	GQuark quark;
 
-	g_return_val_if_fail(manifest != NULL, -1);
+	g_return_val_if_fail(PK_IS_MANIFEST(manifest), -1);
 	g_return_val_if_fail(name != NULL, -1);
 
 	if (!(quark = g_quark_try_string(name))) {
@@ -114,12 +121,13 @@ pk_manifest_get_row_id_from_quark (PkManifest  *manifest,
 	PkManifestRow *row;
 	gint i;
 
-	g_return_val_if_fail(real != NULL, -1);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), -1);
 	g_return_val_if_fail(real->rows != NULL, -1);
 	g_return_val_if_fail(quark > 0, -1);
 
 	for (i = 0; i < real->rows->len; i++) {
 		row = &g_array_index(real->rows, PkManifestRow, i);
+		g_debug("%s", g_quark_to_string(row->name));
 		if (quark == row->name) {
 			return i + 1;
 		}
@@ -177,7 +185,7 @@ pk_manifest_ref (PkManifest *manifest) /* IN */
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	g_return_val_if_fail(real != NULL, NULL);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), NULL);
 	g_return_val_if_fail(real->ref_count > 0, NULL);
 
 	g_atomic_int_inc(&real->ref_count);
@@ -201,7 +209,7 @@ pk_manifest_unref (PkManifest *manifest)
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	g_return_if_fail(real != NULL);
+	g_return_if_fail(PK_IS_MANIFEST(real));
 	g_return_if_fail(real->ref_count > 0);
 
 	if (g_atomic_int_dec_and_test(&real->ref_count)) {
@@ -225,7 +233,7 @@ PkResolution
 pk_manifest_get_resolution (PkManifest *manifest) /* IN */
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
-	g_return_val_if_fail(real != NULL, 0);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), 0);
 	return real->resolution;
 }
 
@@ -243,7 +251,7 @@ gint
 pk_manifest_get_n_rows (PkManifest *manifest) /* IN */
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
-	g_return_val_if_fail(real != NULL, 0);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), 0);
 	return real->n_rows;
 }
 
@@ -264,7 +272,7 @@ pk_manifest_get_row_type (PkManifest *manifest, /* IN */
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	g_return_val_if_fail(real != NULL, G_TYPE_INVALID);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), 0);
 	g_return_val_if_fail(real->rows != NULL, G_TYPE_INVALID);
 	g_return_val_if_fail(row > 0, G_TYPE_INVALID);
 	g_return_val_if_fail(row <= real->n_rows, G_TYPE_INVALID);
@@ -290,7 +298,7 @@ pk_manifest_get_row_name (PkManifest *manifest, /* IN */
 	PkManifestReal *real = (PkManifestReal *)manifest;
 	PkManifestRow *mrow;
 
-	g_return_val_if_fail(real != NULL, NULL);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), NULL);
 	g_return_val_if_fail(row > 0, NULL);
 	g_return_val_if_fail(row <= real->n_rows, NULL);
 
@@ -314,7 +322,7 @@ pk_manifest_get_timespec (PkManifest      *manifest, /* IN */
 {
 	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	g_return_if_fail(real != NULL);
+	g_return_if_fail(PK_IS_MANIFEST(real));
 	g_return_if_fail(ts != NULL);
 
 	*ts = real->ts;
@@ -356,7 +364,7 @@ decode (PkManifest *manifest,
 	gsize end;
 	gint i;
 
-	g_return_val_if_fail(real != NULL, FALSE);
+	g_return_val_if_fail(PK_IS_MANIFEST(real), FALSE);
 	g_return_val_if_fail(buffer != NULL, FALSE);
 
 	/* timestamp */
