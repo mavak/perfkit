@@ -38,14 +38,15 @@
  */
 
 typedef struct _PkSampleField PkSampleField;
+typedef struct _PkSampleReal  PkSampleReal;
 
-struct _PkSample
+struct _PkSampleReal
 {
-	volatile gint    ref_count;
-	gint             source_id;
-	struct timespec  ts;
-	gdouble          time;
-	GArray          *ar;
+	gdouble          time;       /* Time of the sample. Must match PkSample */
+	volatile gint    ref_count;  /* Current structure ref count */
+	gint             source_id;  /* What source did this come from */
+	struct timespec  ts;         /* Time as a timespec */
+	GArray          *ar;         /* Array of PkSampleFields */
 };
 
 struct _PkSampleField
@@ -57,16 +58,18 @@ struct _PkSampleField
 static void
 pk_sample_destroy (PkSample *sample)
 {
+	PkSampleReal *real = (PkSampleReal *)sample;
 	gint i;
 
-	g_return_if_fail(sample != NULL);
+	g_return_if_fail(real != NULL);
 
-	if (G_LIKELY(sample->ar)) {
-		for (i = 0; i < sample->ar->len; i++) {
-			g_value_unset(&(g_array_index(sample->ar, PkSampleField, i).value));
+	if (G_LIKELY(real->ar)) {
+		for (i = 0; i < real->ar->len; i++) {
+			g_value_unset(&(g_array_index(real->ar, PkSampleField, i).value));
 		}
 	}
 }
+
 
 /**
  * pk_sample_new:
@@ -80,27 +83,22 @@ pk_sample_destroy (PkSample *sample)
 static PkSample*
 pk_sample_new (void)
 {
-	PkSample *sample;
+	PkSampleReal *real;
 
-	sample = g_slice_new0(PkSample);
-	sample->ref_count = 1;
-	sample->ar = g_array_new(FALSE, FALSE, sizeof(PkSampleField));
+	real = g_slice_new0(PkSampleReal);
+	real->ref_count = 1;
+	real->ar = g_array_new(FALSE, FALSE, sizeof(PkSampleField));
 
-	return sample;
+	return (PkSample *)real;
 }
 
-gdouble
-pk_sample_get_time (PkSample *sample)
-{
-	g_return_val_if_fail(sample != NULL, 0.0);
-	return sample->time;
-}
 
 static gboolean
 pk_sample_decode_timespec (PkSample   *sample,   /* IN */
                            EggBuffer  *buffer,   /* IN */
                            PkManifest *manifest) /* IN */
 {
+	PkSampleReal *real = (PkSampleReal *)sample;
 	guint field, tag;
 	struct timespec sts;
 	struct timespec mts;
@@ -138,9 +136,9 @@ pk_sample_decode_timespec (PkSample   *sample,   /* IN */
 	}
 	timespec_from_usec(&sts, u64);
 	pk_manifest_get_timespec(manifest, &mts);
-	timespec_add(&sts, &mts, &sample->ts);
-	sample->time = sample->ts.tv_sec
-	             + sample->ts.tv_nsec / (G_USEC_PER_SEC * 1000.0);
+	timespec_add(&sts, &mts, &real->ts);
+	real->time = real->ts.tv_sec
+	           + real->ts.tv_nsec / (G_USEC_PER_SEC * 1000.0);
 	RETURN(TRUE);
 }
 
@@ -152,13 +150,10 @@ pk_sample_init_value (PkSample   *sample,
 {
 	GType type_id;
 
-	type_id = pk_manifest_get_row_type(manifest, field);
-	if (type_id == G_TYPE_INVALID) {
-		return FALSE;
+	if ((type_id = pk_manifest_get_row_type(manifest, field))) {
+		g_value_init(value, type_id);
 	}
-
-	g_value_init(value, type_id);
-	return TRUE;
+	return (type_id != G_TYPE_INVALID);
 }
 
 static gboolean
@@ -166,6 +161,7 @@ pk_sample_decode_data (PkSample   *sample,
                        EggBuffer  *buffer,
                        PkManifest *manifest)
 {
+	PkSampleReal *real = (PkSampleReal *)sample;
 	guint field, tag;
 	guint data_len;
 	gsize total_len,
@@ -284,7 +280,7 @@ pk_sample_decode_data (PkSample   *sample,
 		/* Add sample data point */
 		item.field = field;
 		item.value = value;
-		g_array_append_val(sample->ar, item);
+		g_array_append_val(real->ar, item);
 
 		/* Increment buffer position */
 		offset = egg_buffer_get_pos(buffer);
@@ -341,6 +337,7 @@ pk_sample_new_from_data (PkManifestResolver  resolver,  /* IN */
                          gsize              *n_read)    /* IN */
 {
 	PkManifest *manifest = NULL;
+	PkSampleReal *real;
 	PkSample *sample;
 	EggBuffer *buffer;
 	guint field = 0;
@@ -353,6 +350,7 @@ pk_sample_new_from_data (PkManifestResolver  resolver,  /* IN */
 
 	ENTRY;
 	sample = pk_sample_new();
+	real = (PkSampleReal *)sample;
 	buffer = egg_buffer_new_from_data(data, length);
 
 	/*
@@ -370,7 +368,7 @@ pk_sample_new_from_data (PkManifestResolver  resolver,  /* IN */
 	if (!resolver(source_id, &manifest, user_data)) {
 		GOTO(failed);
 	}
-	sample->source_id = source_id;
+	real->source_id = source_id;
 
 	/*
 	 * Decode the rest of the sample.
@@ -404,10 +402,12 @@ pk_sample_new_from_data (PkManifestResolver  resolver,  /* IN */
 PkSample*
 pk_sample_ref (PkSample *sample)
 {
-	g_return_val_if_fail(sample != NULL, NULL);
-	g_return_val_if_fail(sample->ref_count > 0, NULL);
+	PkSampleReal *real = (PkSampleReal *)sample;
 
-	g_atomic_int_inc(&sample->ref_count);
+	g_return_val_if_fail(real != NULL, NULL);
+	g_return_val_if_fail(real->ref_count > 0, NULL);
+
+	g_atomic_int_inc(&real->ref_count);
 
 	return sample;
 }
@@ -427,12 +427,14 @@ pk_sample_ref (PkSample *sample)
 void
 pk_sample_unref (PkSample *sample)
 {
-	g_return_if_fail(sample != NULL);
-	g_return_if_fail(sample->ref_count > 0);
+	PkSampleReal *real = (PkSampleReal *)sample;
 
-	if (g_atomic_int_dec_and_test(&sample->ref_count)) {
+	g_return_if_fail(real != NULL);
+	g_return_if_fail(real->ref_count > 0);
+
+	if (g_atomic_int_dec_and_test(&real->ref_count)) {
 		pk_sample_destroy(sample);
-		g_slice_free(PkSample, sample);
+		g_slice_free(PkSampleReal, real);
 	}
 }
 
@@ -451,15 +453,16 @@ pk_sample_get_value (PkSample *sample,  // IN
                      guint     row_id,  // IN
                      GValue   *value)   // OUT
 {
+	PkSampleReal *real = (PkSampleReal *)sample;
 	PkSampleField *f;
 	gint i;
 
-	g_return_val_if_fail(sample != NULL, FALSE);
+	g_return_val_if_fail(real != NULL, FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
-	g_return_val_if_fail(sample->ar != NULL, FALSE);
+	g_return_val_if_fail(real->ar != NULL, FALSE);
 
-	for (i = 0; i < sample->ar->len; i++) {
-		f = &g_array_index(sample->ar, PkSampleField, i);
+	for (i = 0; i < real->ar->len; i++) {
+		f = &g_array_index(real->ar, PkSampleField, i);
 		if (f->field == row_id) {
 			g_value_init(value, G_VALUE_TYPE(&f->value));
 			g_value_copy(&f->value, value);
@@ -473,30 +476,33 @@ pk_sample_get_value (PkSample *sample,  // IN
 gint
 pk_sample_get_source_id (PkSample *sample) /* IN */
 {
-	g_return_val_if_fail(sample != NULL, -1);
-	return sample->source_id;
+	PkSampleReal *real = (PkSampleReal *)sample;
+	g_return_val_if_fail(real != NULL, -1);
+	return real->source_id;
 }
 
 void
 pk_sample_get_timespec (PkSample        *sample, /* IN */
                         struct timespec *ts)     /* OUT */
 {
-	g_return_if_fail(sample != NULL);
+	PkSampleReal *real = (PkSampleReal *)sample;
+	g_return_if_fail(real != NULL);
 	g_return_if_fail(ts != NULL);
-
-	*ts = sample->ts;
+	*ts = real->ts;
 }
 
 void
 pk_sample_get_timeval (PkSample *sample, /* IN */
                        GTimeVal *tv)     /* OUT */
 {
-	g_return_if_fail(sample != NULL);
+	PkSampleReal *real = (PkSampleReal *)sample;
+
+	g_return_if_fail(real != NULL);
 	g_return_if_fail(tv != NULL);
 
 	ENTRY;
-	tv->tv_sec = sample->ts.tv_sec;
-	tv->tv_usec = (sample->ts.tv_nsec / 1000);
+	tv->tv_sec = real->ts.tv_sec;
+	tv->tv_usec = (real->ts.tv_nsec / 1000);
 	EXIT;
 }
 

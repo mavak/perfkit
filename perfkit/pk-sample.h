@@ -33,6 +33,17 @@ G_BEGIN_DECLS
 typedef struct _PkSample PkSample;
 
 /**
+ * PkSample:
+ *
+ * This structure represents a series of data elements retrieved from an
+ * agent. Only the time field of the structure is public.
+ */
+struct _PkSample
+{
+	gdouble time;
+};
+
+/**
  * PkSampleFunc:
  * @manifest: A #PkManifest.
  * @sample: A #PkSample.
@@ -74,7 +85,6 @@ gboolean      pk_sample_get_value     (PkSample           *sample,
 gint          pk_sample_get_source_id (PkSample           *sample);
 void          pk_sample_get_timespec  (PkSample           *sample,
                                        struct timespec    *ts);
-gdouble       pk_sample_get_time      (PkSample           *sample);
 void          pk_sample_get_timeval   (PkSample           *sample,
                                        GTimeVal           *tv);
 
