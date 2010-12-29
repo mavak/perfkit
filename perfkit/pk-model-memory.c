@@ -45,6 +45,66 @@ compare_double (const gdouble *xp,
 
 
 static gint
+pk_model_memory_find_manifest_for_time (PkModelMemory *memory,
+                                        gdouble        target_time)
+{
+	PkModelMemoryPrivate *priv;
+	PkManifest **manifests;
+	gint left = 0;
+	gint middle = 0;
+	gint ret;
+	gint right;
+	guint n_manifests;
+
+	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), -1);
+
+	priv = memory->priv;
+
+	/*
+	 * If we have no manifests stored, we can immediately fail.
+	 */
+	if (!(n_manifests = priv->manifests->len)) {
+		return -1;
+	}
+
+	/*
+	 * Lets use the array of manfiests directly. Makes the code a bit
+	 * cleaner and less macros used.
+	 */
+	manifests = (PkManifest **)priv->manifests->pdata;
+	right = n_manifests - 1;
+
+	/*
+	 * Binary search through the array of samples until we find a match
+	 * or have exhausted our divide-and-conquer (which with a normal
+	 * binary search would be a failure).
+	 */
+	while (left <= right) {
+		middle = (left + right) / 2;
+		ret = compare_double(&manifests[middle]->time, &target_time);
+		switch (ret) {
+		case -1:
+			left = middle + 1;
+			break;
+		case 1:
+			right = middle - 1;
+			break;
+		case 0:
+			return middle;
+		default:
+			g_assert_not_reached();
+			return -1;
+		}
+	}
+
+	/*
+	 * The item on the left must be the closest to the 
+	 */
+	return left;
+}
+
+
+static gint
 pk_model_memory_find_nearest_sample (PkModelMemory *memory,
                                      gdouble        target_time,
                                      gdouble        other_time,
@@ -54,7 +114,7 @@ pk_model_memory_find_nearest_sample (PkModelMemory *memory,
 	PkSample **samples;
 	gint left = 0;
 	gint middle = 0;
-	gint ret = -1;
+	gint ret;
 	gint right;
 	guint n_samples;
 
@@ -173,14 +233,22 @@ set_iter (PkModelMemory *memory,
           PkModelIter   *iter,
           PkSample      *sample)
 {
-	PkManifest *manifest = NULL;
+	PkModelMemoryPrivate *priv;
+	gint manifest_idx;
+
+	priv = memory->priv;
 
 	/*
-	 * TODO: Binary search for manifest owning this time.
+	 * Binary search for the manifest owned by this sample.
 	 */
-	g_assert_not_reached();
+	manifest_idx =
+		pk_model_memory_find_manifest_for_time(memory, sample->time);
+	g_assert_cmpint(manifest_idx, >, 0);
 
-	iter->user_data = manifest;
+	/*
+	 * Set the items within the iterator.
+	 */
+	iter->user_data = g_ptr_array_index(priv->manifests, manifest_idx);
 	iter->user_data2 = sample;
 }
 
