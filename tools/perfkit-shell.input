@@ -16,7 +16,7 @@ source=$1
 channel add-source $channel $source
 
 # Set the channel properties
-channel set-target $channel /bin/nc
+channel set-target $channel nc
 channel set-args $channel '-l 10000'
 channel set-env $channel 'KEY1=VALUE1 KEY2=VALUE2'
 
