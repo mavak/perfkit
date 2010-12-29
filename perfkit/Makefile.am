@@ -26,6 +26,7 @@ INST_H_FILES += pk-version.h
 
 NOINST_H_FILES =
 NOINST_H_FILES += pk-log.h
+NOINST_H_FILES += $(builddir)/pk-marshal.h
 NOINST_H_FILES += pk-util.h
 
 libperfkit_1_0_la_SOURCES =
@@ -33,6 +34,7 @@ libperfkit_1_0_la_SOURCES += $(INST_H_FILES)
 libperfkit_1_0_la_SOURCES += $(NOINST_H_FILES)
 libperfkit_1_0_la_SOURCES += pk-connection.c
 libperfkit_1_0_la_SOURCES += pk-manifest.c
+libperfkit_1_0_la_SOURCES += $(builddir)/pk-marshal.c
 libperfkit_1_0_la_SOURCES += pk-model.c
 libperfkit_1_0_la_SOURCES += pk-model-memory.c
 libperfkit_1_0_la_SOURCES += pk-sample.c
@@ -51,6 +53,12 @@ libperfkit_1_0_la_LIBADD =
 libperfkit_1_0_la_LIBADD += $(GIO_LIBS)
 libperfkit_1_0_la_LIBADD += $(GMODULE_LIBS)
 libperfkit_1_0_la_LIBADD += $(GOBJECT_LIBS)
+
+$(builddir)/pk-marshal.c $(builddir)/pk-marshal.h: pk-marshal.list
+	glib-genmarshal --prefix=pk_cclosure_marshal --header	\
+	$(srcdir)/pk-marshal.list > $(builddir)/pk-marshal.h
+	glib-genmarshal --prefix=pk_cclosure_marshal --body	\
+	$(srcdir)/pk-marshal.list > $(builddir)/pk-marshal.c
 
 #
 # DBus connection
