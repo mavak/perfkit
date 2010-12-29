@@ -127,7 +127,6 @@ pk_manifest_get_row_id_from_quark (PkManifest  *manifest,
 
 	for (i = 0; i < real->rows->len; i++) {
 		row = &g_array_index(real->rows, PkManifestRow, i);
-		g_debug("%s", g_quark_to_string(row->name));
 		if (quark == row->name) {
 			return i + 1;
 		}

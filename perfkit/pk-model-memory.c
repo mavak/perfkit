@@ -57,8 +57,6 @@ pk_model_memory_find_manifest_for_time (PkModelMemory *memory,
 	gint right;
 	guint n_manifests;
 
-	ENTRY;
-
 	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), -1);
 
 	priv = memory->priv;
@@ -67,7 +65,7 @@ pk_model_memory_find_manifest_for_time (PkModelMemory *memory,
 	 * If we have no manifests stored, we can immediately fail.
 	 */
 	if (!(n_manifests = priv->manifests->len)) {
-		RETURN(-1);
+		return -1;
 	}
 
 	/*
@@ -93,10 +91,10 @@ pk_model_memory_find_manifest_for_time (PkModelMemory *memory,
 			right = middle - 1;
 			break;
 		case 0:
-			RETURN(middle);
+			return middle;
 		default:
 			g_assert_not_reached();
-			RETURN(-1);
+			return -1;
 		}
 	}
 
@@ -104,7 +102,7 @@ pk_model_memory_find_manifest_for_time (PkModelMemory *memory,
 	 * The item on the left must be the closest. However, there is a chance
 	 * we overran the end of the items so clip to the end.
 	 */
-	RETURN(MIN(left, n_manifests - 1));
+	return MIN(left, n_manifests - 1);
 }
 
 
