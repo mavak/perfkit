@@ -468,6 +468,8 @@ decode (PkManifest *manifest,
 		g_array_append_val(real->rows, row);
 		g_array_sort(real->rows, sort_func);
 		real->n_rows++;
+
+		g_free(name);
 	}
 
 	/* make sure all rows were sent */
