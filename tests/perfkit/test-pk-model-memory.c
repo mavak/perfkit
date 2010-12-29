@@ -56,8 +56,21 @@ test_PkModelMemory_insert_tests (void)
 	g_assert_cmpint(count, ==, 3);
 
 	count = 0;
-	if (pk_model_get_iter_for_range(model, &iter, 1293594061.91,
-	                                1293594062.9, 0.0)) {
+	if (pk_model_get_iter_for_range(model, &iter,
+	                                1293594061.91,
+	                                1293594063.0,
+	                                0.0)) {
+		do {
+			count++;
+		} while (pk_model_iter_next(model, &iter));
+	}
+	g_assert_cmpint(count, ==, 3);
+
+	count = 0;
+	if (pk_model_get_iter_for_range(model, &iter,
+	                                1293594062.0,
+	                                1293594063.0,
+	                                0.0)) {
 		do {
 			count++;
 		} while (pk_model_iter_next(model, &iter));
