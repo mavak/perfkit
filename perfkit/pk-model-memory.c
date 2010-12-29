@@ -378,6 +378,7 @@ pk_model_memory_iter_next (PkModel     *model,
 
 	get_iter(memory, iter, &manifest, &sample, &index, &end_index);
 	if (++index <= end_index) {
+		sample = g_ptr_array_index(priv->samples, index);
 		set_iter(memory, iter, sample, index, end_index);
 		return TRUE;
 	}
