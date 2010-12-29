@@ -38,6 +38,7 @@ typedef struct _PkModel        PkModel;
 typedef struct _PkModelClass   PkModelClass;
 typedef struct _PkModelPrivate PkModelPrivate;
 typedef struct _PkModelIter    PkModelIter;
+typedef enum   _PkModelMode    PkModelMode;
 
 typedef void (*PkModelAccumulator) (PkModel     *model,
                                     GValueArray *values,
@@ -59,6 +60,12 @@ struct _PkModelIter
 	gpointer user_data2;
 	gpointer user_data3;
 	gpointer user_data4;
+};
+
+enum _PkModelMode
+{
+	PK_MODEL_RAW,
+	PK_MODEL_COUNTER,
 };
 
 struct _PkModel
@@ -95,6 +102,9 @@ struct _PkModelClass
 	                                PkSample    *sample);
 	gboolean (*iter_next)          (PkModel     *model,
 	                                PkModelIter *iter);
+	void     (*set_field_mode)     (PkModel     *model,
+	                                GQuark       key,
+	                                PkModelMode  mode);
 };
 
 void     pk_model_accumulate           (PkModel             *model,
@@ -173,6 +183,9 @@ void     pk_model_register_builder     (PkModel             *model,
                                         PkValueBuilder       builder,
                                         gpointer             user_data,
                                         GDestroyNotify       notify);
+void     pk_model_set_field_mode       (PkModel             *model,
+                                        GQuark               key,
+                                        PkModelMode          mode);
 
 G_END_DECLS
 

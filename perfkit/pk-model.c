@@ -216,6 +216,18 @@ pk_model_get_value (PkModel     *model,
 
 
 void
+pk_model_set_field_mode (PkModel     *model,
+                         GQuark       key,
+                         PkModelMode  mode)
+{
+	g_return_if_fail(PK_IS_MODEL(model));
+	g_return_if_fail(key > 0);
+
+	PK_MODEL_GET_CLASS(model)->set_field_mode(model, key, mode);
+}
+
+
+void
 pk_model_register_accumulator (PkModel             *model,
                                GQuark               key,
                                PkModelAccumulator   accumulator,

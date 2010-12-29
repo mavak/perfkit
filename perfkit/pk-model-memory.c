@@ -26,6 +26,7 @@ struct _PkModelMemoryPrivate
 {
 	GPtrArray  *manifests;
 	GPtrArray  *samples;
+	GHashTable *modes;
 };
 
 
@@ -195,6 +196,15 @@ pk_model_memory_find_nearest_sample (PkModelMemory *memory,
 }
 
 
+static PkModelMode
+pk_model_memory_get_field_mode (PkModelMemory *memory,
+                                GQuark         key)
+{
+	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), 0);
+	return (PkModelMode)g_hash_table_lookup(memory->priv->modes, &key);
+}
+
+
 static void
 pk_model_memory_insert_manifest (PkModel    *model,
                                  PkManifest *manifest)
@@ -348,6 +358,72 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 
 
 static void
+subtract (const GValue *x,
+          const GValue *y,
+          GValue       *result)
+{
+	gdouble xd;
+	gdouble yd;
+	gdouble v;
+
+	switch (x->g_type) {
+	case G_TYPE_DOUBLE:
+		xd = g_value_get_double(x);
+		yd = g_value_get_double(y);
+		break;
+	case G_TYPE_INT:
+		xd = g_value_get_int(x);
+		yd = g_value_get_int(y);
+		break;
+	case G_TYPE_INT64:
+		xd = g_value_get_int64(x);
+		yd = g_value_get_int64(y);
+		break;
+	case G_TYPE_UINT:
+		xd = g_value_get_uint(x);
+		yd = g_value_get_uint(y);
+		break;
+	case G_TYPE_UINT64:
+		xd = g_value_get_uint64(x);
+		yd = g_value_get_uint64(y);
+		break;
+	default:
+		/*
+		 * TODO: Add types.
+		 */
+		g_assert_not_reached();
+		return;
+	}
+
+	v = xd - yd;
+
+	switch (result->g_type) {
+	case G_TYPE_DOUBLE:
+		g_value_set_double(result, v);
+		break;
+	case G_TYPE_INT:
+		g_value_set_int(result, v);
+		break;
+	case G_TYPE_INT64:
+		g_value_set_int64(result, v);
+		break;
+	case G_TYPE_UINT:
+		g_value_set_uint(result, v);
+		break;
+	case G_TYPE_UINT64:
+		g_value_set_uint64(result, v);
+		break;
+	default:
+		/*
+		 * TODO: Add types.
+		 */
+		g_assert_not_reached();
+		return;
+	}
+}
+
+
+static void
 pk_model_memory_get_value (PkModel     *model,
                            PkModelIter *iter,
                            GQuark       key,
@@ -357,6 +433,8 @@ pk_model_memory_get_value (PkModel     *model,
 	PkModelMemory *memory = (PkModelMemory *)model;
 	PkManifest *manifest = NULL;
 	PkSample *sample = NULL;
+	PkSample *last;
+	GValue last_value = { 0 };
 	gint end_index;
 	gint row_id;
 	gint begin_index;
@@ -377,6 +455,26 @@ pk_model_memory_get_value (PkModel     *model,
 
 	row_id = pk_manifest_get_row_id_from_quark(manifest, key);
 	pk_sample_get_value(sample, row_id, value);
+
+	/*
+	 * XXX: Obviously, this is a shitty way to do things.
+	 */
+	if (pk_model_memory_get_field_mode(memory, key) == PK_MODEL_COUNTER) {
+		if (begin_index == 0) {
+			/*
+			 * Can't calculate value on first item.
+			 */
+			g_value_reset(value);
+		} else {
+			/*
+			 * TODO: There is a chance the last item doesnt share the manifest
+			 *       and therefore has a different row id.
+			 */
+			last = g_ptr_array_index(priv->samples, begin_index - 1);
+			pk_sample_get_value(last, row_id, &last_value);
+			subtract(value, &last_value, value);
+		}
+	}
 }
 
 
@@ -408,6 +506,25 @@ pk_model_memory_iter_next (PkModel     *model,
 }
 
 
+static void
+pk_model_memory_set_field_mode (PkModel     *model,
+                                GQuark       key,
+                                PkModelMode  mode)
+{
+	PkModelMemory *memory = (PkModelMemory *)model;
+	PkModelMemoryPrivate *priv;
+	GQuark *pkey;
+
+	g_return_if_fail(PK_IS_MODEL_MEMORY(memory));
+
+	priv = memory->priv;
+
+	pkey = g_new0(GQuark, 1);
+	*pkey = key;
+	g_hash_table_insert(priv->modes, pkey, GINT_TO_POINTER(mode));
+}
+
+
 /**
  * pk_model_memory_finalize:
  * @object: (in): A #PkModelMemory.
@@ -430,6 +547,9 @@ pk_model_memory_finalize (GObject *object)
 	g_ptr_array_foreach(priv->samples, (GFunc)pk_sample_unref, NULL);
 	g_ptr_array_free(priv->samples, TRUE);
 	priv->samples = NULL;
+
+	g_hash_table_destroy(priv->modes);
+	priv->modes = NULL;
 
 	G_OBJECT_CLASS(pk_model_memory_parent_class)->finalize(object);
 }
@@ -461,6 +581,7 @@ pk_model_memory_class_init (PkModelMemoryClass *klass)
 	model_class->insert_manifest = pk_model_memory_insert_manifest;
 	model_class->insert_sample = pk_model_memory_insert_sample;
 	model_class->iter_next = pk_model_memory_iter_next;
+	model_class->set_field_mode = pk_model_memory_set_field_mode;
 }
 
 
@@ -481,4 +602,6 @@ pk_model_memory_init (PkModelMemory *memory)
 
 	memory->priv->manifests = g_ptr_array_new();
 	memory->priv->samples = g_ptr_array_new();
+	memory->priv->modes =
+		g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
 }
