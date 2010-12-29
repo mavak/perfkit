@@ -322,6 +322,7 @@ pk_sample_decode (PkSample   *sample,   /* IN */
  * pk_sample_new_from_data:
  * @data: a buffer of data.
  * @length: the length of the buffer.
+ * @n_read: (out): Location for the number of bytes consumed; or %NULL.
  *
  * Creates a new #PkSample from a buffer of data.
  *
@@ -346,7 +347,6 @@ pk_sample_new_from_data (PkManifestResolver  resolver,  /* IN */
 
 	g_return_val_if_fail(resolver != NULL, NULL);
 	g_return_val_if_fail(data != NULL, NULL);
-	g_return_val_if_fail(n_read != NULL, NULL);
 
 	ENTRY;
 	sample = pk_sample_new();
@@ -378,14 +378,18 @@ pk_sample_new_from_data (PkManifestResolver  resolver,  /* IN */
 		sample = NULL;
 	}
 
-	*n_read = egg_buffer_get_pos(buffer);
+	if (n_read) {
+		*n_read = egg_buffer_get_pos(buffer);
+	}
 	egg_buffer_unref(buffer);
 	RETURN(sample);
 
   failed:
   	egg_buffer_unref(buffer);
   	pk_sample_unref(sample);
-  	*n_read = 0;
+  	if (n_read) {
+  		*n_read = 0;
+	}
   	RETURN(NULL);
 }
 
