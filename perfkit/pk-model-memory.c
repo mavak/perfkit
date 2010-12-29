@@ -311,8 +311,8 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 		pk_model_memory_find_nearest_sample(memory, begin_time,
 		                                    end_time, FALSE);
 	end_idx =
-		pk_model_memory_find_nearest_sample(memory, begin_time,
-		                                    end_time, TRUE);
+		pk_model_memory_find_nearest_sample(memory, end_time,
+		                                    begin_time, TRUE);
 	if (begin_idx < 0 || end_idx < 0) {
 		return FALSE;
 	}
