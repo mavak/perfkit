@@ -30,18 +30,31 @@ G_BEGIN_DECLS
 
 #define PK_TYPE_MANIFEST (pk_manifest_get_type())
 
-typedef struct _PkManifest PkManifest;
+typedef struct _PkManifest   PkManifest;
+typedef enum   _PkResolution PkResolution;
 
-typedef void (*PkManifestFunc) (PkManifest *manifest, gpointer user_data);
+typedef void (*PkManifestFunc) (PkManifest *manifest,
+                                gpointer    user_data);
 
-typedef enum
+/**
+ * PkManifest:
+ *
+ * This structure represents a manifest received from a perfkit agent.
+ * Only the time field of the manifest is public.
+ */
+struct _PkManifest
+{
+	gdouble time;
+};
+
+enum _PkResolution
 {
 	PK_RESOLUTION_USEC,
 	PK_RESOLUTION_MSEC,
 	PK_RESOLUTION_SECOND,
 	PK_RESOLUTION_MINUTE,
 	PK_RESOLUTION_HOUR,
-} PkResolution;
+};
 
 GType           pk_manifest_get_type       (void) G_GNUC_CONST;
 PkManifest*     pk_manifest_new_from_data  (const guint8    *data,

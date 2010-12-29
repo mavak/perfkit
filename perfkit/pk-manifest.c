@@ -27,17 +27,23 @@
 #include "pk-log.h"
 #include "pk-util.h"
 
-static gboolean decode (PkManifest *manifest, EggBuffer *buffer);
 
-struct _PkManifest
+typedef struct _PkManifestReal PkManifestReal;
+
+
+static gboolean decode (PkManifest *manifest,
+                        EggBuffer  *buffer);
+
+
+struct _PkManifestReal
 {
-	volatile gint   ref_count;
-	struct timespec ts;
-	gdouble         time;
-	PkResolution    resolution;
-	gint            source_id;
-	gint            n_rows;
-	GArray         *rows;
+	gdouble         time;       /* Must stay in sync with PkManifest */
+	volatile gint   ref_count;  /* The structures reference count */
+	struct timespec ts;         /* Timespec matching time field */
+	PkResolution    resolution; /* Resolution of sample time precision */
+	gint            source_id;  /* The source the manifest belongs to */
+	gint            n_rows;     /* Number of rows in manifest (Delete?) */
+	GArray         *rows;       /* Actual rows */
 };
 
 typedef struct
@@ -50,36 +56,38 @@ typedef struct
 static void
 pk_manifest_destroy (PkManifest *manifest) /* IN */
 {
+	PkManifestReal *real = (PkManifestReal *)manifest;
+
 	g_return_if_fail(manifest != NULL);
 
 	ENTRY;
 
 	/* free row array */
-	g_array_unref(manifest->rows);
+	g_array_unref(real->rows);
 
 	/* mark fields as canaries */
-	manifest->rows = NULL;
-	manifest->source_id = -1;
+	real->rows = NULL;
+	real->source_id = -1;
 	EXIT;
 }
 
 static PkManifest*
 pk_manifest_new (void)
 {
-	PkManifest *manifest;
+	PkManifestReal *real;
 
-	ENTRY;
-	manifest = g_slice_new0(PkManifest);
-	manifest->ref_count = 1;
-	manifest->rows = g_array_new(FALSE, FALSE, sizeof(PkManifestRow));
-	RETURN(manifest);
+	real = g_slice_new0(PkManifestReal);
+	real->ref_count = 1;
+	real->rows = g_array_new(FALSE, FALSE, sizeof(PkManifestRow));
+	return (PkManifest *)real;
 }
 
 gint
 pk_manifest_get_source_id (PkManifest *manifest) /* IN */
 {
-	g_return_val_if_fail(manifest != NULL, -1);
-	return manifest->source_id;
+	PkManifestReal *real = (PkManifestReal *)manifest;
+	g_return_val_if_fail(real != NULL, -1);
+	return real->source_id;
 }
 
 gint
@@ -89,7 +97,6 @@ pk_manifest_get_row_id (PkManifest  *manifest,
 	GQuark quark;
 
 	g_return_val_if_fail(manifest != NULL, -1);
-	g_return_val_if_fail(manifest->rows != NULL, -1);
 	g_return_val_if_fail(name != NULL, -1);
 
 	if (!(quark = g_quark_try_string(name))) {
@@ -103,15 +110,16 @@ gint
 pk_manifest_get_row_id_from_quark (PkManifest  *manifest,
                                    GQuark       quark)
 {
+	PkManifestReal *real = (PkManifestReal *)manifest;
 	PkManifestRow *row;
 	gint i;
 
-	g_return_val_if_fail(manifest != NULL, -1);
-	g_return_val_if_fail(manifest->rows != NULL, -1);
+	g_return_val_if_fail(real != NULL, -1);
+	g_return_val_if_fail(real->rows != NULL, -1);
 	g_return_val_if_fail(quark > 0, -1);
 
-	for (i = 0; i < manifest->rows->len; i++) {
-		row = &g_array_index(manifest->rows, PkManifestRow, i);
+	for (i = 0; i < real->rows->len; i++) {
+		row = &g_array_index(real->rows, PkManifestRow, i);
 		if (quark == row->name) {
 			return i + 1;
 		}
@@ -167,12 +175,13 @@ pk_manifest_new_from_data (const guint8 *data,   /* IN */
 PkManifest*
 pk_manifest_ref (PkManifest *manifest) /* IN */
 {
-	g_return_val_if_fail(manifest != NULL, NULL);
-	g_return_val_if_fail(manifest->ref_count > 0, NULL);
+	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	ENTRY;
-	g_atomic_int_inc(&manifest->ref_count);
-	RETURN(manifest);
+	g_return_val_if_fail(real != NULL, NULL);
+	g_return_val_if_fail(real->ref_count > 0, NULL);
+
+	g_atomic_int_inc(&real->ref_count);
+	return manifest;
 }
 
 /**
@@ -190,15 +199,15 @@ pk_manifest_ref (PkManifest *manifest) /* IN */
 void
 pk_manifest_unref (PkManifest *manifest)
 {
-	g_return_if_fail(manifest != NULL);
-	g_return_if_fail(manifest->ref_count > 0);
+	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	ENTRY;
-	if (g_atomic_int_dec_and_test(&manifest->ref_count)) {
+	g_return_if_fail(real != NULL);
+	g_return_if_fail(real->ref_count > 0);
+
+	if (g_atomic_int_dec_and_test(&real->ref_count)) {
 		pk_manifest_destroy(manifest);
-		g_slice_free(PkManifest, manifest);
+		g_slice_free(PkManifestReal, real);
 	}
-	EXIT;
 }
 
 /**
@@ -215,8 +224,9 @@ pk_manifest_unref (PkManifest *manifest)
 PkResolution
 pk_manifest_get_resolution (PkManifest *manifest) /* IN */
 {
-	g_return_val_if_fail(manifest != NULL, 0);
-	return manifest->resolution;
+	PkManifestReal *real = (PkManifestReal *)manifest;
+	g_return_val_if_fail(real != NULL, 0);
+	return real->resolution;
 }
 
 /**
@@ -232,8 +242,9 @@ pk_manifest_get_resolution (PkManifest *manifest) /* IN */
 gint
 pk_manifest_get_n_rows (PkManifest *manifest) /* IN */
 {
-	g_return_val_if_fail(manifest != NULL, 0);
-	return manifest->n_rows;
+	PkManifestReal *real = (PkManifestReal *)manifest;
+	g_return_val_if_fail(real != NULL, 0);
+	return real->n_rows;
 }
 
 /**
@@ -251,12 +262,14 @@ GType
 pk_manifest_get_row_type (PkManifest *manifest, /* IN */
                           gint        row)      /* IN */
 {
-	g_return_val_if_fail(manifest != NULL, G_TYPE_INVALID);
-	g_return_val_if_fail(manifest->rows != NULL, G_TYPE_INVALID);
-	g_return_val_if_fail(row > 0, G_TYPE_INVALID);
-	g_return_val_if_fail(row <= manifest->n_rows, G_TYPE_INVALID);
+	PkManifestReal *real = (PkManifestReal *)manifest;
 
-	return g_array_index(manifest->rows, PkManifestRow, --row).type;
+	g_return_val_if_fail(real != NULL, G_TYPE_INVALID);
+	g_return_val_if_fail(real->rows != NULL, G_TYPE_INVALID);
+	g_return_val_if_fail(row > 0, G_TYPE_INVALID);
+	g_return_val_if_fail(row <= real->n_rows, G_TYPE_INVALID);
+
+	return g_array_index(real->rows, PkManifestRow, --row).type;
 }
 
 /**
@@ -274,15 +287,15 @@ const gchar*
 pk_manifest_get_row_name (PkManifest *manifest, /* IN */
                           gint        row)      /* IN */
 {
+	PkManifestReal *real = (PkManifestReal *)manifest;
 	PkManifestRow *mrow;
 
-	g_return_val_if_fail(manifest != NULL, NULL);
+	g_return_val_if_fail(real != NULL, NULL);
 	g_return_val_if_fail(row > 0, NULL);
-	g_return_val_if_fail(row <= manifest->n_rows, NULL);
+	g_return_val_if_fail(row <= real->n_rows, NULL);
 
-	ENTRY;
-	mrow = &g_array_index(manifest->rows, PkManifestRow, row - 1);
-	RETURN(g_quark_to_string(mrow->name));
+	mrow = &g_array_index(real->rows, PkManifestRow, row - 1);
+	return g_quark_to_string(mrow->name);
 }
 
 /**
@@ -299,27 +312,12 @@ void
 pk_manifest_get_timespec (PkManifest      *manifest, /* IN */
                           struct timespec *ts)       /* OUT */
 {
-	g_return_if_fail(manifest != NULL);
+	PkManifestReal *real = (PkManifestReal *)manifest;
+
+	g_return_if_fail(real != NULL);
 	g_return_if_fail(ts != NULL);
 
-	*ts = manifest->ts;
-}
-
-/**
- * pk_manifest_get_time:
- * @manifest: (in): A #PkManifest.
- *
- * Retrieves the time of the manifest as a double. Microseconds are provided
- * as decimal precision.
- *
- * Returns: the time of the manifest as a double.
- * Side effects: None.
- */
-gdouble
-pk_manifest_get_time (PkManifest *manifest)
-{
-	g_return_val_if_fail(manifest != NULL, 0.0);
-	return manifest->time;
+	*ts = real->ts;
 }
 
 GType
@@ -329,12 +327,12 @@ pk_manifest_get_type (void)
 	GType _type_id;
 
 	if (g_once_init_enter((gsize *)&type_id)) {
-		_type_id = g_boxed_type_register_static("PkManifest",
-		                                        (GBoxedCopyFunc)pk_manifest_ref,
-		                                        (GBoxedFreeFunc)pk_manifest_unref);
+		_type_id =
+			g_boxed_type_register_static("PkManifest",
+			                             (GBoxedCopyFunc)pk_manifest_ref,
+			                             (GBoxedFreeFunc)pk_manifest_unref);
 		g_once_init_leave((gsize *)&type_id, _type_id);
 	}
-
 	return type_id;
 }
 
@@ -352,12 +350,13 @@ static gboolean
 decode (PkManifest *manifest,
         EggBuffer  *buffer)
 {
+	PkManifestReal *real = (PkManifestReal *)manifest;
 	guint field, tag, u32, len;
 	guint64 u64;
 	gsize end;
 	gint i;
 
-	g_return_val_if_fail(manifest != NULL, FALSE);
+	g_return_val_if_fail(real != NULL, FALSE);
 	g_return_val_if_fail(buffer != NULL, FALSE);
 
 	/* timestamp */
@@ -370,9 +369,9 @@ decode (PkManifest *manifest,
 	if (!egg_buffer_read_uint64(buffer, &u64)) {
 		return FALSE;
 	}
-	timespec_from_usec(&manifest->ts, u64);
-	manifest->time = manifest->ts.tv_sec
-	               + manifest->ts.tv_nsec / 1000000000.0;
+	timespec_from_usec(&real->ts, u64);
+	real->time = real->ts.tv_sec
+	           + real->ts.tv_nsec / 1000000000.0;
 
 	/* resolution */
 	if (!egg_buffer_read_tag(buffer, &field, &tag)) {
@@ -387,7 +386,7 @@ decode (PkManifest *manifest,
 	if (u32 > PK_RESOLUTION_HOUR) {
 		return FALSE;
 	}
-	manifest->resolution = u32;
+	real->resolution = u32;
 
 	/* source */
 	if (!egg_buffer_read_tag(buffer, &field, &tag)) {
@@ -399,7 +398,7 @@ decode (PkManifest *manifest,
 	if (!egg_buffer_read_uint(buffer, &u32)) {
 		return FALSE;
 	}
-	manifest->source_id = u32;
+	real->source_id = u32;
 
 	/* columns */
 	if (!egg_buffer_read_tag(buffer, &field, &tag)) {
@@ -466,16 +465,16 @@ decode (PkManifest *manifest,
 		row.type = row_type;
 		row.name = g_quark_from_string(name);
 
-		g_array_append_val(manifest->rows, row);
-		g_array_sort(manifest->rows, sort_func);
-		manifest->n_rows++;
+		g_array_append_val(real->rows, row);
+		g_array_sort(real->rows, sort_func);
+		real->n_rows++;
 	}
 
 	/* make sure all rows were sent */
-	for (i = 0; i < manifest->n_rows; i++) {
+	for (i = 0; i < real->n_rows; i++) {
 		PkManifestRow *row;
 
-		row = &g_array_index(manifest->rows, PkManifestRow, i);
+		row = &g_array_index(real->rows, PkManifestRow, i);
 		if (row->id != (i + 1)) {
 			return FALSE;
 		}
