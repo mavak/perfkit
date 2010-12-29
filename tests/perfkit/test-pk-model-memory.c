@@ -16,25 +16,49 @@ static void
 test_PkModelMemory_insert_tests (void)
 {
 	PkManifest *manifest;
+	PkModelIter iter;
 	PkSample *sample;
+	PkSample *sample2;
+	PkSample *sample3;
 	PkModel *model;
+	gint count;
 
 	manifest = pk_manifest_new_from_data(manifest_data, sizeof manifest_data);
 	g_assert(manifest);
 
-	sample = pk_sample_new_from_data(manifest_resolver, manifest,
-	                                 sample_data, sizeof sample_data,
-	                                 NULL);
+#define LOAD_SAMPLE(_n)                                  \
+    pk_sample_new_from_data(manifest_resolver, manifest, \
+                            (_n), sizeof (_n), NULL)
+
+	sample = LOAD_SAMPLE(sample_data);
 	g_assert(sample);
+
+	sample2 = LOAD_SAMPLE(sample_data2);
+	g_assert(sample2);
+
+	sample3 = LOAD_SAMPLE(sample_data3);
+	g_assert(sample3);
 
 	model = g_object_new(PK_TYPE_MODEL_MEMORY, NULL);
 	g_assert(model);
 
 	pk_model_insert_manifest(model, manifest);
 	pk_model_insert_sample(model, manifest, sample);
+	pk_model_insert_sample(model, manifest, sample2);
+	pk_model_insert_sample(model, manifest, sample3);
+
+	count = 0;
+	if (pk_model_get_iter_first(model, &iter)) {
+		do {
+			count++;
+		} while (pk_model_iter_next(model, &iter));
+	}
+	g_assert_cmpint(count, ==, 3);
 
 	pk_manifest_unref(manifest);
 	pk_sample_unref(sample);
+	pk_sample_unref(sample2);
+	pk_sample_unref(sample3);
 	g_object_unref(model);
 }
 
