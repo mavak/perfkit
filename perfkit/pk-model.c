@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "pk-marshal.h"
 #include "pk-model.h"
 
 
@@ -180,12 +181,37 @@ pk_model_get_value (PkModel     *model,
                     GQuark       key,
                     GValue      *value)
 {
+	PkModelPrivate *priv;
+	GClosure *closure;
+	GValue values[4] = {{ 0 }};
+
 	g_return_if_fail(PK_IS_MODEL(model));
 	g_return_if_fail(iter != NULL);
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(G_VALUE_TYPE(value));
 
-	return PK_MODEL_GET_CLASS(model)->get_value(model, iter, key, value);
+	priv = model->priv;
+
+	if (G_UNLIKELY((closure = g_hash_table_lookup(priv->builders, &key)))) {
+		g_value_init(&values[0], G_TYPE_OBJECT);
+		g_value_init(&values[1], G_TYPE_POINTER);
+		g_value_init(&values[2], G_TYPE_UINT);
+		g_value_init(&values[3], G_TYPE_VALUE);
+
+		g_value_set_object(&values[0], model);
+		g_value_set_pointer(&values[1], iter);
+		g_value_set_uint(&values[2], key);
+		g_value_set_boxed(&values[3], value);
+
+		g_closure_invoke(closure, NULL, 4, values, NULL);
+
+		g_value_unset(&values[0]);
+		g_value_unset(&values[1]);
+		g_value_unset(&values[2]);
+		g_value_unset(&values[3]);
+	} else {
+		PK_MODEL_GET_CLASS(model)->get_value(model, iter, key, value);
+	}
 }
 
 
@@ -248,6 +274,8 @@ pk_model_register_builder (PkModel        *model,
 	*pkey = key;
 	closure = g_cclosure_new(G_CALLBACK(builder), user_data,
 	                         (GClosureNotify)notify);
+	g_closure_set_marshal(closure,
+	                      pk_cclosure_marshal_VOID__POINTER_UINT_BOXED);
 	g_hash_table_insert(priv->builders, pkey, closure);
 	g_signal_emit(model, signals[BUILDER_ADDED], 0, key);
 }
