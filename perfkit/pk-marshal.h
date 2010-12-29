@@ -6,13 +6,13 @@
 
 G_BEGIN_DECLS
 
-/* VOID:POINTER,UINT,BOXED (./pk-marshal.list:1) */
-extern void pk_cclosure_marshal_VOID__POINTER_UINT_BOXED (GClosure     *closure,
-                                                          GValue       *return_value,
-                                                          guint         n_param_values,
-                                                          const GValue *param_values,
-                                                          gpointer      invocation_hint,
-                                                          gpointer      marshal_data);
+/* VOID:POINTER,UINT,POINTER (./pk-marshal.list:1) */
+extern void pk_cclosure_marshal_VOID__POINTER_UINT_POINTER (GClosure     *closure,
+                                                            GValue       *return_value,
+                                                            guint         n_param_values,
+                                                            const GValue *param_values,
+                                                            gpointer      invocation_hint,
+                                                            gpointer      marshal_data);
 
 G_END_DECLS
 

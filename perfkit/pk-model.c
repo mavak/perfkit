@@ -196,12 +196,12 @@ pk_model_get_value (PkModel     *model,
 		g_value_init(&values[0], G_TYPE_OBJECT);
 		g_value_init(&values[1], G_TYPE_POINTER);
 		g_value_init(&values[2], G_TYPE_UINT);
-		g_value_init(&values[3], G_TYPE_VALUE);
+		g_value_init(&values[3], G_TYPE_POINTER);
 
 		g_value_set_object(&values[0], model);
 		g_value_set_pointer(&values[1], iter);
 		g_value_set_uint(&values[2], key);
-		g_value_set_boxed(&values[3], value);
+		g_value_set_pointer(&values[3], value);
 
 		g_closure_invoke(closure, NULL, 4, values, NULL);
 
@@ -275,7 +275,7 @@ pk_model_register_builder (PkModel        *model,
 	closure = g_cclosure_new(G_CALLBACK(builder), user_data,
 	                         (GClosureNotify)notify);
 	g_closure_set_marshal(closure,
-	                      pk_cclosure_marshal_VOID__POINTER_UINT_BOXED);
+	                      pk_cclosure_marshal_VOID__POINTER_UINT_POINTER);
 	g_hash_table_insert(priv->builders, pkey, closure);
 	g_signal_emit(model, signals[BUILDER_ADDED], 0, key);
 }
