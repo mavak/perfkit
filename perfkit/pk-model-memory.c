@@ -20,12 +20,6 @@
 #include "pk-model-memory.h"
 
 
-#define IS_RELAXED(f)      ((0x2 & f) == 0)
-#define IS_RELAXED_LEFT(f) (IS_RELAXED(f) && ((RELAXED_LEFT & f) == 0))
-#define RELAXED_LEFT       (0x0)
-#define RELAXED_RIGHT      (0x1)
-
-
 struct _PkModelMemoryPrivate
 {
 	GPtrArray  *manifests;
@@ -51,45 +45,45 @@ compare_double (const gdouble *xp,
 
 
 static gint
-pk_model_memory_binary_search (PkModelMemory *memory,
-                               gdouble        target,
-                               gdouble        other,
-                               guint32        flags)
+pk_model_memory_find_nearest_sample (PkModelMemory *memory,
+                                     gdouble        target_time,
+                                     gdouble        other_time,
+                                     gboolean       prefer_right)
 {
 	PkModelMemoryPrivate *priv;
-	GPtrArray *ar;
 	PkSample **samples;
-	gdouble current;
-	gint left;
+	gint left = 0;
 	gint middle = 0;
-	gint ret;
+	gint ret = -1;
 	gint right;
+	guint n_samples;
 
 	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), -1);
 
 	priv = memory->priv;
 
-	ar = priv->samples;
-	if (!ar->len) {
+	/*
+	 * If we have no samples stored, we can immediately fail.
+	 */
+	if (!(n_samples = priv->samples->len)) {
 		return -1;
 	}
 
-	samples = (PkSample **)ar->pdata;
-	left = 0;
-	right = ar->len - 1;
+	/*
+	 * Lets use the array of samples directly. Makes the code a bit
+	 * cleaner and less macros used.
+	 */
+	samples = (PkSample **)priv->samples->pdata;
+	right = n_samples - 1;
 
+	/*
+	 * Binary search through the array of samples until we find a match
+	 * or have exhausted our divide-and-conquer (which with a normal
+	 * binary search would be a failure).
+	 */
 	while (left <= right) {
-		/*
-		 * Get the new middle for this iteration.
-		 */
 		middle = (left + right) / 2;
-
-		/*
-		 * Retrieve the time of this sample and compare it to our target.
-		 */
-		current = pk_sample_get_time(samples[middle]);
-		ret = compare_double(&current, &target);
-
+		ret = compare_double(&samples[middle]->time, &target_time);
 		switch (ret) {
 		case -1:
 			left = middle + 1;
@@ -98,9 +92,6 @@ pk_model_memory_binary_search (PkModelMemory *memory,
 			right = middle - 1;
 			break;
 		case 0:
-			if (!IS_RELAXED(flags)) {
-				return middle;
-			}
 			goto walk;
 		default:
 			g_assert_not_reached();
@@ -109,25 +100,31 @@ pk_model_memory_binary_search (PkModelMemory *memory,
 	}
 
   walk:
-
-	if (IS_RELAXED_LEFT(flags)) {
-		while (middle >= 0 && pk_sample_get_time(samples[middle]) >= target) {
+	/*
+	 * This is a twist on the typical binary search. We didn't find the actual
+	 * time that we were looking for (which is going to be pretty common).
+	 * However, we'd like either the closest item older, or closest item
+	 * newer, than the target time. This walks in either direction based
+	 * on @prefer_right.
+	 */
+	if (!prefer_right) {
+		while (middle >= 0 && samples[middle]->time >= target_time) {
 			middle--;
 		}
 		if (middle < 0) {
-			if (pk_sample_get_time(samples[0]) < other) {
+			if (samples[0]->time < other_time) {
 				return 0;
 			}
 			return -1;
 		}
 		return middle;
 	} else {
-		while (middle < ar->len && pk_sample_get_time(samples[middle]) <= target) {
+		while (middle < n_samples && samples[middle]->time <= target_time) {
 			middle++;
 		}
-		if (middle >= ar->len) {
-			if (pk_sample_get_time(samples[ar->len - 1]) > other) {
-				return ar->len - 1;
+		if (middle >= n_samples) {
+			if (samples[n_samples-1]->time > other_time) {
+				return n_samples - 1;
 			}
 			return -1;
 		}
@@ -243,12 +240,11 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 	 */
 
 	begin_idx =
-		pk_model_memory_binary_search(memory, begin_time, end_time,
-		                              RELAXED_LEFT);
+		pk_model_memory_find_nearest_sample(memory, begin_time,
+		                                    end_time, FALSE);
 	end_idx =
-		pk_model_memory_binary_search(memory, begin_time, end_time,
-		                              RELAXED_RIGHT);
-
+		pk_model_memory_find_nearest_sample(memory, begin_time,
+		                                    end_time, TRUE);
 	if (begin_idx < 0 || end_idx < 0) {
 		return FALSE;
 	}
