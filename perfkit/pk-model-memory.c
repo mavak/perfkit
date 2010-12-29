@@ -357,6 +357,8 @@ pk_model_memory_get_value (PkModel     *model,
 	PkModelMemory *memory = (PkModelMemory *)model;
 	PkManifest *manifest = NULL;
 	PkSample *sample = NULL;
+	GValue tmp_value;
+	GType type;
 	gint end_index;
 	gint row_id;
 	gint begin_index;
@@ -376,7 +378,15 @@ pk_model_memory_get_value (PkModel     *model,
 	g_assert(sample);
 
 	row_id = pk_manifest_get_row_id_from_quark(manifest, key);
-	pk_sample_get_value(sample, row_id, value);
+	type = pk_manifest_get_row_type(manifest, row_id);
+	if (G_VALUE_HOLDS(value, type)) {
+		pk_sample_get_value(sample, row_id, value);
+	} else {
+		memset(&tmp_value, 0, sizeof tmp_value);
+		pk_sample_get_value(sample, row_id, &tmp_value);
+		g_value_transform(&tmp_value, value);
+		g_value_unset(&tmp_value);
+	}
 }
 
 
