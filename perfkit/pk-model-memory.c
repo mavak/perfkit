@@ -233,22 +233,13 @@ set_iter (PkModelMemory *memory,
           PkModelIter   *iter,
           PkSample      *sample)
 {
-	PkModelMemoryPrivate *priv;
 	gint manifest_idx;
 
-	priv = memory->priv;
-
-	/*
-	 * Binary search for the manifest owned by this sample.
-	 */
 	manifest_idx =
 		pk_model_memory_find_manifest_for_time(memory, sample->time);
 	g_assert_cmpint(manifest_idx, >, 0);
-
-	/*
-	 * Set the items within the iterator.
-	 */
-	iter->user_data = g_ptr_array_index(priv->manifests, manifest_idx);
+	iter->user_data =
+		g_ptr_array_index(memory->priv->manifests, manifest_idx);
 	iter->user_data2 = sample;
 }
 
@@ -303,8 +294,7 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 	priv = memory->priv;
 
 	/*
-	 * TODO: Binary search for time ranges.
-	 *       Store time range
+	 * TODO: Store time range
 	 */
 
 	begin_idx =
