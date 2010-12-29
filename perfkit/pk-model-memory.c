@@ -28,7 +28,7 @@ struct _PkModelMemoryPrivate
 };
 
 
-G_DEFINE_TYPE(PkModelMemory, pk_model_memory, G_TYPE_OBJECT)
+G_DEFINE_TYPE(PkModelMemory, pk_model_memory, PK_TYPE_MODEL)
 
 
 static inline gint
@@ -460,7 +460,7 @@ pk_model_memory_init (PkModelMemory *memory)
 	                                           PkModelMemoryPrivate);
 
 	memory->priv->manifests = g_ptr_array_new();
-	memory->priv->manifests_index = g_hash_table_new(g_direct_hash,
-	                                                 g_direct_equal);
+	memory->priv->manifests_index =
+		g_hash_table_new(g_direct_hash, g_direct_equal);
 	memory->priv->samples = g_ptr_array_new();
 }

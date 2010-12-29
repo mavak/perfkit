@@ -37,7 +37,7 @@ typedef struct _PkModelMemoryPrivate PkModelMemoryPrivate;
 
 struct _PkModelMemory
 {
-	GObject parent;
+	PkModel parent;
 
 	/*< private >*/
 	PkModelMemoryPrivate *priv;
@@ -45,7 +45,7 @@ struct _PkModelMemory
 
 struct _PkModelMemoryClass
 {
-	GObjectClass parent_class;
+	PkModelClass parent_class;
 };
 
 GType pk_model_memory_get_type (void) G_GNUC_CONST;
