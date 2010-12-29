@@ -23,6 +23,7 @@ struct _PkModelPrivate
 {
 	GHashTable *accumulators;
 	GHashTable *builders;
+	gdouble     end_time;
 };
 
 
@@ -35,10 +36,21 @@ enum
 };
 
 
+enum
+{
+	PROP_0,
+
+	PROP_END_TIME,
+
+	LAST_PROP
+};
+
+
 G_DEFINE_ABSTRACT_TYPE(PkModel, pk_model, G_TYPE_OBJECT)
 
 
-static guint signals[LAST_SIGNAL] = { 0 };
+static GParamSpec *pspecs[LAST_PROP] = { NULL };
+static guint       signals[LAST_SIGNAL] = { 0 };
 
 
 void
@@ -113,6 +125,11 @@ pk_model_insert_sample (PkModel    *model,
 	g_return_if_fail(PK_IS_MODEL(model));
 	g_return_if_fail(manifest != NULL);
 	g_return_if_fail(sample != NULL);
+
+	if (G_LIKELY(sample->time > model->priv->end_time)) {
+		model->priv->end_time = sample->time;
+		g_object_notify_by_pspec(G_OBJECT(model), pspecs[PROP_END_TIME]);
+	}
 
 	PK_MODEL_GET_CLASS(model)->insert_sample(model, manifest, sample);
 }
@@ -236,6 +253,14 @@ pk_model_register_builder (PkModel        *model,
 }
 
 
+gdouble
+pk_model_get_end_time (PkModel *model)
+{
+	g_return_val_if_fail(PK_IS_MODEL(model), 0.0);
+	return model->priv->end_time;
+}
+
+
 #define GETTER(_name, _type, _TYPE)               \
 _type                                             \
 pk_model_get_##_name (PkModel     *model,         \
@@ -307,6 +332,33 @@ pk_model_finalize (GObject *object)
 
 
 /**
+ * pk_model_set_property:
+ * @object: (in): A #GObject.
+ * @prop_id: (in): The property identifier.
+ * @value: (out): The given property.
+ * @pspec: (in): A #ParamSpec.
+ *
+ * Get a given #GObject property.
+ */
+static void
+pk_model_get_property (GObject    *object,
+                       guint       prop_id,
+                       GValue     *value,
+                       GParamSpec *pspec)
+{
+	PkModel *model = PK_MODEL(object);
+
+	switch (prop_id) {
+	case PROP_END_TIME:
+		g_value_set_double(value, model->priv->end_time);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+	}
+}
+
+
+/**
  * pk_model_class_init:
  * @klass: (in): A #PkModelClass.
  *
@@ -322,7 +374,19 @@ pk_model_class_init (PkModelClass *klass)
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = pk_model_finalize;
+	object_class->get_property = pk_model_get_property;
 	g_type_class_add_private(object_class, sizeof(PkModelPrivate));
+
+	pspecs[PROP_END_TIME] = 
+		g_param_spec_double("end-time",
+		                    "EndTime",
+		                    "The most recent sample time",
+		                    0.0,
+		                    G_MAXDOUBLE,
+		                    0.0,
+		                    G_PARAM_READABLE);
+	g_object_class_install_property(object_class, PROP_END_TIME,
+	                                pspecs[PROP_END_TIME]);
 
 	signals[ACCUMULATOR_ADDED] = g_signal_new("accumulator-added",
 	                                          PK_TYPE_MODEL,

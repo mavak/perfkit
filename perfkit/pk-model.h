@@ -128,6 +128,7 @@ void     pk_model_accumulate_uint64    (PkModel             *model,
 gdouble  pk_model_get_double           (PkModel             *model,
                                         PkModelIter         *iter,
                                         GQuark               key);
+gdouble  pk_model_get_end_time         (PkModel             *model);
 gfloat   pk_model_get_float            (PkModel             *model,
                                         PkModelIter         *iter,
                                         GQuark               key);
