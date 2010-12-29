@@ -450,8 +450,7 @@ ppg_model_insert_sample (PpgModel   *model,
 	 * Get the relative time to the start of the session and store it
 	 * so we can binary search when looking for a sample based on time.
 	 */
-	time_ = pk_sample_get_time(sample);
-	time_ = ppg_session_convert_time(priv->session, time_);
+	time_ = ppg_session_convert_time(priv->session, sample->time);
 	g_array_append_val(priv->sample_times, time_);
 
 	g_signal_emit(model, signals[CHANGED], 0);
@@ -611,8 +610,7 @@ ppg_model_iter_next (PpgModel     *model,
 	/*
 	 * Update the time position of the sample.
 	 */
-	iter->time = ppg_session_convert_time(priv->session,
-	                                      pk_sample_get_time(iter->sample));
+	iter->time = ppg_session_convert_time(priv->session, iter->sample->time);
 
 	/*
 	 * The sample is guaranteed to be within either the current manifest
@@ -621,8 +619,7 @@ ppg_model_iter_next (PpgModel     *model,
 	 */
 	if ((next_manifest = g_hash_table_lookup(priv->next_manifests,
 	                                         iter->manifest))) {
-		if (pk_manifest_get_time(next_manifest) <=
-		    pk_sample_get_time(iter->sample)) {
+		if (next_manifest->time <= iter->sample->time) {
 			iter->manifest = next_manifest;
 		}
 	}
@@ -650,7 +647,7 @@ ppg_model_get_iter_first (PpgModel     *model,
 			iter->begin = 0;
 			iter->end = priv->samples->len - 1;
 			iter->time = ppg_session_convert_time(priv->session,
-			                                      pk_sample_get_time(iter->sample));
+			                                      iter->sample->time);
 			return TRUE;
 		}
 	}
@@ -805,7 +802,7 @@ ppg_model_get_iter_at (PpgModel      *model,
 	iter->index = begin_idx;
 	iter->end = end_idx;
 	iter->time = ppg_session_convert_time(priv->session,
-	                                      pk_sample_get_time(iter->sample));
+	                                      iter->sample->time);
 
 	return TRUE;
 }
@@ -876,6 +873,5 @@ ppg_model_get_last_time (PpgModel *model)
 	}
 
 	sample = g_ptr_array_index(priv->samples, priv->samples->len - 1);
-	return ppg_session_convert_time(priv->session,
-	                                pk_sample_get_time(sample));
+	return ppg_session_convert_time(priv->session, sample->time);
 }
