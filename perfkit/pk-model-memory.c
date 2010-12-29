@@ -23,7 +23,6 @@
 struct _PkModelMemoryPrivate
 {
 	GPtrArray  *manifests;
-	GHashTable *manifests_index;
 	GPtrArray  *samples;
 };
 
@@ -199,16 +198,12 @@ pk_model_memory_insert_manifest (PkModel    *model,
 {
 	PkModelMemory *memory = (PkModelMemory *)model;
 	PkModelMemoryPrivate *priv;
-	gint index;
 
 	g_return_if_fail(PK_IS_MODEL_MEMORY(memory));
 
 	priv = memory->priv;
 
 	g_ptr_array_add(priv->manifests, pk_manifest_ref(manifest));
-	index = priv->manifests->len;
-	g_hash_table_insert(priv->manifests_index, manifest,
-	                    GINT_TO_POINTER(index));
 }
 
 
@@ -402,9 +397,6 @@ pk_model_memory_finalize (GObject *object)
 {
 	PkModelMemoryPrivate *priv = PK_MODEL_MEMORY(object)->priv;
 
-	g_hash_table_destroy(priv->manifests_index);
-	priv->manifests_index = NULL;
-
 	g_ptr_array_foreach(priv->manifests, (GFunc)pk_manifest_unref, NULL);
 	g_ptr_array_free(priv->manifests, TRUE);
 	priv->manifests = NULL;
@@ -462,7 +454,5 @@ pk_model_memory_init (PkModelMemory *memory)
 	                                           PkModelMemoryPrivate);
 
 	memory->priv->manifests = g_ptr_array_new();
-	memory->priv->manifests_index =
-		g_hash_table_new(g_direct_hash, g_direct_equal);
 	memory->priv->samples = g_ptr_array_new();
 }
