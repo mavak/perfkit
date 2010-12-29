@@ -24,6 +24,8 @@
 #include "pk-connection.h"
 #include "pk-connection-lowlevel.h"
 #include "pk-manifest.h"
+#include "pk-model.h"
+#include "pk-model-memory.h"
 #include "pk-sample.h"
 #include "pk-version.h"
 
