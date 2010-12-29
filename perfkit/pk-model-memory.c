@@ -237,6 +237,7 @@ set_iter (PkModelMemory *memory,
 {
 	gint manifest_idx;
 
+	iter->time = sample->time;
 	manifest_idx =
 		pk_model_memory_find_manifest_for_time(memory, sample->time);
 	g_assert_cmpint(manifest_idx, >, 0);
