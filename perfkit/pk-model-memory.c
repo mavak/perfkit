@@ -228,6 +228,7 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 {
 	PkModelMemoryPrivate *priv;
 	PkModelMemory *memory = (PkModelMemory *)model;
+	PkSample *sample;
 	gint begin_idx;
 	gint end_idx;
 
@@ -246,7 +247,7 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 		                              RELAXED_LEFT);
 	end_idx =
 		pk_model_memory_binary_search(memory, begin_time, end_time,
-		                              RELAXED_LEFT);
+		                              RELAXED_RIGHT);
 
 	if (begin_idx < 0 || end_idx < 0) {
 		return FALSE;
@@ -258,6 +259,7 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 	/*
 	 * Create for index range.
 	 */
+	sample = g_ptr_array_index(priv->samples, begin_idx);
 
 	return FALSE;
 }
