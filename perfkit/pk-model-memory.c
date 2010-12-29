@@ -231,7 +231,9 @@ pk_model_memory_insert_sample (PkModel    *model,
 static inline void
 set_iter (PkModelMemory *memory,
           PkModelIter   *iter,
-          PkSample      *sample)
+          PkSample      *sample,
+          gint           index,
+          gint           end_index)
 {
 	gint manifest_idx;
 
@@ -241,6 +243,8 @@ set_iter (PkModelMemory *memory,
 	iter->user_data =
 		g_ptr_array_index(memory->priv->manifests, manifest_idx);
 	iter->user_data2 = sample;
+	iter->user_data3 = GINT_TO_POINTER(index);
+	iter->user_data4 = GINT_TO_POINTER(end_index);
 }
 
 
@@ -248,10 +252,14 @@ static inline void
 get_iter (PkModelMemory  *memory,
           PkModelIter    *iter,
           PkManifest    **manifest,
-          PkSample      **sample)
+          PkSample      **sample,
+          gint           *index,
+          gint           *end_index)
 {
 	*manifest = iter->user_data;
 	*sample = iter->user_data2;
+	*index = GPOINTER_TO_INT(iter->user_data3);
+	*end_index = GPOINTER_TO_INT(iter->user_data4);
 }
 
 
@@ -269,7 +277,8 @@ pk_model_memory_get_iter_first (PkModel     *model,
 	priv = memory->priv;
 
 	if ((ret = !!priv->samples->len)) {
-		set_iter(memory, iter, g_ptr_array_index(priv->samples, 0));
+		set_iter(memory, iter, g_ptr_array_index(priv->samples, 0),
+		         0, priv->samples->len - 1);
 	}
 	return ret;
 }
@@ -294,7 +303,7 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 	priv = memory->priv;
 
 	/*
-	 * TODO: Store time range
+	 * TODO: Store and support aggregate_time.
 	 */
 
 	begin_idx =
@@ -311,11 +320,12 @@ pk_model_memory_get_iter_for_range (PkModel     *model,
 	g_assert_cmpint(end_idx, <, priv->samples->len);
 
 	/*
-	 * Create for index range.
+	 * Create iterator using discovered indexes.
 	 */
 	sample = g_ptr_array_index(priv->samples, begin_idx);
+	set_iter(memory, iter, sample, begin_idx, end_idx);
 
-	return FALSE;
+	return TRUE;
 }
 
 
@@ -329,7 +339,9 @@ pk_model_memory_get_value (PkModel     *model,
 	PkModelMemory *memory = (PkModelMemory *)model;
 	PkManifest *manifest;
 	PkSample *sample;
+	gint end_index;
 	gint row_id;
+	gint index;
 
 	g_return_if_fail(PK_IS_MODEL_MEMORY(memory));
 
@@ -341,7 +353,7 @@ pk_model_memory_get_value (PkModel     *model,
 	 *       use a quark like system for all keys and use them.
 	 */
 
-	get_iter(memory, iter, &manifest, &sample);
+	get_iter(memory, iter, &manifest, &sample, &index, &end_index);
 	row_id = pk_manifest_get_row_id_from_quark(manifest, key);
 	pk_sample_get_value(sample, row_id, value);
 }
@@ -355,18 +367,19 @@ pk_model_memory_iter_next (PkModel     *model,
 	PkModelMemory *memory = (PkModelMemory *)model;
 	PkManifest *manifest;
 	PkSample *sample;
+	gint end_index;
+	gint index;
 
 	g_return_val_if_fail(PK_IS_MODEL_MEMORY(memory), FALSE);
 	g_return_val_if_fail(iter != NULL, FALSE);
 
 	priv = memory->priv;
 
-	get_iter(memory, iter, &manifest, &sample);
-
-	/*
-	 * TODO: Get the next sample in the array. Update the manifest
-	 *       if necessary.
-	 */
+	get_iter(memory, iter, &manifest, &sample, &index, &end_index);
+	if (++index <= end_index) {
+		set_iter(memory, iter, sample, index, end_index);
+		return TRUE;
+	}
 
 	return FALSE;
 }
