@@ -39,6 +39,7 @@ DEFINE_ACTION_CALLBACK(next_instrument);
 DEFINE_ACTION_CALLBACK(prefs);
 DEFINE_ACTION_CALLBACK(prev_instrument);
 DEFINE_ACTION_CALLBACK(quit);
+DEFINE_ACTION_CALLBACK(target_spawn);
 DEFINE_ACTION_CALLBACK(zoom_in);
 DEFINE_ACTION_CALLBACK(zoom_instrument_in);
 DEFINE_ACTION_CALLBACK(zoom_instrument_out);
@@ -148,7 +149,13 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  NULL,
 	  ACTION_CALLBACK(prev_instrument) },
 
-	{ "target-spawn", NULL, N_("Spawn a new process"), "<control>t", NULL, NULL },
+	{ "target-spawn",
+	  NULL,
+	  N_("Spawn a new process"),
+	  "<control>t",
+	  NULL,
+	  ACTION_CALLBACK(target_spawn) },
+
 	{ "target-existing", NULL, N_("Select an existing process"), NULL, NULL, NULL },
 	{ "target-none", NULL, N_("No target"), NULL, NULL, NULL },
 

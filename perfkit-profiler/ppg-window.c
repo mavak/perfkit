@@ -27,6 +27,7 @@
 #include "ppg-runtime.h"
 #include "ppg-session.h"
 #include "ppg-session-view.h"
+#include "ppg-spawn-process-dialog.h"
 #include "ppg-timer-tool-item.h"
 #include "ppg-util.h"
 #include "ppg-window.h"
@@ -286,6 +287,21 @@ ppg_window_prefs_activate (GtkAction *action,
 	                 G_CALLBACK(gtk_widget_hide_on_delete),
 	                 NULL);
 	gtk_dialog_run(GTK_DIALOG(prefs));
+}
+
+
+static void
+ppg_window_target_spawn_activate (GtkAction *action,
+                                  PpgWindow *window)
+{
+	GtkWidget *dialog;
+
+	dialog = g_object_new(PPG_TYPE_SPAWN_PROCESS_DIALOG,
+	                      "transient-for", window,
+	                      "session", window->priv->session,
+	                      NULL);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
 
 
