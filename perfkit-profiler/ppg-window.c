@@ -20,6 +20,7 @@
 #include <perfkit/perfkit.h>
 
 #include "ppg-actions.h"
+#include "ppg-menu-tool-item.h"
 #include "ppg-session.h"
 #include "ppg-session-view.h"
 #include "ppg-timer-tool-item.h"
@@ -39,6 +40,7 @@ struct _PpgWindowPrivate
 
 	GtkWidget      *menubar;
 	GtkWidget      *session_view;
+	GtkWidget      *target_tool_item;
 	GtkWidget      *timer_tool_item;
 	GtkWidget      *toolbar;
 };
@@ -85,6 +87,15 @@ ppg_window_set_uri (PpgWindow   *window,
 	priv->uri = g_strdup(uri);
 	session = g_object_new(PPG_TYPE_SESSION, "connection", connection, NULL);
 	g_object_set(priv->session_view, "session", session, NULL);
+}
+
+
+static GtkAction*
+ppg_window_get_action (PpgWindow   *window,
+                       const gchar *action)
+{
+	g_return_val_if_fail(PPG_IS_WINDOW(window), NULL);
+	return gtk_action_group_get_action(window->priv->actions, action);
 }
 
 
@@ -213,14 +224,29 @@ ppg_window_init (PpgWindow *window)
 {
 	PpgWindowPrivate *priv;
 	GtkWidget *vbox;
+	GtkWidget *mb_target_existing;
+	GtkWidget *mb_visualizers;
+	GtkWidget *target_menu;
+	GtkWidget *target_existing;
 
 	window->priv = G_TYPE_INSTANCE_GET_PRIVATE(window, PPG_TYPE_WINDOW,
 	                                           PpgWindowPrivate);
 	priv = window->priv;
 
+	g_object_set(window,
+	             "title", _(PRODUCT_NAME),
+	             "default-width", 800,
+	             "default-height", 494,
+	             "window-position", GTK_WIN_POS_CENTER,
+	             NULL);
+
 	ppg_util_load_ui(GTK_WIDGET(window), &priv->actions, ppg_window_ui,
 	                 "/menubar", &priv->menubar,
+	                 "/menubar/instrument/visualizers", &mb_visualizers,
+	                 "/menubar/profiler/target/target-existing", &mb_target_existing,
 	                 "/toolbar", &priv->toolbar,
+	                 "/target-popup", &target_menu,
+	                 "/target-popup/target-existing", &target_existing,
 	                 NULL);
 
 	vbox = g_object_new(GTK_TYPE_VBOX,
@@ -245,8 +271,23 @@ ppg_window_init (PpgWindow *window)
 	                                  "expand", TRUE,
 	                                  NULL);
 
+	priv->target_tool_item = g_object_new(PPG_TYPE_MENU_TOOL_ITEM,
+	                                      "label", _("Select target ..."),
+	                                      "menu", target_menu,
+	                                      "visible", TRUE,
+	                                      "width-request", 175,
+	                                      NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(priv->toolbar),
+	                                  priv->target_tool_item,
+	                                  "expand", FALSE,
+	                                  "homogeneous", FALSE,
+	                                  NULL);
+
 	priv->session_view = g_object_new(PPG_TYPE_SESSION_VIEW,
 	                                  "visible", TRUE,
 	                                  NULL);
 	gtk_container_add(GTK_CONTAINER(vbox), priv->session_view);
+	g_object_bind_property(ppg_window_get_action(window, "show-data"),
+	                       "active", priv->session_view, "show_data",
+	                       G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
 }
