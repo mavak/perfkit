@@ -125,7 +125,9 @@ ppg_cpu_instrument_renderer_disposed (gpointer  user_data,
  * Side effects: None.
  */
 static PpgVisualizer*
-ppg_cpu_instrument_combined_cb (PpgCpuInstrument *instrument)
+ppg_cpu_instrument_combined_cb (PpgVisualizerEntry  *entry,
+                                PpgCpuInstrument    *instrument,
+                                GError             **error)
 {
 	PpgCpuInstrumentPrivate *priv;
 	PpgRendererLine *renderer;
@@ -324,9 +326,9 @@ ppg_cpu_instrument_sample_cb (PkManifest *manifest,
  * Side effects: None.
  */
 static void
-ppg_cpu_instrument_set_handlers_cb (GObject *object,
-                                       GAsyncResult *result,
-                                       gpointer user_data)
+ppg_cpu_instrument_set_handlers_cb (GObject      *object,
+                                    GAsyncResult *result,
+                                    gpointer      user_data)
 {
 	PpgCpuInstrument *instrument = (PpgCpuInstrument *)user_data;
 	PpgCpuInstrumentPrivate *priv;
@@ -512,6 +514,10 @@ ppg_cpu_instrument_init (PpgCpuInstrument *instrument)
 	instrument->priv = G_TYPE_INSTANCE_GET_PRIVATE(instrument,
 	                                               PPG_TYPE_CPU_INSTRUMENT,
 	                                               PpgCpuInstrumentPrivate);
+
+	g_object_set(instrument,
+	             "title", _("CPU"),
+	             NULL);
 
 	ppg_instrument_register_visualizers(PPG_INSTRUMENT(instrument),
 	                                    G_N_ELEMENTS(visualizer_entries),
