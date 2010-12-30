@@ -270,7 +270,9 @@ gdkevent_dispatcher (GdkEvent *event,
 	case GDK_DROP_FINISHED:
 	case GDK_CLIENT_EVENT:
 	case GDK_VISIBILITY_NOTIFY:
+#if !GTK_CHECK_VERSION(2, 91, 0)
 	case GDK_NO_EXPOSE:
+#endif
 	case GDK_SCROLL:
 	case GDK_WINDOW_STATE:
 	case GDK_SETTING:
