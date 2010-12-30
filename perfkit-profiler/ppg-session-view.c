@@ -136,6 +136,66 @@ ppg_session_view_move_down (PpgSessionView *view)
 }
 
 
+void
+ppg_session_view_move_forward (PpgSessionView *view)
+{
+	PpgSessionViewPrivate *priv;
+	gdouble lower;
+	gdouble page_size;
+	gdouble step_increment;
+	gdouble upper;
+	gdouble value;
+
+	g_return_if_fail(PPG_IS_SESSION_VIEW(view));
+
+	priv = view->priv;
+
+	g_object_get(priv->hadj,
+	             "lower", &lower,
+	             "page-size", &page_size,
+	             "step-increment", &step_increment,
+	             "upper", &upper,
+	             "value", &value,
+	             NULL);
+
+	value += step_increment;
+
+	g_object_set(priv->hadj,
+	             "value", CLAMP(value, lower, upper - page_size),
+	             NULL);
+}
+
+
+void
+ppg_session_view_move_backward (PpgSessionView *view)
+{
+	PpgSessionViewPrivate *priv;
+	gdouble lower;
+	gdouble page_size;
+	gdouble step_increment;
+	gdouble upper;
+	gdouble value;
+
+	g_return_if_fail(PPG_IS_SESSION_VIEW(view));
+
+	priv = view->priv;
+
+	g_object_get(priv->hadj,
+	             "lower", &lower,
+	             "page-size", &page_size,
+	             "step-increment", &step_increment,
+	             "upper", &upper,
+	             "value", &value,
+	             NULL);
+
+	value -= step_increment;
+
+	g_object_set(priv->hadj,
+	             "value", CLAMP(value, lower, upper - page_size),
+	             NULL);
+}
+
+
 /**
  * ppg_session_view_move_up:
  * @view: (in): A #PpgSessionView.

@@ -31,12 +31,14 @@ G_BEGIN_DECLS
 #define ACTION_CALLBACK(_n) G_CALLBACK(ppg_window_##_n##_activate)
 
 DEFINE_ACTION_CALLBACK(add_instrument);
+DEFINE_ACTION_CALLBACK(move_forward);
+DEFINE_ACTION_CALLBACK(move_backward);
 DEFINE_ACTION_CALLBACK(next_instrument);
 DEFINE_ACTION_CALLBACK(prev_instrument);
 DEFINE_ACTION_CALLBACK(quit);
+DEFINE_ACTION_CALLBACK(zoom_in);
 DEFINE_ACTION_CALLBACK(zoom_instrument_in);
 DEFINE_ACTION_CALLBACK(zoom_instrument_out);
-DEFINE_ACTION_CALLBACK(zoom_in);
 DEFINE_ACTION_CALLBACK(zoom_one);
 DEFINE_ACTION_CALLBACK(zoom_out);
 
@@ -178,8 +180,19 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  NULL,
 	  ACTION_CALLBACK(zoom_one) },
 
-	{ "go-forward", NULL, N_("Move Forward in Time"), "l", NULL, NULL },
-	{ "go-back", NULL, N_("Move Backward in Time"), "h", NULL, NULL },
+	{ "go-forward",
+	  NULL,
+	  N_("Move Forward in Time"),
+	  "l",
+	  NULL,
+	  ACTION_CALLBACK(move_forward) },
+
+	{ "go-back",
+	  NULL,
+	  N_("Move Backward in Time"),
+	  "h",
+	  NULL,
+	  ACTION_CALLBACK(move_backward) },
 
 	{ "zoom-in-instrument",
 	  NULL,

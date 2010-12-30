@@ -68,6 +68,8 @@ PpgInstrumentView*
          ppg_session_view_get_selected_item  (PpgSessionView     *view);
 void     ppg_session_view_set_selected_item  (PpgSessionView     *view,
                                               PpgInstrumentView  *instrument_view);
+void     ppg_session_view_move_forward       (PpgSessionView     *view);
+void     ppg_session_view_move_backward      (PpgSessionView     *view);
 void     ppg_session_view_move_up            (PpgSessionView     *view);
 void     ppg_session_view_move_down          (PpgSessionView     *view);
 gboolean ppg_session_view_get_selection      (PpgSessionView     *view,

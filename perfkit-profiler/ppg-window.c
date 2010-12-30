@@ -211,6 +211,28 @@ ppg_window_zoom_instrument_out_activate (GtkAction *action,
 
 
 static void
+ppg_window_move_forward_activate (GtkAction *action,
+                                  PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	ppg_session_view_move_forward(
+			PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
+ppg_window_move_backward_activate (GtkAction *action,
+                                   PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	ppg_session_view_move_backward(
+			PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
 ppg_window_quit_activate (GtkAction *action,
                           PpgWindow *window)
 {
