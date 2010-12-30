@@ -23,6 +23,7 @@
 #include "ppg-actions.h"
 #include "ppg-add-instrument-dialog.h"
 #include "ppg-menu-tool-item.h"
+#include "ppg-prefs-dialog.h"
 #include "ppg-runtime.h"
 #include "ppg-session.h"
 #include "ppg-session-view.h"
@@ -269,6 +270,20 @@ ppg_window_about_activate (GtkAction *action,
 	                      "transient-for", window,
 	                      NULL);
 	gtk_window_present(GTK_WINDOW(dialog));
+}
+
+
+static void
+ppg_window_prefs_activate (GtkAction *action,
+                           PpgWindow *window)
+{
+	GtkWidget *prefs;
+
+	prefs = g_object_new(PPG_TYPE_PREFS_DIALOG,
+	                     "transient-for", window,
+	                     NULL);
+	gtk_dialog_run(GTK_DIALOG(prefs));
+	gtk_widget_destroy(prefs);
 }
 
 

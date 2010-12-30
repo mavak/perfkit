@@ -36,6 +36,7 @@ DEFINE_ACTION_CALLBACK(fullscreen);
 DEFINE_ACTION_CALLBACK(move_forward);
 DEFINE_ACTION_CALLBACK(move_backward);
 DEFINE_ACTION_CALLBACK(next_instrument);
+DEFINE_ACTION_CALLBACK(prefs);
 DEFINE_ACTION_CALLBACK(prev_instrument);
 DEFINE_ACTION_CALLBACK(quit);
 DEFINE_ACTION_CALLBACK(zoom_in);
@@ -87,7 +88,7 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  NULL,
 	  "<control>comma",
 	  N_("Configure preferences for " PRODUCT_NAME),
-	  NULL },
+	  ACTION_CALLBACK(prefs) },
 
 	{ "profiler",
 	  NULL,
