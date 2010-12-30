@@ -243,6 +243,21 @@ ppg_window_quit_activate (GtkAction *action,
 }
 
 
+static void
+ppg_window_fullscreen_activate (GtkAction *action,
+                                PpgWindow *window)
+{
+	gboolean active;
+
+	g_object_get(action, "active", &active, NULL);
+	if (active) {
+		gtk_window_fullscreen(GTK_WINDOW(window));
+	} else {
+		gtk_window_unfullscreen(GTK_WINDOW(window));
+	}
+}
+
+
 guint
 ppg_window_count (void)
 {

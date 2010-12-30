@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 #define ACTION_CALLBACK(_n) G_CALLBACK(ppg_window_##_n##_activate)
 
 DEFINE_ACTION_CALLBACK(add_instrument);
+DEFINE_ACTION_CALLBACK(fullscreen);
 DEFINE_ACTION_CALLBACK(move_forward);
 DEFINE_ACTION_CALLBACK(move_backward);
 DEFINE_ACTION_CALLBACK(next_instrument);
@@ -216,7 +217,14 @@ static GtkToggleActionEntry ppg_window_toggle_action_entries[] = {
 	{ "stop", GTK_STOCK_MEDIA_STOP, N_("_Stop"), "<control>e", N_("Stop the current profiling session"), NULL },
 	{ "pause", GTK_STOCK_MEDIA_PAUSE, N_("_Pause"), "<control>z", N_("Pause the current profiling session"), NULL },
 	{ "run", "media-playback-start", N_("_Run"), "<control>b", N_("Run the current profiling session"), NULL },
-	{ "fullscreen", GTK_STOCK_FULLSCREEN, NULL, "F11", NULL, NULL, FALSE },
+
+	{ "fullscreen",
+	  GTK_STOCK_FULLSCREEN,
+	  NULL,
+	  "F11",
+	  NULL,
+	  ACTION_CALLBACK(fullscreen) },
+
 	{ "show-data", NULL, N_("Show extended data"), NULL, NULL, NULL },
 };
 
