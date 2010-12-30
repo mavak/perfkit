@@ -111,7 +111,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	table = g_object_new(GTK_TYPE_TABLE,
 	                     "column-spacing", 0,
 	                     "n-columns", 2,
-	                     "n-rows", 7,
+	                     "n-rows", 8,
 	                     "row-spacing", 6,
 	                     "visible", TRUE,
 	                     NULL);
@@ -296,6 +296,48 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  "right-attach", 2,
 	                                  "top-attach", 6,
 	                                  "bottom-attach", 7,
+	                                  "y-options", GTK_FILL,
+	                                  NULL);
+
+	l = g_object_new(GTK_TYPE_LABEL,
+	                 "label", "<b>Gtk+ Version:</b>",
+	                 "use-markup", TRUE,
+	                 "visible", TRUE,
+	                 "xalign", 1.0f,
+	                 "xpad", 12,
+	                 "yalign", 0.0f,
+	                 NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(table), l,
+	                                  "left-attach", 0,
+	                                  "right-attach", 1,
+	                                  "top-attach", 7,
+	                                  "bottom-attach", 8,
+	                                  "y-options", GTK_FILL,
+	                                  "x-options", GTK_FILL,
+	                                  NULL);
+
+	str = g_strdup_printf("%d.%d.%d",
+#if GTK_CHECK_VERSION(2, 91, 0)
+	                      gtk_get_major_version(),
+	                      gtk_get_minor_version(),
+	                      gtk_get_micro_version());
+#else
+	                      gtk_major_version,
+	                      gtk_minor_version,
+	                      gtk_micro_version);
+#endif
+	l = g_object_new(GTK_TYPE_LABEL,
+	                 "label", str,
+	                 "selectable", TRUE,
+	                 "visible", TRUE,
+	                 "xalign", 0.0f,
+	                 NULL);
+	g_free(str);
+	gtk_container_add_with_properties(GTK_CONTAINER(table), l,
+	                                  "left-attach", 1,
+	                                  "right-attach", 2,
+	                                  "top-attach", 7,
+	                                  "bottom-attach", 8,
 	                                  "y-options", GTK_FILL,
 	                                  NULL);
 
