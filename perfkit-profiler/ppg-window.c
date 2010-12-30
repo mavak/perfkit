@@ -19,6 +19,7 @@
 #include <glib/gi18n.h>
 #include <perfkit/perfkit.h>
 
+#include "ppg-about-dialog.h"
 #include "ppg-actions.h"
 #include "ppg-add-instrument-dialog.h"
 #include "ppg-menu-tool-item.h"
@@ -255,6 +256,19 @@ ppg_window_fullscreen_activate (GtkAction *action,
 	} else {
 		gtk_window_unfullscreen(GTK_WINDOW(window));
 	}
+}
+
+
+static void
+ppg_window_about_activate (GtkAction *action,
+                           PpgWindow *window)
+{
+	GtkWindow *dialog;
+
+	dialog = g_object_new(PPG_TYPE_ABOUT_DIALOG,
+	                      "transient-for", window,
+	                      NULL);
+	gtk_window_present(GTK_WINDOW(dialog));
 }
 
 

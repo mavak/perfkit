@@ -30,6 +30,7 @@ G_BEGIN_DECLS
                                             PpgWindow *window)
 #define ACTION_CALLBACK(_n) G_CALLBACK(ppg_window_##_n##_activate)
 
+DEFINE_ACTION_CALLBACK(about);
 DEFINE_ACTION_CALLBACK(add_instrument);
 DEFINE_ACTION_CALLBACK(fullscreen);
 DEFINE_ACTION_CALLBACK(move_forward);
@@ -209,8 +210,16 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  NULL,
 	  ACTION_CALLBACK(zoom_instrument_out) },
 
-	{ "help", NULL, N_("_Help") },
-	{ "about", GTK_STOCK_ABOUT, N_("About " PRODUCT_NAME), NULL, NULL, NULL },
+	{ "help",
+	  NULL,
+	  N_("_Help") },
+
+	{ "about",
+	  GTK_STOCK_ABOUT,
+	  N_("About " PRODUCT_NAME),
+	  NULL,
+	  NULL,
+	  ACTION_CALLBACK(about) },
 };
 
 static GtkToggleActionEntry ppg_window_toggle_action_entries[] = {
@@ -225,7 +234,9 @@ static GtkToggleActionEntry ppg_window_toggle_action_entries[] = {
 	  NULL,
 	  ACTION_CALLBACK(fullscreen) },
 
-	{ "show-data", NULL, N_("Show extended data"), NULL, NULL, NULL },
+	{ "show-data",
+	  NULL,
+	  N_("Show extended data") },
 };
 
 #undef ACTION_CALLBACK
