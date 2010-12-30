@@ -13,7 +13,6 @@ m4_define([lt_current], [m4_eval(100 * perfkit_minor_version +
 m4_define([lt_revision], [perfkit_interface_age])
 m4_define([lt_age], [m4_eval(perfkit_binary_age - perfkit_interface_age)])
 
-
 dnl ************************************************************************
 dnl Initialize Automake
 dnl ************************************************************************
@@ -65,11 +64,18 @@ PKG_CHECK_MODULES(GIO,      [gio-2.0          >= 2.26
 PKG_CHECK_MODULES(GMODULE,  [gmodule-2.0      >= 2.26])
 PKG_CHECK_MODULES(GOBJECT,  [gobject-2.0      >= 2.26
                              gthread-2.0      >= 2.26])
-PKG_CHECK_MODULES(GTK,      [gtk+-2.0         >= 2.20])
 
 
 dnl ************************************************************************
-dnl Check for Optional Modules
+dnl Gtk+ 3.0 Support
+dnl ************************************************************************
+have_gtk3=no
+PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 2.91], [have_gtk3=yes],
+                  [PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.20])])
+
+
+dnl ************************************************************************
+dnl Avahi Support
 dnl ************************************************************************
 have_avahi=no
 AC_ARG_WITH([avahi],
@@ -193,5 +199,9 @@ echo "  Debug Level................: ${enable_debug}"
 echo "  Compiler Flags.............: ${CFLAGS}"
 echo "  Enable API Reference.......: ${enable_gtk_doc}"
 echo "  Enable Test Suite..........: ${enable_glibtest}"
+echo ""
+echo "Optional features"
+echo ""
+echo "  Gtk+ 3.0 Support...........: ${have_gtk3}"
 echo "  Avahi Support..............: ${have_avahi}"
 echo ""
