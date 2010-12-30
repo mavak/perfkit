@@ -71,7 +71,7 @@ Source Overview
   +- perfkit-profiler/
   |
   |  This directory contains the profiler GUI for Perfkit. It is written
-  |  using both the Gtk+ and Clutter libraries. The GUI talks to a
+  |  using both the Gtk+ and GooCanvas libraries. The GUI talks to a
   |  profiling agent via libperfkit.
   |
   +- tools/

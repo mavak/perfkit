@@ -17,7 +17,7 @@ targets=" \
    libglib2.0-0-dbg \
    libgtk2.0-dev \
    libgtk2.0-0-dbg \
-   libclutter-gtk-0.10-dev \
+   libgoocanvas-dev \
    libdbus-glib-1-dev \
    libreadline-dev \
    valgrind \
@@ -26,14 +26,6 @@ targets=" \
 # install required packages
 sudo apt-get install $targets
 
-# checkout and install libethos
-#git clone git://git.dronelabs.com/ethos
-#pushd ethos
-#./autogen.sh --prefix=/usr
-#make
-#sudo make install
-#popd
-
 # build perfkit
-./autogen.sh
+./autogen.sh --enable-silent-rules
 make

@@ -39,7 +39,7 @@ monitoring.  It can be run using `perfkit-agent'.
 Perfkit contains a basic gui for adminstration of the agent. It is called
 perfkit-gui and lives in the directory of the same name.
 
-The profiler gui, perfkit-profiler, contains a Gtk and Clutter based
+The profiler gui, perfkit-profiler, contains a Gtk and GooCanvas based
 interface into the same perfkit-agent. It is found in the perfkit-profiler
 directory.
 
