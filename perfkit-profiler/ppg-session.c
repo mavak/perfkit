@@ -32,8 +32,12 @@ struct _PpgSessionPrivate
 	PpgClockSource  *clock;
 
 	struct {
-		gint channel;
-		GPid pid;
+		gchar **args;
+		gint    channel;
+		gchar **env;
+		GPid    pid;
+		gchar  *target;
+		gchar  *working_dir;
 	} channel;
 };
 
@@ -42,10 +46,14 @@ enum
 {
 	PROP_0,
 
+	PROP_ARGS,
 	PROP_CONNECTION,
 	PROP_ELAPSED,
+	PROP_ENV,
 	PROP_PID,
 	PROP_STATE,
+	PROP_TARGET,
+	PROP_WORKING_DIR,
 
 	PROP_LAST
 };
@@ -305,17 +313,29 @@ ppg_session_get_property (GObject    *object,
 	PpgSession *session = PPG_SESSION(object);
 
 	switch (prop_id) {
-	case PROP_ELAPSED:
-		g_value_set_double(value, ppg_session_get_elapsed(session));
+	case PROP_ARGS:
+		g_value_set_boxed(value, session->priv->channel.args);
 		break;
 	case PROP_CONNECTION:
 		g_value_set_object(value, session->priv->connection);
+		break;
+	case PROP_ELAPSED:
+		g_value_set_double(value, ppg_session_get_elapsed(session));
+		break;
+	case PROP_ENV:
+		g_value_set_boxed(value, session->priv->channel.env);
 		break;
 	case PROP_PID:
 		g_value_set_uint(value, session->priv->channel.pid);
 		break;
 	case PROP_STATE:
 		g_value_set_enum(value, session->priv->state);
+		break;
+	case PROP_TARGET:
+		g_value_set_string(value, session->priv->channel.target);
+		break;
+	case PROP_WORKING_DIR:
+		g_value_set_string(value, session->priv->channel.working_dir);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -341,6 +361,14 @@ ppg_session_set_property (GObject      *object,
 	PpgSession *session = PPG_SESSION(object);
 
 	switch (prop_id) {
+	case PROP_ARGS:
+	case PROP_ENV:
+	case PROP_TARGET:
+	case PROP_WORKING_DIR:
+		/*
+		 * TODO: Make request to agents channel and store.
+		 */
+		break;
 	case PROP_CONNECTION:
 		ppg_session_set_connection(session, g_value_get_object(value));
 		break;
@@ -373,6 +401,20 @@ ppg_session_class_init (PpgSessionClass *klass)
 	object_class->get_property = ppg_session_get_property;
 	object_class->set_property = ppg_session_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgSessionPrivate));
+
+	pspecs[PROP_ARGS] = g_param_spec_boxed("args",
+	                                       "Args",
+	                                       "The target executables arguments",
+	                                       G_TYPE_STRV,
+	                                       G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_ARGS, pspecs[PROP_ARGS]);
+
+	pspecs[PROP_ENV] = g_param_spec_boxed("env",
+	                                      "Env",
+	                                      "The targets environment",
+	                                      G_TYPE_STRV,
+	                                      G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_ENV, pspecs[PROP_ENV]);
 
 	pspecs[PROP_CONNECTION] = g_param_spec_object("connection",
 	                                              "Connection",
@@ -412,6 +454,20 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                       PPG_SESSION_INITIAL,
 	                                       G_PARAM_READABLE);
 	g_object_class_install_property(object_class, PROP_STATE, pspecs[PROP_STATE]);
+
+	pspecs[PROP_TARGET] = g_param_spec_string("target",
+	                                          "Target",
+	                                          "The target executable to launch",
+	                                          NULL,
+	                                          G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_TARGET, pspecs[PROP_TARGET]);
+
+	pspecs[PROP_WORKING_DIR] = g_param_spec_string("working-dir",
+	                                               "WorkingDir",
+	                                               "The directory to run the executable from",
+	                                               NULL,
+	                                               G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_WORKING_DIR, pspecs[PROP_WORKING_DIR]);
 
 	signals[INSTRUMENT_ADDED] = g_signal_new("instrument-added",
 	                                         PPG_TYPE_SESSION,
