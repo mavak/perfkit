@@ -55,9 +55,9 @@ libperfkit_1_0_la_LIBADD += $(GMODULE_LIBS)
 libperfkit_1_0_la_LIBADD += $(GOBJECT_LIBS)
 
 $(builddir)/pk-marshal.c $(builddir)/pk-marshal.h: pk-marshal.list
-	glib-genmarshal --prefix=pk_cclosure_marshal --header	\
+	@$(GLIB_GENMARSHAL) --prefix=pk_cclosure_marshal --header	\
 	$(srcdir)/pk-marshal.list > $(builddir)/pk-marshal.h
-	glib-genmarshal --prefix=pk_cclosure_marshal --body	\
+	@$(GLIB_GENMARSHAL) --prefix=pk_cclosure_marshal --body		\
 	$(srcdir)/pk-marshal.list > $(builddir)/pk-marshal.c
 
 #
