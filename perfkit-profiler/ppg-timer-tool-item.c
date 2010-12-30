@@ -45,12 +45,24 @@ ppg_timer_tool_item_draw (GtkWidget        *widget,
                           PpgTimerToolItem *item)
 {
 	PpgTimerToolItemPrivate *priv;
+#if !GTK_CHECK_VERSION(2, 91, 0)
+	GtkAllocation a;
+	GdkPixmap *pixmap;
+#endif
 
 	g_return_if_fail(PPG_IS_TIMER_TOOL_ITEM(item));
 
 	priv = item->priv;
 
+#if GTK_CHECK_VERSION(2, 91, 0)
 	gtk_widget_draw(priv->offscreen, cr);
+#else
+	gtk_widget_get_allocation(widget, &a);
+	pixmap = gtk_offscreen_window_get_pixmap(GTK_OFFSCREEN_WINDOW(priv->offscreen));
+	gdk_cairo_set_source_pixmap(cr, pixmap, 0, 0);
+	cairo_rectangle(cr, 0, 0, a.width, a.height);
+	cairo_fill(cr);
+#endif
 }
 
 
@@ -62,7 +74,7 @@ ppg_timer_tool_item_expose_event (GtkWidget        *widget,
 {
 	cairo_t *cr;
 
-	cr = gdk_window_create(expose->window);
+	cr = gdk_cairo_create(expose->window);
 	gdk_cairo_rectangle(cr, &expose->area);
 	cairo_clip(cr);
 	ppg_timer_tool_item_draw(widget, cr, item);

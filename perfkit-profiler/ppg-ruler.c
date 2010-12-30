@@ -778,8 +778,8 @@ static void
 ppg_ruler_size_request (GtkWidget      *widget,
                         GtkRequisition *req)
 {
-	gint min_height;
-	gint natural_height;
+	gint min_height = 0;
+	gint natural_height = 0;
 
 	ppg_ruler_get_preferred_height(widget, &min_height, &natural_height);
 	req->height = min_height;
