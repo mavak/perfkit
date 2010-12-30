@@ -55,8 +55,8 @@ NOINST_H_FILES += pka-listener-closures.h
 NOINST_H_FILES += pka-private.h
 
 libperfkit_agent_la_SOURCES =
-libperfkit_agent_la_SOURCES += pka-marshal.c
-libperfkit_agent_la_SOURCES += pka-marshal.h
+libperfkit_agent_la_SOURCES += $(builddir)/pka-marshal.c
+libperfkit_agent_la_SOURCES += $(builddir)/pka-marshal.h
 libperfkit_agent_la_SOURCES += $(INST_H_FILES)
 libperfkit_agent_la_SOURCES += $(NOINST_H_FILES)
 libperfkit_agent_la_SOURCES += pka-channel.c
@@ -111,10 +111,10 @@ perfkit_agent_LDFLAGS += -export-symbols-regex "^pka_.*"
 
 perfkit_agent_DEPENDENCIES = libperfkit-agent.la
 
-pka-marshal.c pka-marshal.h: pka-marshal.list
-	$(GLIB_GENMARSHAL) --header --prefix=pka_marshal		\
+$(builddir)/pka-marshal.c $(builddir)/pka-marshal.h: pka-marshal.list
+	@$(GLIB_GENMARSHAL) --header --prefix=pka_marshal		\
 	$(srcdir)/pka-marshal.list > $(builddir)/pka-marshal.h
-	$(GLIB_GENMARSHAL) --body --prefix=pka_marshal			\
+	@$(GLIB_GENMARSHAL) --body --prefix=pka_marshal			\
 	$(srcdir)/pka-marshal.list > $(builddir)/pka-marshal.c
 
 #

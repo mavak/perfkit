@@ -18,7 +18,9 @@
 
 #include <glib/gi18n.h>
 
+#ifdef HAVE_AVAHI
 #include "ppg-discover-dialog.h"
+#endif
 #include "ppg-runtime.h"
 #include "ppg-session.h"
 #include "ppg-sessions-store.h"
@@ -150,6 +152,7 @@ ppg_welcome_dialog_local_clicked (GtkWidget        *button,
 	gtk_window_present(GTK_WINDOW(window));
 }
 
+#ifdef HAVE_AVAHI
 static void
 ppg_welcome_dialog_remote_clicked (GtkWidget        *button,
                                    PpgWelcomeDialog *dialog)
@@ -177,6 +180,7 @@ ppg_welcome_dialog_remote_clicked (GtkWidget        *button,
 	}
 	gtk_widget_destroy(discover);
 }
+#endif
 
 static void
 ppg_welcome_dialog_open_clicked (GtkWidget        *button,
@@ -449,6 +453,7 @@ ppg_welcome_dialog_init (PpgWelcomeDialog *dialog)
 	                 G_CALLBACK(ppg_welcome_dialog_local_clicked),
 	                 dialog);
 
+#ifdef HAVE_AVAHI
 	b = ppg_welcome_dialog_create_button(dialog, "network-server",
 	                                     GTK_ICON_SIZE_DIALOG,
 	                                     _("Start profiling a new or existing "
@@ -459,6 +464,7 @@ ppg_welcome_dialog_init (PpgWelcomeDialog *dialog)
 	g_signal_connect(b, "clicked",
 	                 G_CALLBACK(ppg_welcome_dialog_remote_clicked),
 	                 dialog);
+#endif
 
 	b = ppg_welcome_dialog_create_button(dialog, GTK_STOCK_OPEN,
 	                                     GTK_ICON_SIZE_DIALOG,

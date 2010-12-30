@@ -58,8 +58,6 @@ AC_SUBST(PK_VERSION)
 dnl ************************************************************************
 dnl Check for Required Modules
 dnl ************************************************************************
-PKG_CHECK_MODULES(AVAHI,    [avahi-client     >= 0.6
-                             avahi-gobject    >= 0.6])
 PKG_CHECK_MODULES(CLUTTER,  [clutter-gtk-0.10 >= 0.10.4])
 PKG_CHECK_MODULES(DBUS,     [dbus-glib-1      >= 0.80])
 PKG_CHECK_MODULES(GIO,      [gio-2.0          >= 2.26
@@ -68,6 +66,21 @@ PKG_CHECK_MODULES(GMODULE,  [gmodule-2.0      >= 2.26])
 PKG_CHECK_MODULES(GOBJECT,  [gobject-2.0      >= 2.26
                              gthread-2.0      >= 2.26])
 PKG_CHECK_MODULES(GTK,      [gtk+-2.0         >= 2.20])
+
+
+dnl ************************************************************************
+dnl Check for Optional Modules
+dnl ************************************************************************
+have_avahi=no
+AC_ARG_WITH([avahi],
+            AS_HELP_STRING([--with-avahi],
+                           [Build with Avahi discovery]))
+if test "x$with_avahi" = "xyes"; then
+	PKG_CHECK_MODULES(AVAHI, [avahi-client  >= 0.6,
+	                          avahi-gobject >= 0.6])
+	have_avahi=yes
+fi
+AM_CONDITIONAL(HAVE_AVAHI, test "x$with_avahi" = "xyes")
 
 
 dnl ************************************************************************
@@ -180,4 +193,5 @@ echo "  Debug Level................: ${enable_debug}"
 echo "  Compiler Flags.............: ${CFLAGS}"
 echo "  Enable API Reference.......: ${enable_gtk_doc}"
 echo "  Enable Test Suite..........: ${enable_glibtest}"
+echo "  Avahi Support..............: ${have_avahi}"
 echo ""

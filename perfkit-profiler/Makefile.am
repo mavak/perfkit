@@ -20,7 +20,9 @@ libprofiler_la_SOURCES += ppg-animation.c
 libprofiler_la_SOURCES += ppg-color.c
 libprofiler_la_SOURCES += ppg-configure-instrument-dialog.c
 libprofiler_la_SOURCES += ppg-cpu-instrument.c
+if HAVE_AVAHI
 libprofiler_la_SOURCES += ppg-discover-dialog.c
+endif
 libprofiler_la_SOURCES += ppg-edit-channel-task.c
 libprofiler_la_SOURCES += ppg-gtk-instrument.c
 libprofiler_la_SOURCES += ppg-header.c
@@ -84,7 +86,9 @@ INST_H_FILES += ppg-animation.h
 INST_H_FILES += ppg-color.h
 INST_H_FILES += ppg-configure-instrument-dialog.h
 INST_H_FILES += ppg-cpu-instrument.h
+if HAVE_AVAHI
 INST_H_FILES += ppg-discover-dialog.h
+endif
 INST_H_FILES += ppg-edit-channel-task.h
 INST_H_FILES += ppg-gtk-instrument.h
 INST_H_FILES += ppg-header.h
