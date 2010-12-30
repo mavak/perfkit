@@ -282,8 +282,10 @@ ppg_window_prefs_activate (GtkAction *action,
 	prefs = g_object_new(PPG_TYPE_PREFS_DIALOG,
 	                     "transient-for", window,
 	                     NULL);
+	g_signal_connect(prefs, "delete-event",
+	                 G_CALLBACK(gtk_widget_hide_on_delete),
+	                 NULL);
 	gtk_dialog_run(GTK_DIALOG(prefs));
-	gtk_widget_destroy(prefs);
 }
 
 
