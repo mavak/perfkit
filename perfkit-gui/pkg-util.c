@@ -89,11 +89,13 @@ pkg_util_dialog_warning (GtkWidget   *parent,       /* IN */
 	g_return_val_if_fail(!parent || GTK_IS_WIDGET(parent), NULL);
 
 	ENTRY;
-	dialog = gtk_dialog_new_with_buttons(title,
-	                                     GTK_WINDOW(parent),
-	                                     GTK_DIALOG_NO_SEPARATOR,
-	                                     GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-	                                     NULL);
+	dialog = g_object_new(GTK_TYPE_DIALOG,
+	                      "has-separator", FALSE,
+	                      "transient-for", parent,
+	                      NULL);
+	gtk_dialog_add_buttons(GTK_DIALOG(dialog),
+	                       GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+	                       NULL);
 	gtk_window_set_resizable(GTK_WINDOW(dialog), FALSE);
 	hbox = gtk_hbox_new(FALSE, 12);
 	gtk_container_set_border_width(GTK_CONTAINER(hbox), 12);
