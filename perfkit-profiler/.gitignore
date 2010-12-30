@@ -1,3 +1,5 @@
 perfkit-profiler
 perfkit-profiler.log
 ppg-version.h
+ppg-marshal.c
+ppg-marshal.h

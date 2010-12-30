@@ -125,7 +125,9 @@ ppg_visualizer_menu_activate (GtkCheckMenuItem  *item,
 	if (active) {
 		ppg_instrument_add_visualizer(priv->instrument, name);
 	} else {
+#if 0
 		ppg_instrument_remove_visualizer_named(priv->instrument, name);
+#endif
 	}
 }
 
@@ -143,11 +145,13 @@ ppg_visualizer_menu_set_instrument (PpgVisualizerMenu *menu,
                                     PpgInstrument     *instrument)
 {
 	PpgVisualizerMenuPrivate *priv;
-	PpgVisualizerEntry *entry;
+	PpgVisualizerEntry *entries;
 	GtkWidget *menu_item;
 	gboolean active;
 	GList *list;
 	GList *iter;
+	gsize n_entries;
+	gint i;
 
 	g_return_if_fail(PPG_IS_VISUALIZER_MENU(menu));
 	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
@@ -167,7 +171,8 @@ ppg_visualizer_menu_set_instrument (PpgVisualizerMenu *menu,
 	/*
 	 * If there are no entries, add dummy item back.
 	 */
-	if (!(list = ppg_instrument_get_visualizer_entries(instrument))) {
+	entries = ppg_instrument_get_entries(instrument, &n_entries);
+	if (!entries || n_entries == 0) {
 		ppg_visualizer_menu_add_dummy(menu);
 		return;
 	}
@@ -175,22 +180,20 @@ ppg_visualizer_menu_set_instrument (PpgVisualizerMenu *menu,
 	/*
 	 * Add visualizer entries.
 	 */
-	for (iter = list; iter; iter = iter->next) {
-		entry = iter->data;
-		active = ppg_visualizer_menu_get_active(menu, entry);
+	for (i = 0; i < n_entries; i++) {
+		active = ppg_visualizer_menu_get_active(menu, &entries[i]);
 		menu_item = g_object_new(GTK_TYPE_CHECK_MENU_ITEM,
 		                         "active", active,
-		                         "label", entry->title,
+		                         "label", entries[i].title,
 		                         "visible", TRUE,
 		                         NULL);
 		g_object_set_data_full(G_OBJECT(menu_item), "visualizer.name",
-		                       g_strdup(entry->name), g_free);
+		                       g_strdup(entries[i].name), g_free);
 		g_signal_connect(menu_item, "activate",
 		                 G_CALLBACK(ppg_visualizer_menu_activate),
 		                 menu);
 		gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
 	}
-	g_list_free(list);
 }
 
 /**

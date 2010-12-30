@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_HEADER_H__
-#define __PPG_HEADER_H__
+#ifndef PPG_HEADER_H
+#define PPG_HEADER_H
 
 #include <gtk/gtk.h>
 
@@ -52,4 +52,4 @@ GType ppg_header_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 
-#endif /* __PPG_HEADER_H__ */
+#endif /* PPG_HEADER_H */

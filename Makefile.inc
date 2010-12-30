@@ -33,6 +33,7 @@ INCLUDE_CFLAGS += -DPACKAGE_SYSCONFDIR=\""$(sysconfdir)"\"
 INCLUDE_CFLAGS += -DPERFKIT_COMPILATION
 INCLUDE_CFLAGS += -I$(top_srcdir)
 INCLUDE_CFLAGS += -I$(top_srcdir)/cut-n-paste
+INCLUDE_CFLAGS += -I$(top_builddir)/data
 INCLUDE_CFLAGS += -I$(top_builddir)/perfkit
 INCLUDE_CFLAGS += $(PERFKIT_DEBUG_CFLAGS)
 INCLUDE_CFLAGS += $(WARNINGS)

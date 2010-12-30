@@ -20,15 +20,13 @@
 
 #include "ppg-status-actor.h"
 
-G_DEFINE_TYPE(PpgStatusActor, ppg_status_actor, CLUTTER_TYPE_CAIRO_TEXTURE)
 
 struct _PpgStatusActorPrivate
 {
-	GtkStyle *style;
+	GtkStyle             *style;
 	PangoFontDescription *font_desc;
-	gchar *label;
-
-	guint resize_handler;
+	gchar                *label;
+	guint                 resize_handler;
 };
 
 enum
@@ -38,11 +36,17 @@ enum
 	PROP_LABEL,
 };
 
+
+G_DEFINE_TYPE(PpgStatusActor, ppg_status_actor, GOO_TYPE_CANVAS_IMAGE)
+
+
 static void
 ppg_status_actor_paint (PpgStatusActor *actor)
 {
+#if 0
+	static const guint radius = 10;
 	PpgStatusActorPrivate *priv;
-	const guint radius = 10;
+	cairo_pattern_t *pattern;
 	PangoLayout *layout;
 	cairo_t *cr;
 	guint width;
@@ -111,49 +115,9 @@ ppg_status_actor_paint (PpgStatusActor *actor)
 	g_object_unref(layout);
 
 	cairo_destroy(cr);
+#endif
 }
 
-static gboolean
-ppg_status_actor_do_resize_surface (gpointer user_data)
-{
-	PpgStatusActor *actor = (PpgStatusActor *)user_data;
-	PpgStatusActorPrivate *priv;
-	ClutterGeometry geom;
-
-	g_return_val_if_fail(PPG_IS_STATUS_ACTOR(actor), FALSE);
-
-	priv = actor->priv;
-	priv->resize_handler = 0;
-
-	clutter_actor_get_geometry(CLUTTER_ACTOR(actor), &geom);
-	g_object_set(actor,
-	             "surface-height", geom.height,
-	             "surface-width", geom.width,
-	             NULL);
-
-	ppg_status_actor_paint(actor);
-
-	return FALSE;
-}
-
-static void
-ppg_status_actor_notify_allocation (PpgStatusActor *actor,
-                                    GParamSpec     *pspec,
-                                    gpointer        user_data)
-{
-	PpgStatusActorPrivate *priv;
-
-	g_return_if_fail(PPG_IS_STATUS_ACTOR(actor));
-
-	priv = actor->priv;
-
-	if (priv->resize_handler) {
-		g_source_remove(priv->resize_handler);
-	}
-
-	priv->resize_handler =
-		g_timeout_add(0, ppg_status_actor_do_resize_surface, actor);
-}
 
 static void
 ppg_status_actor_set_style (PpgStatusActor *actor,
@@ -162,8 +126,11 @@ ppg_status_actor_set_style (PpgStatusActor *actor,
 	g_return_if_fail(PPG_IS_STATUS_ACTOR(actor));
 
 	actor->priv->style = style;
+#if 0
 	ppg_status_actor_notify_allocation(actor, NULL, NULL);
+#endif
 }
+
 
 static void
 ppg_status_actor_set_label (PpgStatusActor *actor,
@@ -179,9 +146,12 @@ ppg_status_actor_set_label (PpgStatusActor *actor,
 	priv->label = g_strdup(label);
 
 	ppg_status_actor_paint(actor);
+#if 0
 	clutter_actor_set_opacity(CLUTTER_ACTOR(actor),
 	                          (!label || !label[0]) ? 0x00 : 0xFF);
+#endif
 }
+
 
 /**
  * ppg_status_actor_finalize:
@@ -292,7 +262,9 @@ ppg_status_actor_init (PpgStatusActor *actor)
 	pango_font_description_set_size(priv->font_desc, 8 * PANGO_SCALE);
 	pango_font_description_set_family_static(priv->font_desc, "Sans");
 
+#if 0
 	g_signal_connect_after(actor, "notify::allocation",
 	                       G_CALLBACK(ppg_status_actor_notify_allocation),
 	                       NULL);
+#endif
 }

@@ -1,647 +1,175 @@
 /* ppg-session.c
  *
  * Copyright (C) 2010 Christian Hergert <chris@dronelabs.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <perfkit/perfkit.h>
+
+#include "ppg-clock-source.h"
 #include "ppg-instrument.h"
 #include "ppg-log.h"
 #include "ppg-session.h"
+#include "ppg-util.h"
 
-G_DEFINE_TYPE(PpgSession, ppg_session, G_TYPE_INITIALLY_UNOWNED)
 
 struct _PpgSessionPrivate
 {
-	gchar            *uri;
-	PkConnection     *conn;
-	gint              channel;
-	gchar            *target;
-	gchar           **args;
-	gchar           **env;
-	GPid              pid;
-	GTimeVal          started_at;  /* TimeVal on agent when channel started */
-	gdouble           started_at_; /* Double version of started_at */
-	GTimer           *timer;
-	guint             position_handler;
-	PpgSessionState   state;
+	PkConnection    *connection;
+	PpgSessionState  state;
+	PpgClockSource  *clock;
+
+	struct {
+		gint channel;
+		GPid pid;
+	} channel;
 };
+
 
 enum
 {
 	PROP_0,
-	PROP_ARGS,
-	PROP_CHANNEL,
+
 	PROP_CONNECTION,
-	PROP_ENV,
-	PROP_POSITION,
-	PROP_TARGET,
-	PROP_URI,
+	PROP_ELAPSED,
 	PROP_PID,
-	PROP_STARTED_AT,
+	PROP_STATE,
+
+	PROP_LAST
 };
+
 
 enum
 {
-	READY,
-	DISCONNECTED,
-	PAUSED,
-	STARTED,
-	STOPPED,
-	UNPAUSED,
 	INSTRUMENT_ADDED,
-	INSTRUMENT_REMOVED,
+
 	LAST_SIGNAL
 };
 
+
+G_DEFINE_TYPE(PpgSession, ppg_session, G_TYPE_INITIALLY_UNOWNED)
+
+
+/*
+ * Globals.
+ */
+static GParamSpec *pspecs[PROP_LAST] = { 0 };
 static guint       signals[LAST_SIGNAL] = { 0 };
-static GParamSpec *position_pspec       = NULL;
+
 
 /**
- * ppg_session_notify_position:
- * @user_data: (in): A #PpgSession.
- *
- * A #GSourceFunc style function for notifying of a change to the position
- * property.
- *
- * Returns: %TRUE always.
- * Side effects: None.
- */
-static gboolean
-ppg_session_notify_position (gpointer user_data)
-{
-	g_object_notify_by_pspec(user_data, position_pspec);
-	return TRUE;
-}
-
-/**
- * ppg_session_start_position_notifier:
+ * ppg_session_clock_sync:
  * @session: (in): A #PpgSession.
+ * @clock_: (in): A #PpgClockSource.
  *
- * Start notifying on a regular interval of the session position.
+ * Notify a synchronization of the clock.
  *
  * Returns: None.
  * Side effects: None.
  */
 static void
-ppg_session_start_position_notifier (PpgSession *session)
+ppg_session_clock_sync (PpgSession     *session,
+                        PpgClockSource *clock_)
 {
-	PpgSessionPrivate *priv = session->priv;
-
-	if (priv->position_handler) {
-		g_source_remove(priv->position_handler);
-	}
-
-	priv->position_handler = g_timeout_add((1000 / 13),
-	                                       ppg_session_notify_position,
-	                                       session);
+	g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_ELAPSED]);
 }
 
+
 /**
- * ppg_session_stop_position_notifier:
+ * ppg_session_set_connection:
  * @session: (in): A #PpgSession.
+ * @connection: (in): A #PkConnection.
  *
- * Stop the notifier registered with ppg_session_stop_position_notifier().
+ * Set the connection for the session. This may only be called once
+ * for a given session.
  *
  * Returns: None.
  * Side effects: None.
  */
 static void
-ppg_session_stop_position_notifier (PpgSession *session)
-{
-	PpgSessionPrivate *priv = session->priv;
-
-	if (priv->position_handler) {
-		g_source_remove(priv->position_handler);
-		priv->position_handler = 0;
-	}
-}
-
-/**
- * ppg_session_report_error:
- * @session: (in): A #PpgSession.
- *
- * Reports an error that has occurred in the session.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_report_error (PpgSession  *session,
-                          const gchar *func,
-                          GError      *error)
-{
-	/*
-	 * TODO: Store the error around and emit a signal for observers to
-	 *       display to the user.
-	 */
-	CRITICAL(Session, "%s(): %s", func, error->message);
-}
-
-/**
- * ppg_session_set_target:
- * @session: (in): A #PpgSession.
- *
- * Sets the target property on the session. This does not persist to the
- * agent.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_set_target (PpgSession  *session,
-                        const gchar *target)
+ppg_session_set_connection (PpgSession   *session,
+                            PkConnection *connection)
 {
 	PpgSessionPrivate *priv;
+	PpgClockSource *clock_;
 
 	g_return_if_fail(PPG_IS_SESSION(session));
+	g_return_if_fail(session->priv->connection == NULL);
 
 	priv = session->priv;
 
-	g_free(priv->target);
-	priv->target = g_strdup(target);
-	g_object_notify(G_OBJECT(session), "target");
+	priv->connection = g_object_ref(connection);
+	clock_ = g_object_new(PPG_TYPE_CLOCK_SOURCE,
+	                      "connection", connection,
+	                      NULL);
+	g_signal_connect_swapped(clock_, "clock-sync",
+	                         G_CALLBACK(ppg_session_clock_sync),
+	                         session);
+	priv->clock = g_object_ref_sink(clock_);
 }
 
-/**
- * ppg_session_set_args:
- * @session: (in): A #PpgSession.
- *
- * Sets the args property on the session. This does not persist to the
- * agent.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_set_args (PpgSession  *session,
-                      gchar      **args)
-{
-	PpgSessionPrivate *priv;
 
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	g_strfreev(priv->args);
-	priv->args = g_strdupv(args);
-	g_object_notify(G_OBJECT(session), "args");
-}
-
-/**
- * ppg_session_set_env:
- * @session: (in): A #PpgSession.
- *
- * Sets the env property on the session. This does not persist to the
- * agent.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_set_env (PpgSession  *session,
-                     gchar      **env)
-{
-	PpgSessionPrivate *priv;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	g_strfreev(priv->env);
-	priv->env = g_strdupv(env);
-	g_object_notify(G_OBJECT(session), "env");
-}
-
-/**
- * ppg_session_set_target:
- * @session: (in): A #PpgSession.
- *
- * Retrieves the "target" property of the session.
- *
- * Returns: A string containing the target or %NULL.
- * Side effects: None.
- */
-static const gchar*
-ppg_session_get_target (PpgSession *session)
-{
-	g_return_val_if_fail(PPG_IS_SESSION(session), NULL);
-	return session->priv->target;
-}
-
-/**
- * ppg_session_get_pid:
- * @session: (in): A #PpgSession.
- *
- * Retrieves the Pid of the target or 0.
- *
- * Returns: A #GPid.
- * Side effects: None.
- */
-static GPid
-ppg_session_get_pid (PpgSession *session)
-{
-	g_return_val_if_fail(PPG_IS_SESSION(session), 0);
-	return session->priv->pid;
-}
-
-/**
- * ppg_session_set_pid:
- * @session: (in): A #PpgSession.
- *
- * Sets the GPid of the pid.
- *
- * Returns: None.
- * Side effects: None.
- */
 static void
 ppg_session_set_pid (PpgSession *session,
-                     GPid pid)
+                     GPid        pid)
 {
+	PpgSessionPrivate *priv;
+
 	g_return_if_fail(PPG_IS_SESSION(session));
-	session->priv->pid = pid;
-	g_object_notify(G_OBJECT(session), "pid");
+
+	priv = session->priv;
+
+	priv->channel.pid = pid;
+	g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_PID]);
 }
 
+
 /**
- * ppg_session_get_position_fast:
+ * ppg_session_set_state:
+ * @session: (in): A #PpgSession.
+ * @state: (in): A #PpgSessionState.
+ *
+ * Set the state of the session.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_session_set_state (PpgSession      *session,
+                       PpgSessionState  state)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+	g_return_if_fail(state >= PPG_SESSION_INITIAL);
+	g_return_if_fail(state <= PPG_SESSION_FAILED);
+
+	priv = session->priv;
+
+	if (priv->state != state) {
+		priv->state = state;
+		g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_STATE]);
+	}
+}
+
+
+/**
+ * ppg_session_start:
  * @session: (in): A #PpgSession.
  *
- * Retrieves the position of the timer since it was started.
- *
- * Returns: A double containing the offset in time since start.
- * Side effects: None.
- */
-static inline gdouble
-ppg_session_get_position_fast (PpgSession *session)
-{
-	return g_timer_elapsed(session->priv->timer, NULL);
-}
-
-/**
- * ppg_session_get_position:
- * @session: (in): A #PpgSession.
- *
- * Retrieves the position of the timer since it was started.
- *
- * Returns: A double containing the offset in time since start.
- * Side effects: None.
- */
-gdouble
-ppg_session_get_position (PpgSession *session)
-{
-	PpgSessionPrivate *priv;
-
-	g_return_val_if_fail(PPG_IS_SESSION(session), 0.0);
-
-	priv = session->priv;
-
-	if (priv->timer) {
-		return ppg_session_get_position_fast(session);
-	}
-
-	return 0.0;
-}
-
-/**
- * ppg_session_get_state:
- * @session: (in): A #PpgSession.
- *
- * Retrieves the session state.
- *
- * Returns: A PpgSessionState.
- * Side effects: None.
- */
-PpgSessionState
-ppg_session_get_state (PpgSession *session)
-{
-	g_return_val_if_fail(PPG_IS_SESSION(session), 0);
-	return session->priv->state;
-}
-
-/**
- * ppg_session_add_channel_cb:
- * @connection: (in): A #PkConnection.
- * @result: (in): A #GAsyncResult.
- * @user_data: (closure): User data for callback.
- *
- * Callback upon the channel being created.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_add_channel_cb (GObject      *connection,
-                            GAsyncResult *result,
-                            gpointer      user_data)
-{
-	PpgSession *session = user_data;
-	PpgSessionPrivate *priv;
-	GError *error = NULL;
-
-	ENTRY;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (!pk_connection_manager_add_channel_finish(priv->conn, result,
-	                                              &priv->channel, &error)) {
-		ppg_session_report_error(session, G_STRFUNC, error);
-		g_error_free(error);
-		EXIT;
-	}
-
-	g_signal_emit(session, signals[READY], 0);
-
-	EXIT;
-}
-
-static void
-ppg_session_channel_stopped_cb (PkConnection *connection,
-                                gint          channel,
-                                PpgSession   *session)
-{
-	PpgSessionPrivate *priv;
-
-	ENTRY;
-
-	g_return_if_fail(PK_IS_CONNECTION(connection));
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (priv->channel == channel) {
-		priv->state = PPG_SESSION_STOPPED;
-		g_timer_stop(priv->timer);
-		ppg_session_stop_position_notifier(session);
-		ppg_session_notify_position(session);
-		g_signal_emit(session, signals[STOPPED], 0);
-	}
-
-	EXIT;
-}
-
-static void
-ppg_session_set_connected (PpgSession *session)
-{
-	PpgSessionPrivate *priv;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	g_signal_connect(priv->conn, "channel-stopped",
-	                 G_CALLBACK(ppg_session_channel_stopped_cb),
-	                 session);
-	pk_connection_manager_add_channel_async(priv->conn, NULL,
-	                                        ppg_session_add_channel_cb,
-	                                        session);
-}
-
-/**
- * ppg_session_connection_connected:
- * @connection: (in): A #PkConnection.
- * @result: (in): A #GAsyncResult.
- * @user_data: (closure): User data for callback.
- *
- * Callback upon the connection connecting to the agent.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_connection_connected (GObject      *connection,
-                                  GAsyncResult *result,
-                                  gpointer      user_data)
-{
-	PpgSession *session = user_data;
-	PpgSessionPrivate *priv;
-	GError *error = NULL;
-
-	ENTRY;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (!pk_connection_connect_finish(priv->conn, result, &error)) {
-		ppg_session_report_error(session, G_STRFUNC, error);
-		g_error_free(error);
-		return;
-	}
-
-	ppg_session_set_connected(session);
-
-	EXIT;
-}
-
-/**
- * ppg_session_channel_stopped:
- * @connection: (in): A #PkConnection.
- * @result: (in): A #GAsyncResult.
- * @user_data: (closure): User data for callback.
- *
- * Callback for asynchronous RPC to stop the channel.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_channel_stopped (GObject *object,
-                             GAsyncResult *result,
-                             gpointer user_data)
-{
-	PpgSession *session = user_data;
-	PpgSessionPrivate *priv;
-	GError *error = NULL;
-
-	ENTRY;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (!pk_connection_channel_stop_finish(priv->conn, result, &error)) {
-		ppg_session_report_error(session, G_STRFUNC, error);
-		g_error_free(error);
-		/*
-		 * FIXME: We need to make sure we handle this gracefully and stop
-		 *        updating the UI. This goes for the rest of the states.
-		 */
-		return;
-	}
-
-	EXIT;
-}
-
-
-/**
- * ppg_session_channel_started:
- * @connection: (in): A #PkConnection.
- * @result: (in): A #GAsyncResult.
- * @user_data: (closure): User data for callback.
- *
- * Callback upon the channel starting.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_channel_started (GObject *object,
-                             GAsyncResult *result,
-                             gpointer user_data)
-{
-	PpgSession *session = user_data;
-	PpgSessionPrivate *priv;
-	GError *error = NULL;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (!pk_connection_channel_start_finish(priv->conn, result,
-	                                        &priv->started_at, &error)) {
-		ppg_session_report_error(session, G_STRFUNC, error);
-		g_error_free(error);
-		return;
-	}
-
-	priv->started_at_ = priv->started_at.tv_sec
-	                  + (priv->started_at.tv_usec / (gdouble)G_USEC_PER_SEC);
-	priv->state = PPG_SESSION_STARTED;
-	priv->timer = g_timer_new();
-
-	ppg_session_start_position_notifier(session);
-
-	DEBUG(Session, "Channel %d started.", priv->channel);
-
-	g_signal_emit(session, signals[STARTED], 0);
-}
-
-/**
- * ppg_session_channel_muted:
- * @connection: (in): A #PkConnection.
- * @result: (in): A #GAsyncResult.
- * @user_data: (closure): User data for callback.
- *
- * Callback upon the channel muting.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_channel_muted (GObject *object,
-                           GAsyncResult *result,
-                           gpointer user_data)
-{
-	PpgSession *session = user_data;
-	PpgSessionPrivate *priv;
-	GError *error = NULL;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (!pk_connection_channel_mute_finish(priv->conn, result, &error)) {
-		ppg_session_report_error(session, G_STRFUNC, error);
-		g_error_free(error);
-		return;
-	}
-
-	/*
-	 * XXX: How do we deal with timer skew?
-	 */
-	priv->state = PPG_SESSION_PAUSED;
-	g_timer_stop(priv->timer);
-
-	ppg_session_stop_position_notifier(session);
-
-	g_signal_emit(session, signals[PAUSED], 0);
-}
-
-/**
- * ppg_session_channel_unmuted:
- * @connection: (in): A #PkConnection.
- * @result: (in): A #GAsyncResult.
- * @user_data: (closure): User data for callback.
- *
- * Callback upon the channel unmuting.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_channel_unmuted (GObject *object,
-                             GAsyncResult *result,
-                             gpointer user_data)
-{
-	PpgSession *session = user_data;
-	PpgSessionPrivate *priv;
-	GError *error = NULL;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	if (!pk_connection_channel_unmute_finish(priv->conn, result, &error)) {
-		ppg_session_report_error(session, G_STRFUNC, error);
-		g_error_free(error);
-		return;
-	}
-
-	/*
-	 * XXX: What do we do here for timer? Add adjust variable?
-	 */
-	priv->state = PPG_SESSION_STARTED;
-	g_timer_start(priv->timer);
-
-	ppg_session_start_position_notifier(session);
-
-	g_signal_emit(session, signals[UNPAUSED], 0);
-}
-
-/**
- * ppg_session_stop:
- * @session: (in): A #PpgSession.
- *
- * Stops the channel on the agent.
- *
- * Returns: None.
- * Side effects: None.
- */
-void
-ppg_session_stop (PpgSession *session)
-{
-	PpgSessionPrivate *priv;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(session->priv->conn != NULL);
-	g_return_if_fail(session->priv->channel >= 0);
-
-	priv = session->priv;
-
-	pk_connection_channel_stop_async(priv->conn, priv->channel, NULL,
-	                                 ppg_session_channel_stopped,
-	                                 session);
-}
-
-/**
- * ppg_session_started:
- * @session: (in): A #PpgSession.
- *
- * Starts the session by starting the channel on the agent.
+ * Starts the session on the agent.
  *
  * Returns: None.
  * Side effects: None.
@@ -650,227 +178,89 @@ void
 ppg_session_start (PpgSession *session)
 {
 	PpgSessionPrivate *priv;
+	GTimeVal tv = { 0 };
 
 	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(session->priv->conn != NULL);
-	g_return_if_fail(session->priv->channel >= 0);
 
 	priv = session->priv;
-
-	DEBUG(Session, "Starting channel %d", priv->channel);
-	pk_connection_channel_start_async(priv->conn, priv->channel, NULL,
-	                                  ppg_session_channel_started,
-	                                  session);
+	/*
+	 * TODO: Get start time from connection.
+	 */
+	ppg_clock_source_start(priv->clock, &tv);
 }
 
+
 /**
- * ppg_session_pause:
+ * ppg_session_get_elapsed:
  * @session: (in): A #PpgSession.
  *
- * Pauses the session by muting the remote channel.
+ * Retrieves the amount of time elapsed since the session was started in
+ * seconds. The microseconds are provided as a decimal.
  *
- * Returns: None.
+ * Returns: The time as a #gdouble.
  * Side effects: None.
  */
-void
-ppg_session_pause (PpgSession *session)
+gdouble
+ppg_session_get_elapsed (PpgSession *session)
 {
-	PpgSessionPrivate *priv;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(session->priv->conn != NULL);
-	g_return_if_fail(session->priv->channel >= 0);
-
-	priv = session->priv;
-
-	DEBUG(Session, "Pausing channel %d", priv->channel);
-	pk_connection_channel_mute_async(priv->conn, priv->channel, NULL,
-	                                 ppg_session_channel_muted,
-	                                 session);
+	g_return_val_if_fail(PPG_IS_SESSION(session), 0.0);
+	return ppg_clock_source_get_elapsed(session->priv->clock);
 }
 
-/**
- * ppg_session_unpause:
- * @session: (in): A #PpgSession.
- *
- * Unpauses the session.
- *
- * Returns: None.
- * Side effects: None.
- */
-void
-ppg_session_unpause (PpgSession *session)
+
+PpgSessionState
+ppg_session_get_state (PpgSession *session)
 {
-	PpgSessionPrivate *priv;
-
-	ENTRY;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(session->priv->conn != NULL);
-	g_return_if_fail(session->priv->channel >= 0);
-
-	priv = session->priv;
-
-	DEBUG(Session, "Unpausing channel %d", priv->channel);
-	pk_connection_channel_unmute_async(priv->conn, priv->channel, NULL,
-	                                   ppg_session_channel_unmuted,
-	                                   session);
-
-	EXIT;
+	g_return_val_if_fail(PPG_IS_SESSION(session), 0);
+	return session->priv->state;
 }
 
-/**
- * ppg_session_add_instrument:
- * @session: (in): A #PpgSession.
- * @instrument: (in): A #PpgInstrument.
- *
- * Adds a new #PpgInstrument to the session.
- *
- * Returns: None.
- * Side effects: None.
- */
+
+gboolean
+ppg_session_load (PpgSession   *session,
+                  const gchar  *filename,
+                  GError      **error)
+{
+	return TRUE;
+}
+
+
 void
 ppg_session_add_instrument (PpgSession    *session,
                             PpgInstrument *instrument)
 {
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-
 	g_signal_emit(session, signals[INSTRUMENT_ADDED], 0, instrument);
 }
 
+
 /**
- * ppg_session_set_uri:
- * @session: (in): A #PpgSession.
+ * ppg_session_dispose:
+ * @object: (in): A #GObject.
  *
- * Sets the URI for the session. The session will attempt to connect
- * to the target immediately.
+ * Dispose callback for @object.  This method releases references held
+ * by the #GObject instance.
  *
  * Returns: None.
- * Side effects: The connection is set and an attempt to connect is made.
+ * Side effects: Plenty.
  */
 static void
-ppg_session_set_uri (PpgSession  *session,
-                     const gchar *uri)
+ppg_session_dispose (GObject *object)
 {
-	PpgSessionPrivate *priv;
+	PpgSessionPrivate *priv = PPG_SESSION(object)->priv;
+	gpointer instance;
 
 	ENTRY;
 
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(session->priv->conn == NULL);
-	g_return_if_fail(uri != NULL);
-
-	priv = session->priv;
-
-	if (!(priv->conn = pk_connection_new_from_uri(uri))) {
-		CRITICAL(Session, "Invalid URI specified: %s", uri);
-		return;
+	if ((instance = priv->connection)) {
+		priv->connection = NULL;
+		g_object_unref(instance);
 	}
 
-	priv->uri = g_strdup(uri);
-	if (!pk_connection_is_connected(priv->conn)) {
-		pk_connection_connect_async(priv->conn, NULL,
-		                            ppg_session_connection_connected,
-		                            session);
-	} else {
-		ppg_session_set_connected(session);
-	}
-	g_object_notify(G_OBJECT(session), "uri");
+	G_OBJECT_CLASS(ppg_session_parent_class)->dispose(object);
 
 	EXIT;
 }
 
-/**
- * ppg_session_save:
- * @session: (in): A #PpgSession.
- * @uri: (in): The URI of the file to save.
- * @error: (error): A location for a #GError, or %NULL.
- *
- * Saves the session to a file found at @uri.
- *
- * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
- * Side effects: None.
- */
-gboolean
-ppg_session_save (PpgSession   *session,
-                  const gchar  *uri,
-                  GError      **error)
-{
-	PpgSessionPrivate *priv;
-
-	ENTRY;
-
-	g_return_val_if_fail(PPG_IS_SESSION(session), FALSE);
-
-	priv = session->priv;
-
-	/*
-	 * TODO: Implement saving to json.
-	 */
-
-	RETURN(TRUE);
-}
-
-/**
- * ppg_session_load:
- * @session: (in): A #PpgSession.
- * @uri: (in): A URI to load the session from.
- * @error: (error): A location of a #GError, or %NULL.
- *
- * Loads a #PpgSession from the file found at @uri.
- *
- * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
- * Side effects: None.
- */
-gboolean
-ppg_session_load (PpgSession   *session,
-                  const gchar  *uri,
-                  GError      **error)
-{
-	PpgSessionPrivate *priv;
-
-	ENTRY;
-
-	g_return_val_if_fail(PPG_IS_SESSION(session), FALSE);
-
-	priv = session->priv;
-
-	/*
-	 * TODO: Implement loading from json.
-	 */
-
-	RETURN(TRUE);
-}
-
-/**
- * ppg_session_get_started_at:
- * @session: (in): A #PpgSession.
- * @started_at: (out): A #GTimeVal.
- *
- * Retrieves the time at which the session was started using remote
- * agent time.
- *
- * Returns: None.
- * Side effects: None.
- */
-void
-ppg_session_get_started_at (PpgSession *session,
-                            GTimeVal   *started_at)
-{
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(started_at != NULL);
-
-	*started_at = session->priv->started_at;
-}
-
-gdouble
-ppg_session_convert_time (PpgSession *session,
-                          gdouble     abstime)
-{
-	g_return_val_if_fail(PPG_IS_SESSION(session), 0.0);
-	return abstime - session->priv->started_at_;
-}
 
 /**
  * ppg_session_finalize:
@@ -889,17 +279,13 @@ ppg_session_finalize (GObject *object)
 
 	ENTRY;
 
-	if (priv->timer) {
-		g_timer_destroy(priv->timer);
-		priv->timer = NULL;
-	}
-
-	g_free(priv->uri);
+	ppg_clear_object(&priv->clock);
 
 	G_OBJECT_CLASS(ppg_session_parent_class)->finalize(object);
 
 	EXIT;
 }
+
 
 /**
  * ppg_session_set_property:
@@ -919,37 +305,23 @@ ppg_session_get_property (GObject    *object,
 	PpgSession *session = PPG_SESSION(object);
 
 	switch (prop_id) {
-	case PROP_ARGS:
-		g_value_set_boxed(value, session->priv->args);
+	case PROP_ELAPSED:
+		g_value_set_double(value, ppg_session_get_elapsed(session));
 		break;
 	case PROP_CONNECTION:
-		g_value_set_object(value, session->priv->conn);
-		break;
-	case PROP_CHANNEL:
-		g_value_set_int(value, session->priv->channel);
-		break;
-	case PROP_ENV:
-		g_value_set_boxed(value, session->priv->env);
-		break;
-	case PROP_TARGET:
-		g_value_set_string(value, ppg_session_get_target(session));
+		g_value_set_object(value, session->priv->connection);
 		break;
 	case PROP_PID:
-		g_value_set_uint(value, ppg_session_get_pid(session));
+		g_value_set_uint(value, session->priv->channel.pid);
 		break;
-	case PROP_POSITION:
-		g_value_set_double(value, ppg_session_get_position(session));
-		break;
-	case PROP_STARTED_AT:
-		g_value_set_pointer(value, &session->priv->started_at);
-		break;
-	case PROP_URI:
-		g_value_set_string(value, session->priv->uri);
+	case PROP_STATE:
+		g_value_set_enum(value, session->priv->state);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
 }
+
 
 /**
  * ppg_session_set_property:
@@ -969,17 +341,8 @@ ppg_session_set_property (GObject      *object,
 	PpgSession *session = PPG_SESSION(object);
 
 	switch (prop_id) {
-	case PROP_URI:
-		ppg_session_set_uri(session, g_value_get_string(value));
-		break;
-	case PROP_TARGET:
-		ppg_session_set_target(session, g_value_get_string(value));
-		break;
-	case PROP_ARGS:
-		ppg_session_set_args(session, g_value_get_boxed(value));
-		break;
-	case PROP_ENV:
-		ppg_session_set_env(session, g_value_get_boxed(value));
+	case PROP_CONNECTION:
+		ppg_session_set_connection(session, g_value_get_object(value));
 		break;
 	case PROP_PID:
 		ppg_session_set_pid(session, g_value_get_uint(value));
@@ -988,6 +351,7 @@ ppg_session_set_property (GObject      *object,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
 }
+
 
 /**
  * ppg_session_class_init:
@@ -1004,147 +368,50 @@ ppg_session_class_init (PpgSessionClass *klass)
 	GObjectClass *object_class;
 
 	object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = ppg_session_dispose;
 	object_class->finalize = ppg_session_finalize;
 	object_class->get_property = ppg_session_get_property;
 	object_class->set_property = ppg_session_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgSessionPrivate));
 
-	g_object_class_install_property(object_class,
-	                                PROP_URI,
-	                                g_param_spec_string("uri",
-	                                                    "uri",
-	                                                    "uri",
-	                                                    NULL,
-	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	pspecs[PROP_CONNECTION] = g_param_spec_object("connection",
+	                                              "Connection",
+	                                              "The connection to a perfkit-agent",
+	                                              PK_TYPE_CONNECTION,
+	                                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+	g_object_class_install_property(object_class, PROP_CONNECTION, pspecs[PROP_CONNECTION]);
 
-	g_object_class_install_property(object_class,
-	                                PROP_CHANNEL,
-	                                g_param_spec_int("channel",
-	                                                 "channel",
-	                                                 "channel",
-	                                                 -1,
-	                                                 G_MAXINT,
-	                                                 -1,
-	                                                 G_PARAM_READABLE));
+	/**
+	 * PpgSession:elapsed:
+	 *
+	 * The "elapsed" property contains the amount of time that has elapsed
+	 * since the session was started.
+	 */
+	pspecs[PROP_ELAPSED] = g_param_spec_double("elapsed",
+	                                           "ElapsedTime",
+	                                           "The amount of time elapsed in the session",
+	                                           0.0,
+	                                           G_MAXDOUBLE,
+	                                           0.0,
+	                                           G_PARAM_READABLE);
+	g_object_class_install_property(object_class, PROP_ELAPSED, pspecs[PROP_ELAPSED]);
 
-	g_object_class_install_property(object_class,
-	                                PROP_CONNECTION,
-	                                g_param_spec_object("connection",
-	                                                    "connection",
-	                                                    "connection",
-	                                                    PK_TYPE_CONNECTION,
-	                                                    G_PARAM_READABLE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_TARGET,
-	                                g_param_spec_string("target",
-	                                                    "target",
-	                                                    "target",
-	                                                    NULL,
-	                                                    G_PARAM_READWRITE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_ARGS,
-	                                g_param_spec_boxed("args",
-	                                                   "args",
-	                                                   "args",
-	                                                   G_TYPE_STRV,
-	                                                   G_PARAM_READWRITE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_ENV,
-	                                g_param_spec_boxed("env",
-	                                                   "env",
-	                                                   "env",
-	                                                   G_TYPE_STRV,
-	                                                   G_PARAM_READWRITE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_PID,
-	                                g_param_spec_uint("pid",
-	                                                  "pid",
-	                                                  "pid",
-	                                                  0,
-	                                                  G_MAXSHORT,
-	                                                  0,
-	                                                  G_PARAM_READWRITE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_POSITION,
-	                                position_pspec = g_param_spec_double("position",
-	                                                                     "position",
-	                                                                     "position",
-	                                                                     0.0,
-	                                                                     G_MAXDOUBLE,
-	                                                                     0.0,
-	                                                                     G_PARAM_READABLE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_STARTED_AT,
-	                                g_param_spec_pointer("started-at",
-	                                                     "started-at",
-	                                                     "started-at",
-	                                                     G_PARAM_READABLE));
-
-	signals[READY] = g_signal_new("ready",
-	                              PPG_TYPE_SESSION,
-	                              G_SIGNAL_RUN_FIRST,
-	                              0,
-	                              NULL,
-	                              NULL,
-	                              g_cclosure_marshal_VOID__VOID,
-	                              G_TYPE_NONE,
-	                              0);
-
-	signals[DISCONNECTED] = g_signal_new("disconnected",
-	                                     PPG_TYPE_SESSION,
-	                                     G_SIGNAL_RUN_FIRST,
+	pspecs[PROP_PID] = g_param_spec_uint("pid",
+	                                     "Pid",
+	                                     "The pid of the target process",
 	                                     0,
-	                                     NULL,
-	                                     NULL,
-	                                     g_cclosure_marshal_VOID__VOID,
-	                                     G_TYPE_NONE,
-	                                     0);
+	                                     G_MAXUINT,
+	                                     0,
+	                                     G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_PID, pspecs[PROP_PID]);
 
-	signals[PAUSED] = g_signal_new("paused",
-	                               PPG_TYPE_SESSION,
-	                               G_SIGNAL_RUN_FIRST,
-	                               0,
-	                               NULL,
-	                               NULL,
-	                               g_cclosure_marshal_VOID__VOID,
-	                               G_TYPE_NONE,
-	                               0);
-
-	signals[STARTED] = g_signal_new("started",
-	                                PPG_TYPE_SESSION,
-	                                G_SIGNAL_RUN_FIRST,
-	                                0,
-	                                NULL,
-	                                NULL,
-	                                g_cclosure_marshal_VOID__VOID,
-	                                G_TYPE_NONE,
-	                                0);
-
-	signals[STOPPED] = g_signal_new("stopped",
-	                                PPG_TYPE_SESSION,
-	                                G_SIGNAL_RUN_FIRST,
-	                                0,
-	                                NULL,
-	                                NULL,
-	                                g_cclosure_marshal_VOID__VOID,
-	                                G_TYPE_NONE,
-	                                0);
-
-	signals[UNPAUSED] = g_signal_new("unpaused",
-	                                 PPG_TYPE_SESSION,
-	                                 G_SIGNAL_RUN_FIRST,
-	                                 0,
-	                                 NULL,
-	                                 NULL,
-	                                 g_cclosure_marshal_VOID__VOID,
-	                                 G_TYPE_NONE,
-	                                 0);
+	pspecs[PROP_STATE] = g_param_spec_enum("state",
+	                                       "State",
+	                                       "The state of the session",
+	                                       PPG_TYPE_SESSION_STATE,
+	                                       PPG_SESSION_INITIAL,
+	                                       G_PARAM_READABLE);
+	g_object_class_install_property(object_class, PROP_STATE, pspecs[PROP_STATE]);
 
 	signals[INSTRUMENT_ADDED] = g_signal_new("instrument-added",
 	                                         PPG_TYPE_SESSION,
@@ -1156,18 +423,8 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                         G_TYPE_NONE,
 	                                         1,
 	                                         PPG_TYPE_INSTRUMENT);
-
-	signals[INSTRUMENT_REMOVED] = g_signal_new("instrument-removed",
-	                                           PPG_TYPE_SESSION,
-	                                           G_SIGNAL_RUN_FIRST,
-	                                           0,
-	                                           NULL,
-	                                           NULL,
-	                                           g_cclosure_marshal_VOID__OBJECT,
-	                                           G_TYPE_NONE,
-	                                           1,
-	                                           PPG_TYPE_INSTRUMENT);
 }
+
 
 /**
  * ppg_session_init:
@@ -1181,8 +438,33 @@ ppg_session_class_init (PpgSessionClass *klass)
 static void
 ppg_session_init (PpgSession *session)
 {
-	ENTRY;
-	session->priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
-	                                            PpgSessionPrivate);
-	EXIT;
+	PpgSessionPrivate *priv;
+
+	priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
+	                                   PpgSessionPrivate);
+	session->priv = priv;
+
+	ppg_session_set_state(session, PPG_SESSION_INITIAL);
+}
+
+
+GType
+ppg_session_state_get_type (void)
+{
+	static gsize initialized = FALSE;
+	static GType type_id;
+	static const GEnumValue values[] = {
+		{ PPG_SESSION_INITIAL, "PPG_SESSION_INITIAL", "INITIAL" },
+		{ PPG_SESSION_READY,   "PPG_SESSION_READY",   "READY" },
+		{ PPG_SESSION_STOPPED, "PPG_SESSION_STOPPED", "STOPPED" },
+		{ PPG_SESSION_FAILED,  "PPG_SESSION_FAILED",  "FAILED" },
+		{ PPG_SESSION_MUTED,   "PPG_SESSION_MUTED",   "MUTED" },
+		{ 0 }
+	};
+
+	if (g_once_init_enter(&initialized)) {
+		type_id = g_enum_register_static("PpgSessionState", values);
+		g_once_init_leave(&initialized, TRUE);
+	}
+	return type_id;
 }

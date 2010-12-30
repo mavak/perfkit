@@ -16,18 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <glib/gi18n.h>
 
 #include "ppg-about-dialog.h"
 #include "ppg-util.h"
 
+
 G_DEFINE_TYPE(PpgAboutDialog, ppg_about_dialog, GTK_TYPE_WINDOW)
 
-#define BOLD(_s) "<span weight=\"bold\">" _s "</span>"
 
 static void
 ppg_about_dialog_class_init (PpgAboutDialogClass *klass)
@@ -111,9 +107,6 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                    "visible", TRUE,
 	                    NULL);
 	gtk_container_add(GTK_CONTAINER(frame_), vbox);
-	g_signal_connect(vbox, "expose-event",
-	                 G_CALLBACK(ppg_util_base_expose_event),
-	                 NULL);
 
 	table = g_object_new(GTK_TYPE_TABLE,
 	                     "column-spacing", 0,
@@ -135,7 +128,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  NULL);
 
 	l = g_object_new(GTK_TYPE_LABEL,
-	                 "label", BOLD("Name:"),
+	                 "label", "<b>Name:</b>",
 	                 "use-markup", TRUE,
 	                 "visible", TRUE,
 	                 "xalign", 1.0f,
@@ -165,7 +158,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  NULL);
 
 	l = g_object_new(GTK_TYPE_LABEL,
-	                 "label", BOLD("Version:"),
+	                 "label", "<b>Version:</b>",
 	                 "use-markup", TRUE,
 	                 "visible", TRUE,
 	                 "xalign", 1.0f,
@@ -205,7 +198,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  NULL);
 
 	l = g_object_new(GTK_TYPE_LABEL,
-	                 "label", BOLD("Machine:"),
+	                 "label", "<b>Machine:</b>",
 	                 "use-markup", TRUE,
 	                 "visible", TRUE,
 	                 "xalign", 1.0f,
@@ -244,7 +237,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  NULL);
 
 	l = g_object_new(GTK_TYPE_LABEL,
-	                 "label", BOLD("Memory:"),
+	                 "label", "<b>Memory:</b>",
 	                 "use-markup", TRUE,
 	                 "visible", TRUE,
 	                 "xalign", 1.0f,
@@ -276,7 +269,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  NULL);
 
 	l = g_object_new(GTK_TYPE_LABEL,
-	                 "label", BOLD("OS Version:"),
+	                 "label", "<b>OS Version:</b>",
 	                 "use-markup", TRUE,
 	                 "visible", TRUE,
 	                 "xalign", 1.0f,

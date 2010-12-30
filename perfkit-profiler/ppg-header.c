@@ -17,19 +17,18 @@
  */
 
 #include "ppg-header.h"
+#include "ppg-util.h"
+
 
 G_DEFINE_TYPE(PpgHeader, ppg_header, GTK_TYPE_DRAWING_AREA)
 
-#define TO_CAIRO_RGB(c)    \
-    ((c).red   / 65535.0), \
-    ((c).green / 65535.0), \
-    ((c).blue  / 65535.0)
 
 struct _PpgHeaderPrivate
 {
 	gboolean right_separator;
 	gboolean bottom_separator;
 };
+
 
 enum
 {
@@ -38,22 +37,32 @@ enum
 	PROP_RIGHT_SEPARATOR,
 };
 
+
+/**
+ * ppg_header_draw:
+ * @widget: (in): A #PpgHeader.
+ * @cr: (in): A #cairo_t.
+ *
+ * Draws the background for the header widget.
+ *
+ * Returns: %FALSE always.
+ * Side effects: Background is drawn to @cr.
+ */
 static gboolean
-ppg_header_expose_event (GtkWidget      *widget,
-                         GdkEventExpose *expose)
+ppg_header_draw (GtkWidget *widget,
+                 cairo_t   *cr)
 {
 	PpgHeader *header = (PpgHeader *)widget;
 	PpgHeaderPrivate *priv;
-	GtkStateType state = GTK_STATE_NORMAL;
+	cairo_pattern_t *p;
 	GtkAllocation alloc;
+	GtkStateType state = GTK_STATE_NORMAL;
 	GtkStyle *style;
 	GdkColor begin;
 	GdkColor end;
 	GdkColor line;
 	GdkColor v_begin;
 	GdkColor v_end;
-	cairo_pattern_t *p;
-	cairo_t *cr;
 
 	g_return_val_if_fail(PPG_IS_HEADER(header), FALSE);
 
@@ -67,7 +76,6 @@ ppg_header_expose_event (GtkWidget      *widget,
 	v_begin = style->mid[state];
 	v_end = style->dark[state];
 
-	cr = gdk_cairo_create(expose->window);
 	p = cairo_pattern_create_linear(0, 0, 0, alloc.height);
 
 	cairo_pattern_add_color_stop_rgb(p, 0.0, TO_CAIRO_RGB(begin));
@@ -76,7 +84,6 @@ ppg_header_expose_event (GtkWidget      *widget,
 	cairo_rectangle(cr, 0, 0, alloc.width, alloc.height);
 	cairo_fill(cr);
 	cairo_pattern_destroy(p);
-
 
 	if (priv->bottom_separator) {
 		cairo_set_source_rgb(cr, TO_CAIRO_RGB(line));
@@ -98,26 +105,40 @@ ppg_header_expose_event (GtkWidget      *widget,
 		cairo_pattern_destroy(p);
 	}
 
-	cairo_destroy(cr);
-
 	return FALSE;
 }
 
+
 /**
- * ppg_header_finalize:
- * @object: (in): A #PpgHeader.
+ * ppg_header_expose_event:
+ * @header: (in): A #PpgHeader.
  *
- * Finalizer for a #PpgHeader instance.  Frees any resources held by
- * the instance.
+ * Handles the "expose-event" on older versions of Gtk. Uses the new model
+ * of GtkWidget::draw() to perform the drawing.
  *
- * Returns: None.
+ * Returns: %FALSE unless event propagation should stop.
  * Side effects: None.
  */
-static void
-ppg_header_finalize (GObject *object)
+#if !GTK_CHECK_VERSION(2, 91, 0)
+static gboolean
+ppg_header_expose_event (GtkWidget      *widget,
+                         GdkEventExpose *expose)
 {
-	G_OBJECT_CLASS(ppg_header_parent_class)->finalize(object);
+	gboolean ret = FALSE;
+	cairo_t *cr;
+
+	if (gtk_widget_is_drawable(widget)) {
+		cr = gdk_cairo_create(expose->window);
+		gdk_cairo_rectangle(cr, &expose->area);
+		cairo_clip(cr);
+		ret = ppg_header_draw(widget, cr);
+		cairo_destroy(cr);
+	}
+
+	return ret;
 }
+#endif
+
 
 /**
  * ppg_header_set_property:
@@ -147,6 +168,7 @@ ppg_header_get_property (GObject    *object,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
 }
+
 
 /**
  * ppg_header_set_property:
@@ -180,6 +202,7 @@ ppg_header_set_property (GObject      *object,
 	}
 }
 
+
 /**
  * ppg_header_class_init:
  * @klass: (in): A #PpgHeaderClass.
@@ -196,13 +219,16 @@ ppg_header_class_init (PpgHeaderClass *klass)
 	GtkWidgetClass *widget_class;
 
 	object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = ppg_header_finalize;
 	object_class->get_property = ppg_header_get_property;
 	object_class->set_property = ppg_header_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgHeaderPrivate));
 
 	widget_class = GTK_WIDGET_CLASS(klass);
+#if GTK_CHECK_VERSION(2, 91, 0)
+	widget_class->draw = ppg_header_draw;
+#else
 	widget_class->expose_event = ppg_header_expose_event;
+#endif
 
 	g_object_class_install_property(object_class,
 	                                PROP_BOTTOM_SEPARATOR,
@@ -221,6 +247,7 @@ ppg_header_class_init (PpgHeaderClass *klass)
 	                                                     G_PARAM_READWRITE));
 }
 
+
 /**
  * ppg_header_init:
  * @header: (in): A #PpgHeader.
@@ -233,8 +260,6 @@ ppg_header_class_init (PpgHeaderClass *klass)
 static void
 ppg_header_init (PpgHeader *header)
 {
-	PpgHeaderPrivate *priv;
-
-	priv = header->priv = G_TYPE_INSTANCE_GET_PRIVATE(header, PPG_TYPE_HEADER,
-	                                                  PpgHeaderPrivate);
+	header->priv = G_TYPE_INSTANCE_GET_PRIVATE(header, PPG_TYPE_HEADER,
+	                                           PpgHeaderPrivate);
 }

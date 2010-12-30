@@ -51,7 +51,7 @@ ppg_restart_task_channel_started (GObject      *object,
 		/*
 		 * TODO: Notify session of new start time?
 		 */
-		ppg_task_finish_with_error(task, error);
+		ppg_task_fail(task, error);
 		g_error_free(error);
 		return;
 	}
@@ -78,7 +78,7 @@ ppg_restart_task_channel_stopped (GObject      *object,
 	priv = restart->priv;
 
 	if (!pk_connection_channel_stop_finish(conn, result, &error)) {
-		ppg_task_finish_with_error(task, error);
+		ppg_task_fail(task, error);
 		g_error_free(error);
 		return;
 	}

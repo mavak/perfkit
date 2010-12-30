@@ -17,7 +17,11 @@ sources_LTLIBRARIES += sched.la
 sourcesdir = $(libdir)/perfkit-agent/plugins
 
 modules_LTLIBRARIES = libgdkevent-module.la
+if HAVE_GTK3
+modulesdir = $(libdir)/gtk-3.0/modules
+else
 modulesdir = $(libdir)/gtk-2.0/modules
+endif
 
 headerdir = $(prefix)/include/perfkit-1.0/perfkit-agent
 header_DATA = $(INST_H_FILES)

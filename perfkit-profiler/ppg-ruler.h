@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_RULER_H__
-#define __PPG_RULER_H__
+#ifndef PPG_RULER_H
+#define PPG_RULER_H
 
 #include "ppg-header.h"
 
@@ -48,12 +48,19 @@ struct _PpgRulerClass
 	PpgHeaderClass parent_class;
 };
 
-GType ppg_ruler_get_type (void) G_GNUC_CONST;
-void  ppg_ruler_set_range (PpgRuler *ruler,
-                           gdouble   lower,
-                           gdouble   upper,
-                           gdouble   position);
+GType ppg_ruler_get_type       (void) G_GNUC_CONST;
+void  ppg_ruler_get_range      (PpgRuler *ruler,
+                                gdouble  *lower,
+                                gdouble  *upper,
+                                gdouble  *position);
+void  ppg_ruler_set_range      (PpgRuler *ruler,
+                                gdouble   lower,
+                                gdouble   upper,
+                                gdouble   position);
+gdouble ppg_ruler_get_position (PpgRuler *ruler);
+void    ppg_ruler_set_position (PpgRuler *ruler,
+                                gdouble   position);
 
 G_END_DECLS
 
-#endif /* __PPG_RULER_H__ */
+#endif /* PPG_RULER_H */

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <clutter/clutter.h>
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
 
@@ -24,7 +23,6 @@
 #include "ppg-color.h"
 #include "ppg-instruments.h"
 #include "ppg-log.h"
-#include "ppg-monitor.h"
 #include "ppg-paths.h"
 #include "ppg-private.h"
 #include "ppg-prefs.h"
@@ -38,15 +36,9 @@
 static gboolean  use_stdount  = TRUE;
 static gchar    *log_filename = NULL;
 static gint      exit_code    = 0;
-static gboolean  show_cpu     = FALSE;
 
 static GOptionEntry option_entries[] = {
 	{ "log", 'l', 0, G_OPTION_ARG_FILENAME, &log_filename, N_("Log to FILE"), N_("FILE") },
-	{ NULL }
-};
-
-static GOptionEntry hidden_entries[] = {
-	{ "show-cpu", 0, 0, G_OPTION_ARG_NONE, &show_cpu, N_("Show the CPU monitor") },
 	{ NULL }
 };
 
@@ -64,19 +56,13 @@ gboolean
 ppg_runtime_init (gint    *argc,
                   gchar ***argv)
 {
-	GOptionGroup *hidden;
 	GOptionContext *context;
 	GError *error = NULL;
-
-	hidden = g_option_group_new("special", "", "", NULL, NULL);
-	g_option_group_add_entries(hidden, hidden_entries);
 
 	context = g_option_context_new(_("- " PRODUCT_NAME));
 	g_option_context_add_main_entries(context, option_entries, GETTEXT_PACKAGE);
 	g_option_context_add_group(context, gtk_get_option_group(TRUE));
-	g_option_context_add_group(context, clutter_get_option_group());
 	g_option_context_add_group(context, ppg_prefs_get_option_group());
-	g_option_context_add_group(context, hidden);
 	if (!g_option_context_parse(context, argc, argv, &error)) {
 		g_printerr("%s\n", error->message);
 		g_error_free(error);
@@ -87,19 +73,11 @@ ppg_runtime_init (gint    *argc,
 	ppg_paths_init();
 	ppg_prefs_init();
 	ppg_color_init();
-	ppg_monitor_init();
 	gtk_window_set_default_icon_name("clock");
 	gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(),
 	                                  ppg_paths_get_icon_dir());
 	ppg_instruments_init();
 	ppg_actions_init();
-
-	if (show_cpu) {
-		GtkWidget *graph;
-
-		graph = ppg_monitor_cpu_new();
-		ppg_window_show_graph(_("CPU Usage"), graph, NULL);
-	}
 
 	return TRUE;
 }
@@ -190,7 +168,6 @@ ppg_runtime_shutdown (void)
 	ppg_instruments_shutdown();
 	ppg_actions_shutdown();
 	ppg_prefs_shutdown();
-	ppg_monitor_shutdown();
 	ppg_color_shutdown();
 	ppg_paths_shutdown();
 	ppg_log_shutdown();

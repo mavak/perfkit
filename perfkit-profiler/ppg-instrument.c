@@ -1,65 +1,94 @@
 /* ppg-instrument.c
  *
  * Copyright (C) 2010 Christian Hergert <chris@dronelabs.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <glib/gi18n.h>
 
 #include "ppg-instrument.h"
+#include "ppg-log.h"
+#include "ppg-session.h"
 
-G_DEFINE_ABSTRACT_TYPE(PpgInstrument, ppg_instrument, G_TYPE_INITIALLY_UNOWNED)
-
-typedef struct
-{
-	PpgVisualizerEntry *entry;
-	gpointer            user_data;
-} PpgVisualizerFactory;
 
 struct _PpgInstrumentPrivate
 {
+	GArray     *entries;
 	PpgSession *session;
-	gboolean failed;
-	gchar *name;
-	GArray *factories;
-	GList  *visualizers;
+	gchar      *title;
+	GPtrArray  *visualizers;
 };
+
 
 enum
 {
 	PROP_0,
-	PROP_FAILED,
-	PROP_NAME,
+
 	PROP_SESSION,
+	PROP_TITLE,
 };
+
 
 enum
 {
 	VISUALIZER_ADDED,
 	VISUALIZER_REMOVED,
+
 	LAST_SIGNAL
 };
 
+
+G_DEFINE_ABSTRACT_TYPE(PpgInstrument, ppg_instrument, G_TYPE_INITIALLY_UNOWNED)
+
+
+/*
+ * Globals.
+ */
 static guint signals[LAST_SIGNAL] = { 0 };
 
-GList*
-ppg_instrument_get_visualizers (PpgInstrument *instrument)
+
+PpgVisualizerEntry*
+ppg_instrument_get_entries (PpgInstrument *instrument,
+                            gsize         *n_entries)
 {
+	PpgInstrumentPrivate *priv;
+
 	g_return_val_if_fail(PPG_IS_INSTRUMENT(instrument), NULL);
-	return instrument->priv->visualizers;
+
+	priv = instrument->priv;
+
+	*n_entries = priv->entries->len;
+	return (PpgVisualizerEntry *)priv->entries->data;
 }
+
+
+GtkWidget*
+ppg_instrument_create_data_view (PpgInstrument *instrument)
+{
+	PpgInstrumentClass *klass;
+	GtkWidget *ret = NULL;
+
+	g_return_val_if_fail(PPG_IS_INSTRUMENT(instrument), NULL);
+
+	klass = PPG_INSTRUMENT_GET_CLASS(instrument);
+	if (klass->create_data_view) {
+		ret = klass->create_data_view(instrument);
+	}
+	return ret;
+}
+
 
 PpgSession*
 ppg_instrument_get_session (PpgInstrument *instrument)
@@ -68,40 +97,145 @@ ppg_instrument_get_session (PpgInstrument *instrument)
 	return instrument->priv->session;
 }
 
+
 static void
 ppg_instrument_set_session (PpgInstrument *instrument,
                             PpgSession    *session)
 {
-	PpgInstrumentClass *klass;
-	PpgInstrumentPrivate *priv;
-	GError *error = NULL;
-
 	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
 	g_return_if_fail(PPG_IS_SESSION(session));
+	instrument->priv->session = g_object_ref(session);
+}
+
+
+/**
+ * ppg_instrument_get_title:
+ * @instrument: (in): A #PpgInstrument.
+ *
+ * Retrieves the title of the instrument.
+ *
+ * Returns: A string which should not be modified or freed.
+ * Side effects: None.
+ */
+const gchar *
+ppg_instrument_get_title (PpgInstrument *instrument)
+{
+	g_return_val_if_fail(PPG_IS_INSTRUMENT(instrument), NULL);
+	return instrument->priv->title;
+}
+
+
+/**
+ * ppg_instrument_set_title:
+ * @instrument: (in): A #PpgInstrument.
+ * @title: (in): A string.
+ *
+ * Sets the title for an instrument.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_instrument_set_title (PpgInstrument *instrument,
+                          const gchar   *title)
+{
+	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
+	g_return_if_fail(instrument->priv->title == NULL);
+
+	instrument->priv->title = g_strdup(title);
+	g_object_notify(G_OBJECT(instrument), "title");
+}
+
+
+/**
+ * ppg_instrument_register_visualizers:
+ * @instrument: (in): A #PpgInstrument.
+ *
+ * Register a set of visualizers that can be created by this instrument.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_instrument_register_visualizers (PpgInstrument      *instrument,
+                                     guint               n_entries,
+                                     PpgVisualizerEntry *entries,
+                                     gpointer            user_data)
+{
+	PpgInstrumentPrivate *priv;
+	PpgVisualizerEntry entry;
+	gint i;
+
+	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
+	g_return_if_fail(entries != NULL);
 
 	priv = instrument->priv;
-	klass = PPG_INSTRUMENT_GET_CLASS(instrument);
 
-	priv->session = session;
-	g_object_add_weak_pointer(G_OBJECT(priv->session), (gpointer *)&priv->session);
+	for (i = 0; i < n_entries; i++) {
+		memset(&entry, 0, sizeof entry);
+		entry.name = g_strdup(entries[i].name);
+		entry.title = g_strdup(entries[i].title);
+		entry.icon_name = g_strdup(entries[i].icon_name);
+		entry.callback = entries[i].callback;
+		entry.user_data = user_data;
+		g_array_append_val(priv->entries, entry);
+	}
+}
 
-	g_object_notify(G_OBJECT(instrument), "session");
 
-	if (klass->load) {
-		if (!klass->load(instrument, session, &error)) {
-			priv->failed = TRUE;
-			g_critical("Failed to load instrument %s: %s",
-			           g_type_name(G_TYPE_FROM_INSTANCE(instrument)),
-			           error->message);
-			/*
-			 * XXX: Should we store the error?
-			 */
-			g_error_free(error);
-			return;
+/**
+ * ppg_instrument_add_visualizer:
+ * @instrument: (in): A #PpgInstrument.
+ * @name: (in): The name of the visualizer.
+ *
+ * Requests that a visualizer by the name of @name be created.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_instrument_add_visualizer (PpgInstrument *instrument,
+                               const gchar   *name)
+{
+	PpgInstrumentPrivate *priv;
+	PpgVisualizerEntry *entry;
+	PpgVisualizerFactory factory;
+	PpgVisualizer *visualizer;
+	GError *error = NULL;
+	gint i;
+
+	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
+	g_return_if_fail(name != NULL);
+
+	priv = instrument->priv;
+
+	for (i = 0; i < priv->entries->len; i++) {
+		entry = &g_array_index(priv->entries, PpgVisualizerEntry, i);
+		if (!g_strcmp0(name, entry->name)) {
+			factory = (gpointer)entry->callback;
+			if (!(visualizer = factory(entry, entry->user_data, &error))) {
+				/*
+				 * TODO: Show error message.
+				 */
+				g_assert_not_reached();
+			}
+			g_signal_emit(instrument, signals[VISUALIZER_ADDED],
+			              0, visualizer);
+			break;
 		}
 	}
 }
 
+
+/**
+ * ppg_instrument_visualizer_added:
+ * @instrument: (in): A #PpgInstrument.
+ *
+ * Handle the "visualizer-added" event and store a reference to the visualizer.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static void
 ppg_instrument_visualizer_added (PpgInstrument *instrument,
                                  PpgVisualizer *visualizer)
@@ -112,147 +246,26 @@ ppg_instrument_visualizer_added (PpgInstrument *instrument,
 	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
 
 	priv = instrument->priv;
-	priv->visualizers = g_list_prepend(priv->visualizers, visualizer);
+
+	g_ptr_array_add(priv->visualizers, g_object_ref(visualizer));
 }
 
-static void
-ppg_instrument_visualizer_removed (PpgInstrument *instrument,
-                                   PpgVisualizer *visualizer)
-{
-	PpgInstrumentPrivate *priv;
 
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
-
-	priv = instrument->priv;
-	priv->visualizers = g_list_remove(priv->visualizers, visualizer);
-}
-
-void
-ppg_instrument_register_visualizer (PpgInstrument      *instrument,
-                                    PpgVisualizerEntry *entry,
-                                    gpointer            user_data)
-{
-	PpgInstrumentPrivate *priv;
-	PpgVisualizerFactory factory = { 0 };
-
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-	g_return_if_fail(entry != NULL);
-
-	priv = instrument->priv;
-
-	if (!entry->callback) {
-		g_critical("PpgVisualizerEntry \"%s\" missing callback!",
-		           entry->name);
-		return;
-	}
-
-	factory.entry = g_new0(PpgVisualizerEntry, 1);
-	memcpy(factory.entry, entry, sizeof(*entry));
-	factory.user_data = user_data;
-
-	g_array_append_val(priv->factories, factory);
-}
-
-void
-ppg_instrument_register_visualizers (PpgInstrument      *instrument,
-                                     PpgVisualizerEntry *entries,
-                                     guint               n_entries,
-                                     gpointer            user_data)
-{
-	PpgInstrumentPrivate *priv;
-	gint i;
-
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-	g_return_if_fail(entries != NULL);
-
-	priv = instrument->priv;
-
-	for (i = 0; i < n_entries; i++) {
-		ppg_instrument_register_visualizer(instrument,
-		                                   &entries[i],
-		                                   user_data);
-	}
-}
-
-void
-ppg_instrument_add_visualizer (PpgInstrument *instrument,
-                               const gchar   *name)
-{
-	PpgInstrumentPrivate *priv;
-	PpgVisualizer *visualizer = NULL;
-	PpgVisualizerFactory *factory;
-	PpgVisualizer* (*factory_func) (gpointer user_data);
-	gint i;
-
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-	g_return_if_fail(name != NULL);
-
-	priv = instrument->priv;
-
-	for (i = 0; i < priv->factories->len; i++) {
-		factory = &g_array_index(priv->factories, PpgVisualizerFactory, i);
-		if (g_str_equal(factory->entry->name, name)) {
-			if ((factory_func = (gpointer)factory->entry->callback)) {
-				visualizer = factory_func(factory->user_data);
-			}
-		}
-	}
-
-	if (visualizer) {
-		g_signal_emit(instrument, signals[VISUALIZER_ADDED], 0, visualizer);
-	}
-}
-
-void
-ppg_instrument_remove_visualizer (PpgInstrument *instrument,
-                                  PpgVisualizer *visualizer)
-{
-	PpgInstrumentPrivate *priv;
-
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
-
-	priv = instrument->priv;
-
-	if (!g_list_find(priv->visualizers, visualizer)) {
-		g_critical("Instrument does not contain visualizer instance!");
-		return;
-	}
-
-	priv->visualizers = g_list_remove(priv->visualizers, visualizer);
-	g_signal_emit(instrument, signals[VISUALIZER_REMOVED], 0, visualizer);
-}
-
-void
-ppg_instrument_remove_visualizer_named (PpgInstrument *instrument,
-                                        const gchar   *name)
-{
-	PpgInstrumentPrivate *priv;
-	GList *iter;
-	gchar *iter_name;
-
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-	g_return_if_fail(name != NULL);
-
-	priv = instrument->priv;
-
-	for (iter = priv->visualizers; iter; iter = iter->next) {
-		g_object_get(iter->data, "name", &iter_name, NULL);
-		if (!g_strcmp0(name, iter_name)) {
-			ppg_instrument_remove_visualizer(instrument, iter->data);
-			g_free(iter_name);
-			return;
-		}
-		g_free(iter_name);
-	}
-}
-
+/**
+ * ppg_instrument_get_visualizers:
+ * @instrument: (in): A #PpgInstrument.
+ *
+ * Retrieves a list of #PpgVisualizer<!-- -->'s. The reference count is not
+ * increased, so the caller only needs to call g_list_free() on the returned
+ * list.
+ *
+ * Returns: A #GList of visualizers.
+ * Side effects: None.
+ */
 GList*
-ppg_instrument_get_visualizer_entries (PpgInstrument *instrument)
+ppg_instrument_get_visualizers (PpgInstrument *instrument)
 {
 	PpgInstrumentPrivate *priv;
-	PpgVisualizerFactory *factory;
 	GList *list = NULL;
 	gint i;
 
@@ -260,27 +273,12 @@ ppg_instrument_get_visualizer_entries (PpgInstrument *instrument)
 
 	priv = instrument->priv;
 
-	for (i = 0; i < priv->factories->len; i++) {
-		factory = &g_array_index(priv->factories, PpgVisualizerFactory, i);
-		list = g_list_prepend(list, factory->entry);
+	for (i = 0; i < priv->visualizers->len; i++) {
+		list = g_list_prepend(list, g_ptr_array_index(priv->visualizers, i));
 	}
-
 	return list;
 }
 
-static void
-ppg_instrument_set_name (PpgInstrument *instrument,
-                         const gchar *name)
-{
-	PpgInstrumentPrivate *priv;
-
-	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
-
-	priv = instrument->priv;
-
-	g_free(priv->name);
-	priv->name = g_strdup(name);
-}
 
 /**
  * ppg_instrument_finalize:
@@ -295,15 +293,46 @@ ppg_instrument_set_name (PpgInstrument *instrument,
 static void
 ppg_instrument_finalize (GObject *object)
 {
-	PpgInstrumentPrivate *priv = PPG_INSTRUMENT(object)->priv;
-
-	g_object_remove_weak_pointer(G_OBJECT(priv->session),
-	                             (gpointer *)&priv->session);
-	g_array_unref(priv->factories);
-	g_free(priv->name);
-
+	ENTRY;
 	G_OBJECT_CLASS(ppg_instrument_parent_class)->finalize(object);
+	EXIT;
 }
+
+
+/**
+ * ppg_instrument_dispose:
+ * @instrument: (in): A #PpgInstrument.
+ *
+ * Handle the "dispose" signal on the object. Clean any references.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_instrument_dispose (GObject *object)
+{
+	PpgInstrumentPrivate *priv = PPG_INSTRUMENT(object)->priv;
+	PpgVisualizer *visualizer;
+	GPtrArray *visualizers;
+	gint i;
+
+	ENTRY;
+
+	if ((visualizers = priv->visualizers)) {
+		priv->visualizers = NULL;
+		for (i = visualizers->len - 1; i >= 0; i--) {
+			visualizer = g_ptr_array_index(visualizers, i);
+			g_ptr_array_remove(visualizers, visualizer);
+			g_object_unref(visualizer);
+		}
+		g_ptr_array_free(visualizers, TRUE);
+	}
+
+	G_OBJECT_CLASS(ppg_instrument_parent_class)->dispose(object);
+
+	EXIT;
+}
+
 
 /**
  * ppg_instrument_set_property:
@@ -323,19 +352,17 @@ ppg_instrument_get_property (GObject    *object,
 	PpgInstrument *instrument = PPG_INSTRUMENT(object);
 
 	switch (prop_id) {
-	case PROP_FAILED:
-		g_value_set_boolean(value, instrument->priv->failed);
-		break;
-	case PROP_NAME:
-		g_value_set_string(value, instrument->priv->name);
-		break;
 	case PROP_SESSION:
-		g_value_set_object(value, instrument->priv->session);
+		g_value_set_object(value, ppg_instrument_get_session(instrument));
+		break;
+	case PROP_TITLE:
+		g_value_set_string(value, ppg_instrument_get_title(instrument));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
 }
+
 
 /**
  * ppg_instrument_set_property:
@@ -355,16 +382,17 @@ ppg_instrument_set_property (GObject      *object,
 	PpgInstrument *instrument = PPG_INSTRUMENT(object);
 
 	switch (prop_id) {
+	case PROP_TITLE:
+		ppg_instrument_set_title(instrument, g_value_get_string(value));
+		break;
 	case PROP_SESSION:
 		ppg_instrument_set_session(instrument, g_value_get_object(value));
-		break;
-	case PROP_NAME:
-		ppg_instrument_set_name(instrument, g_value_get_string(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
 }
+
 
 /**
  * ppg_instrument_class_init:
@@ -381,21 +409,13 @@ ppg_instrument_class_init (PpgInstrumentClass *klass)
 	GObjectClass *object_class;
 
 	object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = ppg_instrument_dispose;
 	object_class->finalize = ppg_instrument_finalize;
 	object_class->get_property = ppg_instrument_get_property;
 	object_class->set_property = ppg_instrument_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgInstrumentPrivate));
 
 	klass->visualizer_added = ppg_instrument_visualizer_added;
-	klass->visualizer_removed = ppg_instrument_visualizer_removed;
-
-	g_object_class_install_property(object_class,
-	                                PROP_NAME,
-	                                g_param_spec_string("name",
-	                                                    "name",
-	                                                    "name",
-	                                                    NULL,
-	                                                    G_PARAM_READWRITE));
 
 	g_object_class_install_property(object_class,
 	                                PROP_SESSION,
@@ -406,35 +426,24 @@ ppg_instrument_class_init (PpgInstrumentClass *klass)
 	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
 	g_object_class_install_property(object_class,
-	                                PROP_FAILED,
-	                                g_param_spec_boolean("failed",
-	                                                     "failed",
-	                                                     "failed",
-	                                                     FALSE,
-	                                                     G_PARAM_READABLE));
+	                                PROP_TITLE,
+	                                g_param_spec_string("title",
+	                                                    "title",
+	                                                    "title",
+	                                                    _("Unknown"),
+	                                                    G_PARAM_READWRITE));
 
 	signals[VISUALIZER_ADDED] = g_signal_new("visualizer-added",
 	                                         PPG_TYPE_INSTRUMENT,
-	                                         G_SIGNAL_RUN_LAST,
+	                                         G_SIGNAL_RUN_FIRST,
 	                                         G_STRUCT_OFFSET(PpgInstrumentClass, visualizer_added),
-	                                         NULL,
-	                                         NULL,
+	                                         NULL, NULL,
 	                                         g_cclosure_marshal_VOID__OBJECT,
 	                                         G_TYPE_NONE,
 	                                         1,
 	                                         PPG_TYPE_VISUALIZER);
-
-	signals[VISUALIZER_REMOVED] = g_signal_new("visualizer-removed",
-	                                           PPG_TYPE_INSTRUMENT,
-	                                           G_SIGNAL_RUN_LAST,
-	                                           G_STRUCT_OFFSET(PpgInstrumentClass, visualizer_removed),
-	                                           NULL,
-	                                           NULL,
-	                                           g_cclosure_marshal_VOID__OBJECT,
-	                                           G_TYPE_NONE,
-	                                           1,
-	                                           PPG_TYPE_VISUALIZER);
 }
+
 
 /**
  * ppg_instrument_init:
@@ -454,5 +463,6 @@ ppg_instrument_init (PpgInstrument *instrument)
 	                                   PpgInstrumentPrivate);
 	instrument->priv = priv;
 
-	priv->factories = g_array_new(FALSE, FALSE, sizeof(PpgVisualizerFactory));
+	priv->entries = g_array_new(FALSE, FALSE, sizeof(PpgVisualizerEntry));
+	priv->visualizers = g_ptr_array_new();
 }

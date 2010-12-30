@@ -57,13 +57,12 @@ AC_SUBST(PK_VERSION)
 dnl ************************************************************************
 dnl Check for Required Modules
 dnl ************************************************************************
-PKG_CHECK_MODULES(CLUTTER,  [clutter-gtk-0.10 >= 0.10.4])
-PKG_CHECK_MODULES(DBUS,     [dbus-glib-1      >= 0.80])
-PKG_CHECK_MODULES(GIO,      [gio-2.0          >= 2.26
-                             gio-unix-2.0     >= 2.26])
-PKG_CHECK_MODULES(GMODULE,  [gmodule-2.0      >= 2.26])
-PKG_CHECK_MODULES(GOBJECT,  [gobject-2.0      >= 2.26
-                             gthread-2.0      >= 2.26])
+PKG_CHECK_MODULES(DBUS,      [dbus-glib-1      >= 0.80])
+PKG_CHECK_MODULES(GIO,       [gio-2.0          >= 2.26
+                              gio-unix-2.0     >= 2.26])
+PKG_CHECK_MODULES(GMODULE,   [gmodule-2.0      >= 2.26])
+PKG_CHECK_MODULES(GOBJECT,   [gobject-2.0      >= 2.26
+                              gthread-2.0      >= 2.26])
 
 
 dnl ************************************************************************
@@ -72,6 +71,12 @@ dnl ************************************************************************
 have_gtk3=no
 PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 2.91], [have_gtk3=yes],
                   [PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.20])])
+if test "x$have_gtk3" = "xyes"; then
+	PKG_CHECK_MODULES(GOOCANVAS, [goocanvas-2.0 >= 1.90.2])
+else
+	PKG_CHECK_MODULES(GOOCANVAS, [goocanvas >= 0.15])
+fi
+AM_CONDITIONAL(HAVE_GTK3, test "x$have_gtk3" = "xyes")
 
 
 dnl ************************************************************************
@@ -175,8 +180,6 @@ AC_CONFIG_FILES([
 
 	perfkit-gui/Makefile
 	perfkit-gui/pkg-version.h
-
-	uber/Makefile
 
 	perfkit-profiler/Makefile
 	perfkit-profiler/ppg-version.h

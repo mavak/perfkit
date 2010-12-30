@@ -1,3 +1,14 @@
-icondir = $(datadir)/perfkit/icons
-icon_DATA = perfkit-plugin.png
-EXTRA_DIST = $(icon_DATA)
+all: $(ICONS)
+
+%.h: %.png
+	@$(GDK_PIXBUF_CSOURCE) --name=$*_pixbuf $*.png > tmp-$*.h
+	@mv tmp-$*.h $*.h
+
+ICONS =
+ICONS += plugin.h
+ICONS += pointer.h
+ICONS += selection.h
+
+EXTRA_DIST = $(ICONS)
+CLEANFILES = $(ICONS)
+GDK_PIXBUF_CSOURCE = gdk-pixbuf-csource

@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_RUNTIME_H__
-#define __PPG_RUNTIME_H__
+#ifndef PPG_RUNTIME_H
+#define PPG_RUNTIME_H
 
 #include <glib.h>
 
@@ -29,4 +29,4 @@ gboolean ppg_runtime_try_quit  (void);
 
 G_END_DECLS
 
-#endif /* __PPG_RUNTIME_H__ */
+#endif /* PPG_RUNTIME_H */

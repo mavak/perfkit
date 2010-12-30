@@ -3,7 +3,6 @@ SUBDIRS += data
 SUBDIRS += perfkit-agent
 SUBDIRS += perfkit
 SUBDIRS += tools
-SUBDIRS += uber
 SUBDIRS += perfkit-gui
 SUBDIRS += perfkit-profiler
 SUBDIRS += bindings

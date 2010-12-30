@@ -20,31 +20,34 @@
 
 #include "ppg-ruler.h"
 
-G_DEFINE_TYPE(PpgRuler, ppg_ruler, PPG_TYPE_HEADER)
 
 #define ARROW_SIZE 17
 
+
+G_DEFINE_TYPE(PpgRuler, ppg_ruler, PPG_TYPE_HEADER)
+
+
 struct _PpgRulerPrivate
 {
-	PangoFontDescription *font_desc;
-
-	gdouble lower;
-	gdouble upper;
-	gdouble pos;
-
-	gboolean dirty;
-
-	GdkPixmap *ruler;
-	GdkPixmap *arrow;
+	PangoFontDescription *font_desc; /* Time position font styling */
+	gdouble               lower;     /* Lower value of range */
+	gdouble               upper;     /* Upper value of range */
+	gdouble               pos;       /* Current position in range */
+	gboolean              dirty;     /* If we need to redraw */
+	cairo_surface_t      *ruler;     /* Ruler surface */
+	cairo_surface_t      *arrow;     /* Arrow surface */
 };
+
 
 enum
 {
 	PROP_0,
+
 	PROP_LOWER,
 	PROP_UPPER,
 	PROP_POSITION,
 };
+
 
 /**
  * ppg_ruler_contains:
@@ -63,6 +66,7 @@ ppg_ruler_contains (PpgRuler *ruler,
 	return ((value >= ruler->priv->lower) &&
 	        (value <= ruler->priv->upper));
 }
+
 
 /**
  * ppg_ruler_update_layout_text:
@@ -101,6 +105,43 @@ ppg_ruler_update_layout_text (PpgRuler    *ruler,
 	g_free(markup);
 }
 
+
+/**
+ * ppg_ruler_get_range:
+ * @ruler: (in): A #PpgRuler.
+ * @lower: (out): A location for a #gdouble or %NULL.
+ * @upper: (out): A location for a #gdouble or %NULL.
+ * @position: (out): A location for a #gdouble or %NULL.
+ *
+ * Retrieves the range and position for the ruler widget.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_ruler_get_range (PpgRuler *ruler,
+                     gdouble  *lower,
+                     gdouble  *upper,
+                     gdouble  *position)
+{
+	PpgRulerPrivate *priv;
+
+	g_return_if_fail(PPG_IS_RULER(ruler));
+
+	priv = ruler->priv;
+
+	if (lower) {
+		*lower = priv->lower;
+	}
+	if (upper) {
+		*upper = priv->upper;
+	}
+	if (position) {
+		*position = priv->pos;
+	}
+}
+
+
 /**
  * ppg_ruler_set_range:
  * @ruler: (in): A #PpgRuler.
@@ -137,6 +178,24 @@ ppg_ruler_set_range (PpgRuler *ruler,
 	g_object_notify(G_OBJECT(ruler), "position");
 }
 
+
+/**
+ * ppg_ruler_get_position:
+ * @ruler: (in): A #PpgRuler.
+ *
+ * Retrieves the current position of the arrow in the ruler.
+ *
+ * Returns: The position of the arrow.
+ * Side effects: None.
+ */
+gdouble
+ppg_ruler_get_position (PpgRuler *ruler)
+{
+	g_return_val_if_fail(PPG_IS_RULER(ruler), 0.0);
+	return ruler->priv->pos;
+}
+
+
 /**
  * ppg_ruler_set_position:
  * @ruler: (in): A #PpgRuler.
@@ -147,7 +206,7 @@ ppg_ruler_set_range (PpgRuler *ruler,
  * Returns: None.
  * Side effects: None.
  */
-static void
+void
 ppg_ruler_set_position (PpgRuler *ruler,
                         gdouble   position)
 {
@@ -157,6 +216,7 @@ ppg_ruler_set_position (PpgRuler *ruler,
 	gtk_widget_queue_draw(GTK_WIDGET(ruler));
 	g_object_notify(G_OBJECT(ruler), "position");
 }
+
 
 /**
  * ppg_ruler_set_lower:
@@ -184,6 +244,7 @@ ppg_ruler_set_lower (PpgRuler *ruler,
 	g_object_notify(G_OBJECT(ruler), "lower");
 }
 
+
 /**
  * ppg_ruler_set_upper:
  * @ruler: (in): A #PpgRuler.
@@ -209,6 +270,7 @@ ppg_ruler_set_upper (PpgRuler *ruler,
 	gtk_widget_queue_draw(GTK_WIDGET(ruler));
 	g_object_notify(G_OBJECT(ruler), "upper");
 }
+
 
 /**
  * ppg_ruler_motion_notify_event:
@@ -240,6 +302,7 @@ ppg_ruler_motion_notify_event (GtkWidget      *widget,
 
 	return FALSE;
 }
+
 
 /**
  * ppg_ruler_draw_arrow:
@@ -274,7 +337,7 @@ ppg_ruler_draw_arrow (PpgRuler *ruler)
 	priv = ruler->priv;
 	style = gtk_widget_get_style(GTK_WIDGET(ruler));
 
-	cr = gdk_cairo_create(priv->arrow);
+	cr = cairo_create(priv->arrow);
 
 	cairo_save(cr);
 	cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -354,6 +417,15 @@ ppg_ruler_draw_arrow (PpgRuler *ruler)
 	cairo_destroy(cr);
 }
 
+
+/**
+ * get_x_offset:
+ *
+ * Retrieves the x offset within the widget for a given time.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
 static inline gdouble
 get_x_offset (PpgRulerPrivate *priv,
               GtkAllocation *alloc,
@@ -372,6 +444,7 @@ get_x_offset (PpgRulerPrivate *priv,
 	b = value - priv->lower;
 	return floor((b / a) * alloc->width);
 }
+
 
 /**
  * ppg_ruler_draw_ruler:
@@ -412,7 +485,7 @@ ppg_ruler_draw_ruler (PpgRuler *ruler)
 
 	gtk_widget_get_allocation(GTK_WIDGET(ruler), &alloc);
 	style = gtk_widget_get_style(GTK_WIDGET(ruler));
-	cr = gdk_cairo_create(priv->ruler);
+	cr = cairo_create(priv->ruler);
 
 	cairo_save(cr);
 	cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -481,6 +554,7 @@ ppg_ruler_draw_ruler (PpgRuler *ruler)
 	cairo_destroy(cr);
 }
 
+
 /**
  * ppg_ruler_realize:
  * @widget: (in): A #PpgRuler.
@@ -495,8 +569,7 @@ ppg_ruler_realize (GtkWidget *widget)
 {
 	PpgRuler *ruler = (PpgRuler *)widget;
 	PpgRulerPrivate *priv;
-	GdkColormap *colormap;
-	GdkVisual *visual;
+	GdkWindow *window;
 
 	g_return_if_fail(PPG_IS_RULER(ruler));
 
@@ -505,53 +578,51 @@ ppg_ruler_realize (GtkWidget *widget)
 	GTK_WIDGET_CLASS(ppg_ruler_parent_class)->realize(widget);
 	gtk_widget_queue_resize(widget);
 
-	/*
-	 * Create pixmap for arrow.
-	 */
 	if (priv->arrow) {
-		g_object_unref(priv->arrow);
+		cairo_surface_destroy(priv->arrow);
 	}
-	priv->arrow = gdk_pixmap_new(NULL, ARROW_SIZE, ARROW_SIZE, 32);
-	visual = gdk_visual_get_best_with_depth(32);
-	colormap = gdk_colormap_new(visual, FALSE);
-	gdk_drawable_set_colormap(priv->arrow, colormap);
+
+	window = gtk_widget_get_window(widget);
+	priv->arrow = gdk_window_create_similar_surface(window,
+	                                                CAIRO_CONTENT_COLOR_ALPHA,
+	                                                ARROW_SIZE, ARROW_SIZE);
 }
 
+
 /**
- * ppg_ruler_expose_event:
+ * ppg_ruler_draw:
  * @ruler: (in): A #PpgRuler.
+ * @cr: (in): A #cairo_t to draw to.
  *
- * Handle the "expose-event" for the widget. Blit the background and position
+ * Handle the "draw" event for the widget. Blit the background and position
  * arrow to the surface.
  *
- * Returns: None.
+ * Returns: FALSE always.
  * Side effects: None.
  */
 static gboolean
-ppg_ruler_expose_event (GtkWidget      *widget,
-                        GdkEventExpose *expose)
+ppg_ruler_draw (GtkWidget *widget,
+                cairo_t   *cr)
 {
 	PpgRuler *ruler = (PpgRuler *)widget;
 	PpgRulerPrivate *priv;
 	GtkAllocation alloc;
-	cairo_t *cr;
+	gboolean ret;
 	gint x;
 	gint y;
 
 	g_return_val_if_fail(PPG_IS_RULER(ruler), FALSE);
 
-	GTK_WIDGET_CLASS(ppg_ruler_parent_class)->expose_event(widget, expose);
+#if GTK_CHECK_VERSION(2, 91, 0)
+	ret = GTK_WIDGET_CLASS(ppg_ruler_parent_class)->draw(widget, cr);
+#else
+	ret = GTK_WIDGET_CLASS(ppg_ruler_parent_class)->
+		expose_event(widget, (GdkEventExpose *)gtk_get_current_event());
+#endif
 
 	priv = ruler->priv;
 
 	gtk_widget_get_allocation(widget, &alloc);
-	cr = gdk_cairo_create(expose->window);
-
-	/*
-	 * Clip to exposure region.
-	 */
-	gdk_cairo_rectangle(cr, &expose->area);
-	cairo_clip(cr);
 
 	/*
 	 * Render the contents immediately if needed.
@@ -566,7 +637,7 @@ ppg_ruler_expose_event (GtkWidget      *widget,
 	 * Blit the background to the surface.
 	 */
 	cairo_rectangle(cr, 0, 0, alloc.width, alloc.height);
-	gdk_cairo_set_source_pixmap(cr, priv->ruler, 0, 0);
+	cairo_set_source_surface(cr, priv->ruler, 0, 0);
 	cairo_fill(cr);
 
 	/*
@@ -576,16 +647,43 @@ ppg_ruler_expose_event (GtkWidget      *widget,
                 (priv->upper - priv->lower) *
                 alloc.width) - (ARROW_SIZE / 2.0));
 	y = alloc.height - ARROW_SIZE - 1;
-	gdk_cairo_set_source_pixmap(cr, priv->arrow, x, y);
+	cairo_set_source_surface(cr, priv->arrow, x, y);
 	cairo_rectangle(cr, x, y, ARROW_SIZE, ARROW_SIZE);
 	cairo_fill(cr);
 
-	/*
-	 * Cleanup.
-	 */
-	cairo_destroy(cr);
-	return FALSE;
+	return ret;
 }
+
+
+/**
+ * ppg_ruler_expose_event:
+ * @ruler: (in): A #PpgRuler.
+ *
+ * Handles the "expose-event" for older versions of Gtk+.
+ *
+ * Returns: %FALSE if signal emission should continue; otherwise %TRUE.
+ * Side effects: None.
+ */
+#if !GTK_CHECK_VERSION(2, 91, 0)
+static gboolean
+ppg_ruler_expose_event (GtkWidget      *widget,
+                        GdkEventExpose *expose)
+{
+	gboolean ret = FALSE;
+	cairo_t *cr;
+
+	if (gtk_widget_is_drawable(widget)) {
+		cr = gdk_cairo_create(expose->window);
+		gdk_cairo_rectangle(cr, &expose->area);
+		cairo_clip(cr);
+		ret = ppg_ruler_draw(widget, cr);
+		cairo_destroy(cr);
+	}
+
+	return ret;
+}
+#endif
+
 
 /**
  * ppg_ruler_finalize:
@@ -606,31 +704,34 @@ ppg_ruler_finalize (GObject *object)
 	priv->font_desc = NULL;
 
 	if (priv->ruler) {
-		g_object_unref(priv->ruler);
+		cairo_surface_destroy(priv->ruler);
 		priv->ruler = NULL;
 	}
 
 	if (priv->arrow) {
-		g_object_unref(priv->arrow);
+		cairo_surface_destroy(priv->arrow);
 		priv->arrow = NULL;
 	}
 
 	G_OBJECT_CLASS(ppg_ruler_parent_class)->finalize(object);
 }
 
+
 /**
- * ppg_ruler_size_request:
+ * ppg_ruler_get_preferred_height:
  * @ruler: (in): A #PpgRuler.
+ * @min_height: (out): A #gint.
+ * @natural_height: (out): A #gint.
  *
- * Handle the "size-request" for the widget. Make sure we have enough space
- * to render the time labels as well as the ticks.
+ * Handle the "get_preferred_height" virtual function for the ruler.
  *
  * Returns: None.
  * Side effects: None.
  */
 static void
-ppg_ruler_size_request (GtkWidget *widget,
-                        GtkRequisition *req)
+ppg_ruler_get_preferred_height (GtkWidget *widget,
+                                gint      *min_height,
+                                gint      *natural_height)
 {
 	PpgRuler *ruler = (PpgRuler *)widget;
 	PpgRulerPrivate *priv;
@@ -644,7 +745,7 @@ ppg_ruler_size_request (GtkWidget *widget,
 
 	priv = ruler->priv;
 
-	GTK_WIDGET_CLASS(ppg_ruler_parent_class)->size_request(widget, req);
+	*min_height = *natural_height = 0;
 
 	if ((window = gtk_widget_get_window(widget))) {
 		cr = gdk_cairo_create(window);
@@ -657,11 +758,35 @@ ppg_ruler_size_request (GtkWidget *widget,
 		g_object_unref(layout);
 		cairo_destroy(cr);
 
-		if (req->height < height) {
-			req->height = height;
-		}
+		*min_height = *natural_height = height;
 	}
 }
+
+
+/**
+ * ppg_ruler_size_request:
+ * @widget: (in): A #PpgRuler.
+ * @req: (out): A #GtkRequisition.
+ *
+ * Handle the "size-request" event for the widget on older versions of Gtk+.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+#if !GTK_CHECK_VERSION(2, 91, 0)
+static void
+ppg_ruler_size_request (GtkWidget      *widget,
+                        GtkRequisition *req)
+{
+	gint min_height;
+	gint natural_height;
+
+	ppg_ruler_get_preferred_height(widget, &min_height, &natural_height);
+	req->height = min_height;
+	req->width = 1;
+}
+#endif
+
 
 /**
  * ppg_ruler_size_allocate:
@@ -679,8 +804,7 @@ ppg_ruler_size_allocate (GtkWidget     *widget,
 {
 	PpgRuler *ruler = (PpgRuler *)widget;
 	PpgRulerPrivate *priv;
-	GdkColormap *colormap;
-	GdkVisual *visual;
+	GdkWindow *window;
 
 	g_return_if_fail(PPG_IS_RULER(ruler));
 
@@ -689,18 +813,19 @@ ppg_ruler_size_allocate (GtkWidget     *widget,
 	GTK_WIDGET_CLASS(ppg_ruler_parent_class)->size_allocate(widget, alloc);
 
 	if (priv->ruler) {
-		g_object_unref(priv->ruler);
+		cairo_surface_destroy(priv->ruler);
 	}
 
-	priv->ruler = gdk_pixmap_new(NULL, alloc->width, alloc->height, 32);
-	visual = gdk_visual_get_best_with_depth(32);
-	colormap = gdk_colormap_new(visual, FALSE);
-	gdk_drawable_set_colormap(priv->ruler, colormap);
-
-	if (GTK_WIDGET_DRAWABLE(widget)) {
+	if (gtk_widget_is_drawable(widget)) {
+		window = gtk_widget_get_window(widget);
+		priv->ruler = gdk_window_create_similar_surface(window,
+														CAIRO_CONTENT_COLOR_ALPHA,
+														alloc->width,
+														alloc->height);
 		ppg_ruler_draw_ruler(ruler);
 	}
 }
+
 
 /**
  * ppg_ruler_style_set:
@@ -727,6 +852,7 @@ ppg_ruler_style_set (GtkWidget *widget,
 	priv->dirty = TRUE;
 	gtk_widget_queue_draw(widget);
 }
+
 
 /**
  * ppg_ruler_set_property:
@@ -760,6 +886,7 @@ ppg_ruler_get_property (GObject    *object,
 	}
 }
 
+
 /**
  * ppg_ruler_set_property:
  * @object: (in): A #GObject.
@@ -792,6 +919,7 @@ ppg_ruler_set_property (GObject      *object,
 	}
 }
 
+
 /**
  * ppg_ruler_class_init:
  * @klass: (in): A #PpgRulerClass.
@@ -814,18 +942,23 @@ ppg_ruler_class_init (PpgRulerClass *klass)
 	g_type_class_add_private(object_class, sizeof(PpgRulerPrivate));
 
 	widget_class = GTK_WIDGET_CLASS(klass);
+#if GTK_CHECK_VERSION(2, 91, 0)
+	widget_class->draw = ppg_ruler_draw;
+	widget_class->get_preferred_height = ppg_ruler_get_preferred_height;
+#else
 	widget_class->expose_event = ppg_ruler_expose_event;
+	widget_class->size_request = ppg_ruler_size_request;
+#endif
 	widget_class->motion_notify_event = ppg_ruler_motion_notify_event;
 	widget_class->realize = ppg_ruler_realize;
 	widget_class->size_allocate = ppg_ruler_size_allocate;
-	widget_class->size_request = ppg_ruler_size_request;
 	widget_class->style_set = ppg_ruler_style_set;
 
 	g_object_class_install_property(object_class,
 	                                PROP_LOWER,
 	                                g_param_spec_double("lower",
 	                                                    "lower",
-	                                                    "loser",
+	                                                    "lower",
 	                                                    0,
 	                                                    G_MAXDOUBLE,
 	                                                    0,
@@ -851,6 +984,7 @@ ppg_ruler_class_init (PpgRulerClass *klass)
 	                                                    0,
 	                                                    G_PARAM_READWRITE));
 }
+
 
 /**
  * ppg_ruler_init:

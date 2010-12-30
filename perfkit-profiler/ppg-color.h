@@ -19,16 +19,18 @@
 #ifndef __PPG_COLOR_H__
 #define __PPG_COLOR_H__
 
-#include <clutter/clutter.h>
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
 typedef struct
 {
-	guint        mod;
-	GdkColor     color;
-	ClutterColor clutter_color;
+	GdkColor color;  /* Color in GdkColor format */
+	guint rgba;      /* Color in Goocanvas rgba format */
+	gchar html[16];  /* Color in html '#fff' format */
+
+	/*< private >*/
+	guint mod;
 } PpgColorIter;
 
 void ppg_color_iter_init (PpgColorIter *iter);

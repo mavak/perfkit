@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_INSTRUMENTS_H__
-#define __PPG_INSTRUMENTS_H__
+#ifndef PPG_INSTRUMENTS_H
+#define PPG_INSTRUMENTS_H
 
 #include <gtk/gtk.h>
 
@@ -45,4 +45,4 @@ PpgInstrument* ppg_instruments_create    (PpgSession  *session,
 
 G_END_DECLS
 
-#endif /* __PPG_INSTRUMENTS_H__ */
+#endif /* PPG_INSTRUMENTS_H */

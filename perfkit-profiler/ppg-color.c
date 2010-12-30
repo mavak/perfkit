@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "ppg-color.h"
+#include "ppg-util.h"
 
 static const gchar *default_colors[] = {
 	"#3465a4",
@@ -84,7 +85,8 @@ ppg_color_iter_init (PpgColorIter *iter)
 
 	memset(iter, 0, sizeof *iter);
 	gdk_color_parse(colors[0], &iter->color);
-	clutter_color_from_string(&iter->clutter_color, colors[0]);
+	g_snprintf(iter->html, sizeof iter->html, "%s", colors[0]);
+	iter->rgba = ppg_color_to_uint(&iter->color, 0xFF);
 }
 
 /**
@@ -106,5 +108,6 @@ ppg_color_iter_next (PpgColorIter *iter)
 	iter->mod++;
 	color = colors[iter->mod % n_colors];
 	gdk_color_parse(color, &iter->color);
-	clutter_color_from_string(&iter->clutter_color, color);
+	g_snprintf(iter->html, sizeof iter->html, "%s", color);
+	iter->rgba = ppg_color_to_uint(&iter->color, 0xFF);
 }

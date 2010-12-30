@@ -18,7 +18,12 @@
 
 #include <glib-object.h>
 #include <gobject/gvaluecollector.h>
+#include <math.h>
+#include <string.h>
+#if __linux__
+#include <sys/sysinfo.h>
 #include <sys/utsname.h>
+#endif
 
 #include "ppg-actions.h"
 #include "ppg-util.h"
@@ -96,63 +101,6 @@ ppg_util_load_ui (GtkWidget       *widget,
 	}
 }
 
-static gboolean
-ppg_util_real_expose_event (GtkWidget      *widget,
-                            GdkEventExpose *event,
-                            gint            palette)
-{
-	GtkAllocation alloc;
-	GtkStateType state;
-	GtkStyle *style;
-	GdkGC *gc = NULL;
-
-	if (GTK_WIDGET_DRAWABLE(widget)) {
-		gtk_widget_get_allocation(widget, &alloc);
-		style = gtk_widget_get_style(widget);
-		state = gtk_widget_get_state(widget);
-
-		switch (palette) {
-		case PALETTE_BASE:
-			gc = style->base_gc[state];
-			break;
-		case PALETTE_BG:
-			gc = style->bg_gc[state];
-			break;
-		case PALETTE_FG:
-			gc = style->fg_gc[state];
-			break;
-		default:
-			g_assert_not_reached();
-		}
-
-		gdk_draw_rectangle(event->window, gc, TRUE, alloc.x, alloc.y,
-		                   alloc.width, alloc.height);
-	}
-
-	return FALSE;
-}
-
-gboolean
-ppg_util_base_expose_event (GtkWidget      *widget,
-                            GdkEventExpose *event)
-{
-	return ppg_util_real_expose_event(widget, event, PALETTE_BASE);
-}
-
-gboolean
-ppg_util_bg_expose_event (GtkWidget      *widget,
-                          GdkEventExpose *event)
-{
-	return ppg_util_real_expose_event(widget, event, PALETTE_BG);
-}
-
-gboolean
-ppg_util_fg_expose_event (GtkWidget      *widget,
-                          GdkEventExpose *event)
-{
-	return ppg_util_real_expose_event(widget, event, PALETTE_FG);
-}
-
 static void
 ppg_util_header_item_on_style_set (GtkWidget *widget,
                                    GtkStyle  *old_style,
@@ -191,48 +139,12 @@ ppg_util_header_item_new (const gchar *label)
 }
 
 PpgAnimation*
-ppg_widget_animate (GtkWidget        *widget,
-                    guint             duration_msec,
-                    PpgAnimationMode  mode,
-                    const gchar      *first_property,
-                    ...)
-{
-	PpgAnimation *animation;
-	va_list args;
-
-	va_start(args, first_property);
-	animation = ppg_widget_animatev(widget, duration_msec, mode,
-	                                first_property, args);
-	va_end(args);
-	return animation;
-}
-
-PpgAnimation*
-ppg_widget_animate_full (GtkWidget        *widget,
-                         guint             duration_msec,
-                         PpgAnimationMode  mode,
-                         GDestroyNotify    notify,
-                         gpointer          notify_data,
-                         const gchar      *first_property,
-                         ...)
-{
-	PpgAnimation *animation;
-	va_list args;
-
-	va_start(args, first_property);
-	animation = ppg_widget_animatev(widget, duration_msec, mode,
-	                                first_property, args);
-	va_end(args);
-	g_object_weak_ref(G_OBJECT(animation), (GWeakNotify)notify, notify_data);
-	return animation;
-}
-
-PpgAnimation*
-ppg_widget_animatev (GtkWidget        *widget,
-                     guint             duration_msec,
-                     PpgAnimationMode  mode,
-                     const gchar      *first_property,
-                     va_list           args)
+g_object_animatev (gpointer          object,
+                   PpgAnimationMode  mode,
+                   guint             duration_msec,
+                   guint             frame_rate,
+                   const gchar      *first_property,
+                   va_list           args)
 {
 	PpgAnimation *animation;
 	GObjectClass *klass;
@@ -245,27 +157,32 @@ ppg_widget_animatev (GtkWidget        *widget,
 	GType type;
 	GType ptype;
 
-	g_return_val_if_fail(GTK_IS_WIDGET(widget), NULL);
 	g_return_val_if_fail(first_property != NULL, NULL);
 	g_return_val_if_fail(mode < PPG_ANIMATION_LAST, NULL);
 
 	name = first_property;
-	type = G_TYPE_FROM_INSTANCE(widget);
-	klass = G_OBJECT_GET_CLASS(widget);
+	type = G_TYPE_FROM_INSTANCE(object);
+	klass = G_OBJECT_GET_CLASS(object);
 	animation = g_object_new(PPG_TYPE_ANIMATION,
 	                         "duration", duration_msec,
+	                         "frame-rate", frame_rate ? frame_rate : 60,
 	                         "mode", mode,
-	                         "target", widget,
+	                         "target", object,
 	                         NULL);
 
 	do {
 		/*
 		 * First check for the property on the object. If that does not exist
-		 * then check if the widget has a parent and look at its child
-		 * properties.
+		 * then check if the object has a parent and look at its child
+		 * properties (if its a GtkWidget).
 		 */
 		if (!(pspec = g_object_class_find_property(klass, name))) {
-			if (!(parent = gtk_widget_get_parent(widget))) {
+			if (!g_type_is_a(type, GTK_TYPE_WIDGET)) {
+				g_critical("Failed to find property %s in %s",
+				           name, g_type_name(type));
+				goto failure;
+			}
+			if (!(parent = gtk_widget_get_parent(object))) {
 				g_critical("Failed to find property %s in %s",
 				           name, g_type_name(type));
 				goto failure;
@@ -279,7 +196,8 @@ ppg_widget_animatev (GtkWidget        *widget,
 			}
 		}
 
-		G_VALUE_COLLECT_INIT(&value, pspec->value_type, args, 0, &error);
+		g_value_init(&value, pspec->value_type);
+		G_VALUE_COLLECT(&value, args, 0, &error);
 		if (error != NULL) {
 			g_critical("Failed to retrieve va_list value: %s", error);
 			g_free(error);
@@ -298,4 +216,153 @@ failure:
 	g_object_ref_sink(animation);
 	g_object_unref(animation);
 	return NULL;
+}
+
+PpgAnimation*
+g_object_animate (gpointer          object,
+                  PpgAnimationMode  mode,
+                  guint             duration_msec,
+                  const gchar      *first_property,
+                  ...)
+{
+	PpgAnimation *animation;
+	va_list args;
+
+	va_start(args, first_property);
+	animation = g_object_animatev(object, mode, duration_msec, 0,
+	                              first_property, args);
+	va_end(args);
+	return animation;
+}
+
+PpgAnimation*
+g_object_animate_full (gpointer          object,
+                       PpgAnimationMode  mode,
+                       guint             duration_msec,
+                       guint             frame_rate,
+                       GDestroyNotify    notify,
+                       gpointer          notify_data,
+                       const gchar      *first_property,
+                       ...)
+{
+	PpgAnimation *animation;
+	va_list args;
+
+	va_start(args, first_property);
+	animation = g_object_animatev(object, mode, duration_msec,
+	                              frame_rate, first_property, args);
+	va_end(args);
+	g_object_weak_ref(G_OBJECT(animation), (GWeakNotify)notify, notify_data);
+	return animation;
+}
+
+
+/**
+ * ppg_color_to_hex:
+ * @color: (in): A #GdkColor.
+ *
+ * Converts the color represented by @color into an HTML hex string
+ * such as "#ffffff".
+ *
+ * Returns: A newly allocated string that should be freed with g_free().
+ * Side effects: None.
+ */
+gchar *
+ppg_color_to_hex (const GdkColor *color)
+{
+	return g_strdup_printf("#%0x%02x%02x",
+	                       color->red / 255,
+	                       color->green / 255,
+	                       color->blue / 255);
+}
+
+
+/**
+ * ppg_color_to_uint:
+ * @color: (in): A #GdkColor.
+ * @alpha: (in): An alpha value between 0x00 and 0xFF.
+ *
+ * Creates a 32-bit integer containing the value of @color and @alpha
+ * in the format of 0xRRGGBBAA.
+ *
+ * Returns: A 32-bit integer containing the color value with alpha.
+ * Side effects: None.
+ */
+guint
+ppg_color_to_uint (const GdkColor *color,
+                   guint           alpha)
+{
+	g_return_val_if_fail(color != NULL, 0);
+	g_return_val_if_fail(alpha <= 0xFF, 0);
+
+	return ((color->red / 255) << 24)
+		 | ((color->green / 255) << 16)
+		 | ((color->blue / 255) << 8)
+		 | alpha;
+}
+
+
+/**
+ * ppg_cairo_add_color_stop:
+ * @pattern: (in): A #cairo_pattern_t.
+ * @offset: (in): The offset for the color.
+ * @color: (in): A #GdkColor.
+ *
+ * Adds a color stop for a gradient using a #GdkColor.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_cairo_add_color_stop (cairo_pattern_t *pattern,
+                          gdouble          offset,
+                          const GdkColor  *color)
+{
+	g_return_if_fail(pattern != NULL);
+	g_return_if_fail(color != NULL);
+
+	cairo_pattern_add_color_stop_rgb(pattern, offset, TO_CAIRO_RGB(*color));
+}
+
+
+/**
+ * ppg_format_time:
+ * @time_: (in): A double representing a precision time.
+ *
+ * Converts @time_ into a string representation such as "HH:MM:SS.MSEC".
+ *
+ * Returns: A newly allocated string that should be freed with g_free().
+ * Side effects: None.
+ */
+gchar *
+ppg_format_time (gdouble time_)
+{
+	gdouble frac;
+	gdouble dummy;
+
+	frac = modf(time_, &dummy);
+	return g_strdup_printf("%02d:%02d:%02d.%04d",
+	                       (gint)floor(time_/ 3600.0),
+	                       (gint)floor(((gint)time_ % 3600) / 60.0),
+	                       (gint)floor((gint)time_ % 60),
+	                       (gint)floor(frac * 10000));
+}
+
+
+/**
+ * ppg_get_num_cpus:
+ *
+ * Retrieves the number of CPUs available on the system.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+guint
+ppg_get_num_cpus (void)
+{
+#if __linux__
+	return get_nprocs();
+#else
+	return 1;
+#endif
 }

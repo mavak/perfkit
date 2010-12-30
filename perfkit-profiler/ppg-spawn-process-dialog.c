@@ -19,10 +19,9 @@
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
 
-#include "ppg-edit-channel-task.h"
 #include "ppg-session.h"
 #include "ppg-spawn-process-dialog.h"
-#include "ppg-task.h"
+
 
 /*
  * The following value is stored as a gboolean in the gpointer.
@@ -32,12 +31,10 @@
  */
 #define COPY_QUARK (g_quark_from_static_string("copy-env-quark"))
 
-G_DEFINE_TYPE(PpgSpawnProcessDialog, ppg_spawn_process_dialog, GTK_TYPE_DIALOG)
 
 struct _PpgSpawnProcessDialogPrivate
 {
 	PpgSession   *session;
-
 	GtkWidget    *target_entry;
 	GtkWidget    *args_entry;
 	GtkWidget    *dir_button;
@@ -47,12 +44,16 @@ struct _PpgSpawnProcessDialogPrivate
 	GtkListStore *env_model;
 };
 
+
 enum
 {
 	PROP_0,
 	PROP_SESSION,
-	PROP_TASK,
 };
+
+
+G_DEFINE_TYPE(PpgSpawnProcessDialog, ppg_spawn_process_dialog, GTK_TYPE_DIALOG)
+
 
 static gchar **
 ppg_spawn_process_dialog_build_env (PpgSpawnProcessDialog *dialog)
@@ -407,41 +408,46 @@ ppg_spawn_process_dialog_set_session (PpgSpawnProcessDialog *dialog,
 	                             active);
 }
 
-static PpgTask*
-ppg_spawn_process_dialog_get_task (PpgSpawnProcessDialog *dialog)
+static void
+ppg_spawn_process_dialog_response (PpgSpawnProcessDialog *dialog,
+                                   gint                   response_id)
 {
 	PpgSpawnProcessDialogPrivate *priv;
-	const gchar *target;
 	const gchar *args;
+	const gchar *target;
 	const gchar *working_dir;
 	gchar **argv = NULL;
 	gchar **env = NULL;
 	gint argc = 0;
 	gboolean empty;
-	PpgTask *task;
 	gboolean do_copy;
 
-	g_return_val_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog), NULL);
+	g_return_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog));
 
 	priv = dialog->priv;
+
+	if (response_id != GTK_RESPONSE_OK) {
+		return;
+	}
+
 	target = gtk_entry_get_text(GTK_ENTRY(priv->target_entry));
 	args = gtk_entry_get_text(GTK_ENTRY(priv->args_entry));
 	empty = !args || !args[0];
 	working_dir = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(priv->dir_button));
 
 	if (!empty && !g_shell_parse_argv(args, &argc, &argv, NULL)) {
-		return NULL;
+		g_signal_stop_emission_by_name(dialog, "response");
+		return;
 	}
 
 	env = ppg_spawn_process_dialog_build_env(dialog);
 
-	task = g_object_new(PPG_TYPE_EDIT_CHANNEL_TASK,
-	                    "args", argv,
-	                    "session", priv->session,
-	                    "target", target,
-	                    "working-dir", working_dir,
-	                    "env", env,
-	                    NULL);
+	g_object_set(priv->session,
+	             "args", argv,
+	             "env", env,
+	             "target", target,
+	             "working-dir", working_dir,
+	             NULL);
 
 	do_copy = !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(priv->copy_env_button));
 	g_object_set_qdata(G_OBJECT(priv->session), COPY_QUARK,
@@ -449,8 +455,6 @@ ppg_spawn_process_dialog_get_task (PpgSpawnProcessDialog *dialog)
 
 	g_strfreev(env);
 	g_strfreev(argv);
-
-	return task;
 }
 
 static gboolean
@@ -561,9 +565,6 @@ ppg_spawn_process_dialog_get_property (GObject    *object,
 	case PROP_SESSION:
 		g_value_set_object(value, dialog->priv->session);
 		break;
-	case PROP_TASK:
-		g_value_set_object(value, ppg_spawn_process_dialog_get_task(dialog));
-		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 	}
@@ -623,14 +624,6 @@ ppg_spawn_process_dialog_class_init (PpgSpawnProcessDialogClass *klass)
 	                                                    "session",
 	                                                    PPG_TYPE_SESSION,
 	                                                    G_PARAM_READWRITE));
-
-	g_object_class_install_property(object_class,
-	                                PROP_TASK,
-	                                g_param_spec_object("task",
-	                                                    "task",
-	                                                    "task",
-	                                                    PPG_TYPE_TASK,
-	                                                    G_PARAM_READABLE));
 }
 
 /**
@@ -927,4 +920,8 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	priv->ok_button = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK,
 	                                        GTK_RESPONSE_OK);
 	gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+	g_signal_connect(dialog, "response",
+	                 G_CALLBACK(ppg_spawn_process_dialog_response),
+	                 NULL);
 }

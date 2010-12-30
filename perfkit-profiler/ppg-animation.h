@@ -24,6 +24,7 @@
 G_BEGIN_DECLS
 
 #define PPG_TYPE_ANIMATION            (ppg_animation_get_type())
+#define PPG_TYPE_ANIMATION_MODE       (ppg_animation_mode_get_type())
 #define PPG_ANIMATION(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), PPG_TYPE_ANIMATION, PpgAnimation))
 #define PPG_ANIMATION_CONST(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), PPG_TYPE_ANIMATION, PpgAnimation const))
 #define PPG_ANIMATION_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  PPG_TYPE_ANIMATION, PpgAnimationClass))
@@ -59,12 +60,13 @@ struct _PpgAnimationClass
 	GInitiallyUnownedClass parent_class;
 };
 
-GType ppg_animation_get_type     (void) G_GNUC_CONST;
-void  ppg_animation_start        (PpgAnimation *animation);
-void  ppg_animation_stop         (PpgAnimation *animation);
-void  ppg_animation_add_property (PpgAnimation *animation,
-                                  GParamSpec   *pspec,
-                                  const GValue *value);
+GType ppg_animation_get_type      (void) G_GNUC_CONST;
+GType ppg_animation_mode_get_type (void) G_GNUC_CONST;
+void  ppg_animation_start         (PpgAnimation *animation);
+void  ppg_animation_stop          (PpgAnimation *animation);
+void  ppg_animation_add_property  (PpgAnimation *animation,
+                                   GParamSpec   *pspec,
+                                   const GValue *value);
 
 G_END_DECLS
 

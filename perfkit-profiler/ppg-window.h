@@ -1,27 +1,25 @@
 /* ppg-window.h
  *
  * Copyright (C) 2010 Christian Hergert <chris@dronelabs.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_WINDOW_H__
-#define __PPG_WINDOW_H__
+#ifndef PPG_WINDOW_H
+#define PPG_WINDOW_H
 
 #include <gtk/gtk.h>
-
-#include "ppg-session.h"
 
 G_BEGIN_DECLS
 
@@ -50,26 +48,9 @@ struct _PpgWindowClass
 	GtkWindowClass parent_class;
 };
 
-void        ppg_window_action_set          (PpgWindow   *window,
-                                            const gchar *name,
-                                            const gchar *first_property,
-                                            ...) G_GNUC_NULL_TERMINATED;
-guint       ppg_window_count               (void);
-GtkAction*  ppg_window_get_action          (PpgWindow   *window,
-                                            const gchar *action);
-PpgSession* ppg_window_get_session         (PpgWindow   *window);
-GType       ppg_window_get_type            (void) G_GNUC_CONST;
-void        ppg_window_show_graph          (const gchar *title,
-                                            GtkWidget   *graph,
-                                            GtkWindow   *parent);
-void        ppg_window_select_next_row     (PpgWindow   *window);
-void        ppg_window_select_previous_row (PpgWindow   *window);
-void        ppg_window_set_status_label    (PpgWindow   *window,
-                                            const gchar *label);
-void        ppg_window_visualizers_set     (PpgWindow   *window,
-                                            const gchar *first_property,
-                                            ...);
+guint ppg_window_count    (void);
+GType ppg_window_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 
-#endif /* __PPG_WINDOW_H__ */
+#endif /* PPG_WINDOW_H */

@@ -26,9 +26,10 @@ G_DEFINE_TYPE(PpgTimerToolItem, ppg_timer_tool_item, GTK_TYPE_TOOL_ITEM)
 struct _PpgTimerToolItemPrivate
 {
 	PpgSession *session;
-	GtkWidget *button;
-	GtkWidget *ebox;
-	GtkWidget *label;
+	GtkWidget  *drawing;
+	GtkWidget  *offscreen;
+	GtkWidget  *button;
+	GtkWidget  *label;
 };
 
 enum
@@ -37,64 +38,38 @@ enum
 	PROP_SESSION,
 };
 
-static gboolean
-ppg_timer_tool_item_ebox_expose (GtkWidget        *ebox,
-                                 GdkEventExpose   *expose,
-                                 PpgTimerToolItem *item)
+
+static void
+ppg_timer_tool_item_draw (GtkWidget        *widget,
+                          cairo_t          *cr,
+                          PpgTimerToolItem *item)
 {
 	PpgTimerToolItemPrivate *priv;
-	GtkAllocation alloc;
-	GtkStyle *style;
-	GdkColor color;
 
-	g_return_val_if_fail(GTK_IS_WIDGET(ebox), FALSE);
-	g_return_val_if_fail(expose != NULL, FALSE);
-	g_return_val_if_fail(PPG_IS_TIMER_TOOL_ITEM(item), FALSE);
+	g_return_if_fail(PPG_IS_TIMER_TOOL_ITEM(item));
 
 	priv = item->priv;
 
-	/*
-	 * XXX: Hackety-hack (don't talk back).
-	 */
-	gtk_widget_show(priv->button);
-
-	switch (ppg_session_get_state(priv->session)) {
-	case PPG_SESSION_STOPPED:
-		gtk_widget_modify_bg(priv->button, GTK_STATE_NORMAL, NULL);
-		break;
-	case PPG_SESSION_STARTED:
-		gdk_color_parse("#cc6666", &color);
-		gtk_widget_modify_bg(priv->button, GTK_STATE_NORMAL, &color);
-		break;
-	case PPG_SESSION_PAUSED:
-		gdk_color_parse("#ee9a77", &color);
-		gtk_widget_modify_bg(priv->button, GTK_STATE_NORMAL, &color);
-		break;
-	default:
-		g_assert_not_reached();
-	}
-
-	/*
-	 * XXX: Hackety-hack (don't talk back).
-	 */
-	style = gtk_widget_get_style(priv->button);
-	gtk_widget_hide(priv->button);
-
-	gtk_widget_get_allocation(ebox, &alloc);
-	gtk_paint_box(style,
-	              expose->window,
-	              GTK_STATE_NORMAL,
-	              GTK_SHADOW_OUT,
-	              &expose->area,
-	              priv->button,
-	              "button",
-	              0,
-	              0,
-	              alloc.width,
-	              alloc.height);
-
-	return FALSE;
+	gtk_widget_draw(priv->offscreen, cr);
 }
+
+
+#if !GTK_CHECK_VERSION(2, 91, 0)
+static void
+ppg_timer_tool_item_expose_event (GtkWidget        *widget,
+                                  GdkEventExpose   *expose,
+                                  PpgTimerToolItem *item)
+{
+	cairo_t *cr;
+
+	cr = gdk_window_create(expose->window);
+	gdk_cairo_rectangle(cr, &expose->area);
+	cairo_clip(cr);
+	ppg_timer_tool_item_draw(widget, cr, item);
+	cairo_destroy(cr);
+}
+#endif
+
 
 static void
 ppg_timer_tool_item_format (gchar *formatted,
@@ -121,27 +96,83 @@ ppg_timer_tool_item_format (gchar *formatted,
 	formatted[n - 1] = '\0';
 }
 
+
 static void
-ppg_timer_tool_item_notify_position (PpgSession *session,
-                                     GParamSpec *pspec,
-                                     PpgTimerToolItem *item)
+ppg_timer_tool_item_notify_elapsed (PpgSession       *session,
+                                    GParamSpec       *pspec,
+                                    PpgTimerToolItem *item)
 {
 	PpgTimerToolItemPrivate *priv;
 	gchar formatted[MAX_TIMER_CHARS + 1];
-	gdouble position;
+	gdouble elapsed;
 
 	g_return_if_fail(PPG_IS_TIMER_TOOL_ITEM(item));
 
 	priv = item->priv;
 
-	position = ppg_session_get_position(session);
-	ppg_timer_tool_item_format(formatted, sizeof(formatted), position);
+	elapsed = ppg_session_get_elapsed(session);
+	ppg_timer_tool_item_format(formatted, sizeof formatted, elapsed);
 	gtk_label_set_label(GTK_LABEL(priv->label), formatted);
+	gtk_widget_queue_draw(GTK_WIDGET(priv->drawing));
 }
+
+
+static void
+ppg_timer_tool_item_notify_state (PpgSession       *session,
+                                  GParamSpec       *pspec,
+                                  PpgTimerToolItem *item)
+{
+	PpgTimerToolItemPrivate *priv;
+	GdkColor color;
+
+	g_return_if_fail(PPG_IS_TIMER_TOOL_ITEM(item));
+
+	priv = item->priv;
+
+	switch (ppg_session_get_state(session)) {
+	case PPG_SESSION_INITIAL:
+	case PPG_SESSION_READY:
+	case PPG_SESSION_STOPPED:
+		gtk_widget_modify_base(priv->button, GTK_STATE_NORMAL, NULL);
+		break;
+	case PPG_SESSION_FAILED:
+	case PPG_SESSION_STARTED:
+		gdk_color_parse("#cc66666", &color);
+		gtk_widget_modify_base(priv->button, GTK_STATE_NORMAL, &color);
+		break;
+	case PPG_SESSION_MUTED:
+		gdk_color_parse("#ee9a77", &color);
+		gtk_widget_modify_base(priv->button, GTK_STATE_NORMAL, &color);
+		break;
+	default:
+		g_assert_not_reached();
+		return;
+	}
+
+	gtk_widget_queue_draw(priv->drawing);
+}
+
+
+static void
+ppg_timer_tool_item_size_allocate (GtkWidget     *widget,
+                                   GtkAllocation *alloc)
+{
+	PpgTimerToolItemPrivate *priv;
+	GtkAllocation a;
+
+	GTK_WIDGET_CLASS(ppg_timer_tool_item_parent_class)->
+		size_allocate(widget, alloc);
+
+	priv = PPG_TIMER_TOOL_ITEM(widget)->priv;
+
+	gtk_widget_get_allocation(priv->drawing, &a);
+	gtk_widget_size_allocate(priv->offscreen, &a);
+}
+
 
 static void
 ppg_timer_tool_item_set_session (PpgTimerToolItem *item,
-                                 PpgSession *session)
+                                 PpgSession       *session)
 {
 	PpgTimerToolItemPrivate *priv;
 
@@ -151,20 +182,11 @@ ppg_timer_tool_item_set_session (PpgTimerToolItem *item,
 	priv->session = session;
 
 	g_signal_connect(session,
-	                 "notify::position",
-	                 G_CALLBACK(ppg_timer_tool_item_notify_position),
+	                 "notify::elapsed",
+	                 G_CALLBACK(ppg_timer_tool_item_notify_elapsed),
 	                 item);
-	g_signal_connect_swapped(session, "started",
-	                         G_CALLBACK(gtk_widget_queue_draw),
-	                         item);
-	g_signal_connect_swapped(session, "stopped",
-	                         G_CALLBACK(gtk_widget_queue_draw),
-	                         item);
-	g_signal_connect_swapped(session, "paused",
-	                         G_CALLBACK(gtk_widget_queue_draw),
-	                         item);
-	g_signal_connect_swapped(session, "unpaused",
-	                         G_CALLBACK(gtk_widget_queue_draw),
+	g_signal_connect_swapped(session, "notify::state",
+	                         G_CALLBACK(ppg_timer_tool_item_notify_state),
 	                         item);
 }
 
@@ -223,11 +245,15 @@ static void
 ppg_timer_tool_item_class_init (PpgTimerToolItemClass *klass)
 {
 	GObjectClass *object_class;
+	GtkWidgetClass *widget_class;
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_timer_tool_item_finalize;
 	object_class->set_property = ppg_timer_tool_item_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgTimerToolItemPrivate));
+
+	widget_class = GTK_WIDGET_CLASS(klass);
+	widget_class->size_allocate = ppg_timer_tool_item_size_allocate;
 
 	g_object_class_install_property(object_class,
 	                                PROP_SESSION,
@@ -273,17 +299,32 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	                    NULL);
 	gtk_container_add(GTK_CONTAINER(align), hbox);
 
-	priv->ebox = g_object_new(GTK_TYPE_EVENT_BOX,
-	                          "app-paintable", TRUE,
-	                          "visible", TRUE,
-	                          NULL);
-	gtk_container_add(GTK_CONTAINER(hbox), priv->ebox);
-	g_signal_connect(priv->ebox, "expose-event",
-	                 G_CALLBACK(ppg_timer_tool_item_ebox_expose), item);
+	priv->drawing = g_object_new(GTK_TYPE_DRAWING_AREA,
+	                             "height-request", 32,
+	                             "visible", TRUE,
+	                             "width-request", 250,
+	                             NULL);
+	gtk_container_add(GTK_CONTAINER(hbox), priv->drawing);
 
-	/* dummy button for styling */
-	priv->button = g_object_new(GTK_TYPE_BUTTON, NULL);
-	gtk_container_add(GTK_CONTAINER(hbox), priv->button);
+#if GTK_CHECK_VERSION(2, 91, 0)
+	g_signal_connect(priv->drawing, "draw",
+	                 G_CALLBACK(ppg_timer_tool_item_draw),
+	                 item);
+#else
+	g_signal_connect(priv->drawing, "expose-event",
+	                 G_CALLBACK(ppg_timer_tool_item_expose_event),
+	                 item);
+#endif
+
+	priv->offscreen = g_object_new(GTK_TYPE_OFFSCREEN_WINDOW,
+	                               "height-request", 32,
+	                               "visible", TRUE,
+	                               "width-request", 250,
+	                               NULL);
+	priv->button = g_object_new(GTK_TYPE_BUTTON,
+	                            "visible", TRUE,
+	                            NULL);
+	gtk_container_add(GTK_CONTAINER(priv->offscreen), priv->button);
 
 	attrs = pango_attr_list_new();
 	pango_attr_list_insert(attrs, pango_attr_size_new(16 * PANGO_SCALE));
@@ -293,7 +334,6 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	                           "attributes", attrs,
 	                           "label", "00:00:00.00",
 	                           "selectable", TRUE,
-	                           //"single-line-mode", TRUE,
 	                           "use-markup", FALSE,
 	                           "visible", TRUE,
 	                           "xalign", 0.5f,
@@ -301,6 +341,6 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	                           "xpad", 12,
 	                           "ypad", 6,
 	                           NULL);
-	gtk_container_add(GTK_CONTAINER(priv->ebox), priv->label);
+	gtk_container_add(GTK_CONTAINER(priv->button), priv->label);
 	pango_attr_list_unref(attrs);
 }

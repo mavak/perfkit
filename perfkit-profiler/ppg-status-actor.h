@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_STATUS_ACTOR_H__
-#define __PPG_STATUS_ACTOR_H__
+#ifndef PPG_STATUS_ACTOR_H
+#define PPG_STATUS_ACTOR_H
 
-#include <clutter/clutter.h>
+#include <goocanvas.h>
 
 G_BEGIN_DECLS
 
@@ -37,7 +37,7 @@ typedef struct _PpgStatusActorPrivate PpgStatusActorPrivate;
 
 struct _PpgStatusActor
 {
-	ClutterCairoTexture parent;
+	GooCanvasImage parent;
 
 	/*< private >*/
 	PpgStatusActorPrivate *priv;
@@ -45,11 +45,11 @@ struct _PpgStatusActor
 
 struct _PpgStatusActorClass
 {
-	ClutterCairoTextureClass parent_class;
+	GooCanvasImageClass parent_class;
 };
 
 GType ppg_status_actor_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 
-#endif /* __PPG_STATUS_ACTOR_H__ */
+#endif /* PPG_STATUS_ACTOR_H */

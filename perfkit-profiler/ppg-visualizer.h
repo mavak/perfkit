@@ -1,25 +1,28 @@
 /* ppg-visualizer.h
  *
  * Copyright (C) 2010 Christian Hergert <chris@dronelabs.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_VISUALIZER_H__
-#define __PPG_VISUALIZER_H__
+#ifndef PPG_VISUALIZER_H
+#define PPG_VISUALIZER_H
 
-#include <clutter/clutter.h>
+#include <goocanvas.h>
+#include <gtk/gtk.h>
+
+#include "ppg-task.h"
 
 G_BEGIN_DECLS
 
@@ -36,9 +39,13 @@ typedef struct _PpgVisualizerClass   PpgVisualizerClass;
 typedef struct _PpgVisualizerPrivate PpgVisualizerPrivate;
 typedef struct _PpgVisualizerEntry   PpgVisualizerEntry;
 
+typedef PpgVisualizer* (*PpgVisualizerFactory) (PpgVisualizerEntry  *entry,
+                                                gpointer             user_data,
+                                                GError             **error);
+
 struct _PpgVisualizer
 {
-	GInitiallyUnowned parent;
+	GooCanvasImage parent;
 
 	/*< private >*/
 	PpgVisualizerPrivate *priv;
@@ -46,13 +53,16 @@ struct _PpgVisualizer
 
 struct _PpgVisualizerClass
 {
-	GInitiallyUnownedClass parent_class;
+	GooCanvasImageClass parent_class;
 
-	ClutterActor* (*get_actor) (PpgVisualizer *visualizer);
-	void          (*draw)      (PpgVisualizer *visualizer);
-	void          (*draw_fast) (PpgVisualizer *visualizer,
-	                            gdouble        begin,
-	                            gdouble        end);
+	PpgTask* (*draw) (PpgVisualizer   *visualizer,
+	                  cairo_surface_t *surface,
+	                  gdouble          begin_time,
+	                  gdouble          end_time,
+	                  gdouble          x,
+	                  gdouble          y,
+	                  gdouble          width,
+	                  gdouble          height);
 };
 
 struct _PpgVisualizerEntry
@@ -61,15 +71,31 @@ struct _PpgVisualizerEntry
 	const gchar *title;
 	const gchar *icon_name;
 	GCallback    callback;
+
+	/*< private >*/
+	gpointer     user_data;
 };
 
-GType         ppg_visualizer_get_type        (void) G_GNUC_CONST;
-ClutterActor* ppg_visualizer_get_actor       (PpgVisualizer *visualizer);
-void          ppg_visualizer_queue_draw      (PpgVisualizer *visualizer);
-void          ppg_visualizer_queue_draw_fast (PpgVisualizer *visualizer,
-                                              gdouble        begin,
-                                              gdouble        end);
+gboolean      ppg_visualizer_get_is_important     (PpgVisualizer *visualizer);
+gdouble       ppg_visualizer_get_natural_height   (PpgVisualizer *visualizer);
+GType         ppg_visualizer_get_type             (void) G_GNUC_CONST;
+void          ppg_visualizer_queue_draw           (PpgVisualizer *visualizer);
+void          ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
+                                                   gdouble        begin_time,
+                                                   gdouble        end_time);
+void          ppg_visualizer_set_begin_time       (PpgVisualizer *visualizer,
+                                                   gdouble        begin_time);
+void          ppg_visualizer_set_end_time         (PpgVisualizer *visualizer,
+                                                   gdouble        end_time);
+void          ppg_visualizer_set_is_important     (PpgVisualizer *visualizer,
+                                                   gboolean       important);
+void          ppg_visualizer_set_time             (PpgVisualizer *visualizer,
+                                                   gdouble        begin_time,
+                                                   gdouble        end_time);
+void          ppg_visualizer_thaw                 (PpgVisualizer *visualizer);
+void          ppg_visualizer_freeze               (PpgVisualizer *visualizer);
+const gchar * ppg_visualizer_get_name             (PpgVisualizer *visualizer);
 
 G_END_DECLS
 
-#endif /* __PPG_VISUALIZER_H__ */
+#endif /* PPG_VISUALIZER_H */
