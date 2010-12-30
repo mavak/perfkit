@@ -16,16 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PERFKIT_PROFILER_H__
-#define __PERFKIT_PROFILER_H__
+#ifndef PERFKIT_PROFILER_H
+#define PERFKIT_PROFILER_H
 
-#define __PERFKIT_PROFILER_INSIDE__
+#define PERFKIT_PROFILER_INSIDE
 
 #include "ppg-add-instrument-dialog.h"
 #include "ppg-log.h"
 #include "ppg-runtime.h"
 #include "ppg-version.h"
 
-#undef __PERFKIT_PROFILER_INSIDE__
+#undef PERFKIT_PROFILER_INSIDE
 
-#endif /* __PERFKIT_PROFILER_H__ */
+#endif /* PERFKIT_PROFILER_H */

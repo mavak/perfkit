@@ -20,7 +20,9 @@
 #include <perfkit/perfkit.h>
 
 #include "ppg-actions.h"
+#include "ppg-add-instrument-dialog.h"
 #include "ppg-menu-tool-item.h"
+#include "ppg-runtime.h"
 #include "ppg-session.h"
 #include "ppg-session-view.h"
 #include "ppg-timer-tool-item.h"
@@ -60,6 +62,84 @@ static guint n_windows = 0;
 G_DEFINE_TYPE(PpgWindow, ppg_window, GTK_TYPE_WINDOW)
 
 
+/**
+ * ppg_window_check_close:
+ * @window: (in): A #PpgWindow.
+ *
+ * Checks to see if the window is in a state that can be closed. If the session
+ * is active, then the user will be prompted to confirm.
+ *
+ * Returns: %TRUE if the window can be closed; otherwise %FALSE.
+ * Side effects: None.
+ */
+static gboolean
+ppg_window_check_close (PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GtkAction *action;
+	GtkWidget *dialog;
+	gboolean ret = TRUE;
+
+	g_return_val_if_fail(PPG_IS_WINDOW(window), FALSE);
+
+	priv = window->priv;
+
+	/*
+	 * If the stop action is sensitive, then the session is likely running
+	 * and we should ask the user if we should close.
+	 */
+
+	action = gtk_action_group_get_action(priv->actions, "stop");
+	if (gtk_action_get_sensitive(action)) {
+		dialog = g_object_new(GTK_TYPE_MESSAGE_DIALOG,
+		                      "buttons", GTK_BUTTONS_OK_CANCEL,
+		                      "message-type", GTK_MESSAGE_QUESTION,
+		                      "text", _("The current profiling session is "
+		                                "active. Would you like to close "
+		                                "this session?"),
+		                      "transient-for", window,
+		                      NULL);
+		if (gtk_dialog_run(GTK_DIALOG(dialog)) != GTK_RESPONSE_OK) {
+			ret = FALSE;
+		}
+		gtk_widget_destroy(dialog);
+	}
+
+	return ret;
+}
+
+
+static void
+ppg_window_add_instrument_activate (GtkAction *action,
+                                    PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	GtkDialog *dialog;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	dialog = g_object_new(PPG_TYPE_ADD_INSTRUMENT_DIALOG,
+	                      "session", priv->session,
+	                      "transient-for", window,
+	                      NULL);
+	gtk_dialog_run(dialog);
+	gtk_widget_destroy(GTK_WIDGET(dialog));
+}
+
+
+static void
+ppg_window_quit_activate (GtkAction *action,
+                          PpgWindow *window)
+{
+	if (!ppg_window_check_close(window)) {
+		return;
+	}
+	ppg_runtime_quit();
+}
+
+
 guint
 ppg_window_count (void)
 {
@@ -73,7 +153,6 @@ ppg_window_set_uri (PpgWindow   *window,
 {
 	PpgWindowPrivate *priv;
 	PkConnection *connection;
-	PpgSession *session;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
@@ -85,8 +164,12 @@ ppg_window_set_uri (PpgWindow   *window,
 	}
 
 	priv->uri = g_strdup(uri);
-	session = g_object_new(PPG_TYPE_SESSION, "connection", connection, NULL);
-	g_object_set(priv->session_view, "session", session, NULL);
+	priv->session = g_object_new(PPG_TYPE_SESSION,
+	                             "connection", connection,
+	                             NULL);
+	g_object_set(priv->session_view,
+	             "session", priv->session,
+	             NULL);
 }
 
 

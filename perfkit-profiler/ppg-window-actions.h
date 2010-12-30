@@ -25,25 +25,92 @@
 
 G_BEGIN_DECLS
 
+#define DEFINE_ACTION_CALLBACK(_n)                             \
+    static void ppg_window_##_n##_activate (GtkAction *action, \
+                                            PpgWindow *window)
+#define ACTION_CALLBACK(_n) G_CALLBACK(ppg_window_##_n##_activate)
+
+DEFINE_ACTION_CALLBACK(add_instrument);
+DEFINE_ACTION_CALLBACK(quit);
+
 static GtkActionEntry ppg_window_action_entries[] = {
-	{ "file", NULL, N_("Per_fkit") },
-	{ "new-session", NULL, N_("_New Session"), NULL, NULL, NULL },
-	{ "quit", GTK_STOCK_QUIT, NULL, NULL, NULL, NULL },
-	{ "close", GTK_STOCK_CLOSE, N_("_Close Window"), NULL, NULL, NULL },
+	{ "file",
+	  NULL,
+	  N_("Per_fkit") },
 
-	{ "edit", NULL, N_("_Edit") },
-	{ "cut", GTK_STOCK_CUT },
-	{ "copy", GTK_STOCK_COPY },
-	{ "paste", GTK_STOCK_PASTE },
-	{ "preferences", GTK_STOCK_PREFERENCES, NULL, "<control>comma", N_("Configure preferences for " PRODUCT_NAME), NULL },
+	{ "new-session",
+	  NULL,
+	  N_("_New Session"),
+	  NULL,
+	  NULL,
+	  NULL },
 
-	{ "profiler", NULL, N_("_Profiler") },
-	{ "target", NULL, N_("Target") },
-	{ "restart", GTK_STOCK_REFRESH, N_("Res_tart"), NULL, N_("Restart the current profiling session"), NULL },
-	{ "settings", NULL, N_("S_ettings"), "<control>d", N_("Adjust settings for the current profiling session"), NULL },
+	{ "quit",
+	  GTK_STOCK_QUIT,
+	  NULL,
+	  NULL,
+	  NULL,
+	  ACTION_CALLBACK(quit) },
 
-	{ "instrument", NULL, N_("_Instrument") },
-	{ "add-instrument", GTK_STOCK_ADD, N_("_Add Instrument"), "<control><shift>n", N_("Add an instrument to the current profiling session"), NULL },
+	{ "close", GTK_STOCK_CLOSE,
+	  N_("_Close Window"),
+	  NULL,
+	  NULL,
+	  NULL },
+
+	{ "edit",
+	  NULL,
+	  N_("_Edit") },
+
+	{ "cut",
+	  GTK_STOCK_CUT },
+
+	{ "copy",
+	  GTK_STOCK_COPY },
+
+	{ "paste",
+	  GTK_STOCK_PASTE },
+
+	{ "preferences",
+	  GTK_STOCK_PREFERENCES,
+	  NULL,
+	  "<control>comma",
+	  N_("Configure preferences for " PRODUCT_NAME),
+	  NULL },
+
+	{ "profiler",
+	  NULL,
+	  N_("_Profiler") },
+
+	{ "target",
+	  NULL,
+	  N_("Target") },
+
+	{ "restart",
+	  GTK_STOCK_REFRESH,
+	  N_("Res_tart"),
+	  NULL,
+	  N_("Restart the current profiling session"),
+	  NULL },
+
+	{ "settings",
+	  NULL,
+	  N_("S_ettings"),
+	  "<control>d",
+	  N_("Adjust settings for the current profiling session"),
+	  NULL },
+
+	{ "instrument",
+	  NULL,
+	  N_("_Instrument") },
+
+	{ "add-instrument",
+	  GTK_STOCK_ADD,
+	  N_("_Add Instrument"),
+	  "<control><shift>n",
+	  N_("Add an instrument to the current profiling session"),
+	  ACTION_CALLBACK(add_instrument) },
+
 	{ "configure-instrument", NULL, N_("_Configure"), NULL, N_("Configure the selected instrument"), NULL },
 	{ "visualizers", NULL, N_("_Visualizers") },
 	{ "next-instrument", NULL, N_("Next"), "j", NULL, NULL },
@@ -79,6 +146,9 @@ static GtkToggleActionEntry ppg_window_toggle_action_entries[] = {
 	{ "fullscreen", GTK_STOCK_FULLSCREEN, NULL, "F11", NULL, NULL, FALSE },
 	{ "show-data", NULL, N_("Show extended data"), NULL, NULL, NULL },
 };
+
+#undef ACTION_CALLBACK
+#undef DEFINE_ACTION_CALLBACK
 
 G_END_DECLS
 

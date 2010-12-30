@@ -19,9 +19,12 @@
 #include <glib/gi18n.h>
 #include <string.h>
 
+#include "icons/plugin.h"
+
 #include "ppg-cpu-instrument.h"
 #include "ppg-instrument.h"
 #include "ppg-instruments.h"
+#include "ppg-util.h"
 
 #define GET_ICON_NAMED(n) \
     gtk_icon_theme_load_icon(gtk_icon_theme_get_default(), (n), \
@@ -46,7 +49,7 @@ void
 ppg_instruments_init (void)
 {
 	factories = g_array_new(FALSE, FALSE, sizeof(PpgInstrumentFactory));
-	default_pixbuf = GET_ICON_NAMED("perfkit-plugin");
+	default_pixbuf = LOAD_INLINE_PIXBUF(plugin_pixbuf);
 
 	/*
 	ppg_instruments_register("perfkit-memory", _("Memory"), "gnome-dev-memory",
@@ -124,7 +127,6 @@ ppg_instruments_create (PpgSession  *session,
 		factory = &g_array_index(factories, PpgInstrumentFactory, i);
 		if (g_str_equal(name, factory->name)) {
 			instrument = g_object_new(factory->type,
-			                          "name", factory->title,
 			                          "session", session,
 			                          NULL);
 			if (instrument) {
