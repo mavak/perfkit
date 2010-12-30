@@ -31,7 +31,14 @@ G_BEGIN_DECLS
 #define ACTION_CALLBACK(_n) G_CALLBACK(ppg_window_##_n##_activate)
 
 DEFINE_ACTION_CALLBACK(add_instrument);
+DEFINE_ACTION_CALLBACK(next_instrument);
+DEFINE_ACTION_CALLBACK(prev_instrument);
 DEFINE_ACTION_CALLBACK(quit);
+DEFINE_ACTION_CALLBACK(zoom_instrument_in);
+DEFINE_ACTION_CALLBACK(zoom_instrument_out);
+DEFINE_ACTION_CALLBACK(zoom_in);
+DEFINE_ACTION_CALLBACK(zoom_one);
+DEFINE_ACTION_CALLBACK(zoom_out);
 
 static GtkActionEntry ppg_window_action_entries[] = {
 	{ "file",
@@ -111,10 +118,30 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  N_("Add an instrument to the current profiling session"),
 	  ACTION_CALLBACK(add_instrument) },
 
-	{ "configure-instrument", NULL, N_("_Configure"), NULL, N_("Configure the selected instrument"), NULL },
-	{ "visualizers", NULL, N_("_Visualizers") },
-	{ "next-instrument", NULL, N_("Next"), "j", NULL, NULL },
-	{ "previous-instrument", NULL, N_("Previous"), "k", NULL, NULL },
+	{ "configure-instrument",
+	  NULL,
+	  N_("_Configure"),
+	  NULL,
+	  N_("Configure the selected instrument"),
+	  NULL },
+
+	{ "visualizers",
+	  NULL,
+	  N_("_Visualizers") },
+
+	{ "next-instrument",
+	  NULL,
+	  N_("Next"),
+	  "j",
+	  NULL,
+	  ACTION_CALLBACK(next_instrument) },
+
+	{ "previous-instrument",
+	  NULL,
+	  N_("Previous"),
+	  "k",
+	  NULL,
+	  ACTION_CALLBACK(prev_instrument) },
 
 	{ "target-spawn", NULL, N_("Spawn a new process"), "<control>t", NULL, NULL },
 	{ "target-existing", NULL, N_("Select an existing process"), NULL, NULL, NULL },
@@ -126,14 +153,47 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "monitor-mem", NULL, N_("Memory Usage"), NULL, NULL, NULL },
 	{ "monitor-net", NULL, N_("Network Usage"), NULL, NULL, NULL },
 
-	{ "view", NULL, N_("_View") },
-	{ "zoom-in", GTK_STOCK_ZOOM_IN, N_("Zoom In"), "<control>plus", NULL, NULL },
-	{ "zoom-out", GTK_STOCK_ZOOM_OUT, N_("Zoom Out"), "<control>minus", NULL, NULL },
-	{ "zoom-one", GTK_STOCK_ZOOM_100, N_("Normal Size"), "<control>0", NULL, NULL },
+	{ "view",
+	  NULL,
+	  N_("_View") },
+
+	{ "zoom-in",
+	  GTK_STOCK_ZOOM_IN,
+	  N_("Zoom In"),
+	  "<control>plus",
+	  NULL,
+	  ACTION_CALLBACK(zoom_in) },
+
+	{ "zoom-out",
+	  GTK_STOCK_ZOOM_OUT,
+	  N_("Zoom Out"),
+	  "<control>minus",
+	  NULL,
+	  ACTION_CALLBACK(zoom_out) },
+
+	{ "zoom-one",
+	  GTK_STOCK_ZOOM_100,
+	  N_("Normal Size"),
+	  "<control>0",
+	  NULL,
+	  ACTION_CALLBACK(zoom_one) },
+
 	{ "go-forward", NULL, N_("Move Forward in Time"), "l", NULL, NULL },
 	{ "go-back", NULL, N_("Move Backward in Time"), "h", NULL, NULL },
-	{ "zoom-in-instrument", NULL, N_("Zoom In Instrument"), "space", NULL, NULL },
-	{ "zoom-out-instrument", NULL, N_("Zoom Out Instrument"), "<shift>space", NULL, NULL },
+
+	{ "zoom-in-instrument",
+	  NULL,
+	  N_("Zoom In Instrument"),
+	  "space",
+	  NULL,
+	  ACTION_CALLBACK(zoom_instrument_in) },
+
+	{ "zoom-out-instrument",
+	  NULL,
+	  N_("Zoom Out Instrument"),
+	  "<shift>space",
+	  NULL,
+	  ACTION_CALLBACK(zoom_instrument_out) },
 
 	{ "help", NULL, N_("_Help") },
 	{ "about", GTK_STOCK_ABOUT, N_("About " PRODUCT_NAME), NULL, NULL, NULL },

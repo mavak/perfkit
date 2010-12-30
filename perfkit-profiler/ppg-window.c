@@ -130,6 +130,87 @@ ppg_window_add_instrument_activate (GtkAction *action,
 
 
 static void
+ppg_window_next_instrument_activate (GtkAction *action,
+                                     PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	ppg_session_view_move_down(PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
+ppg_window_prev_instrument_activate (GtkAction *action,
+                                     PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	ppg_session_view_move_up(PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
+ppg_window_zoom_in_activate (GtkAction *action,
+                             PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	ppg_session_view_zoom_in(PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
+ppg_window_zoom_out_activate (GtkAction *action,
+                              PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	ppg_session_view_zoom_out(PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
+ppg_window_zoom_one_activate (GtkAction *action,
+                              PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	ppg_session_view_zoom_normal(PPG_SESSION_VIEW(window->priv->session_view));
+}
+
+
+static void
+ppg_window_zoom_instrument_in_activate (GtkAction *action,
+                                        PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	PpgSessionView *session_view;
+	PpgInstrumentView *view;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	session_view = PPG_SESSION_VIEW(priv->session_view);
+	view = ppg_session_view_get_selected_item(session_view);
+	ppg_instrument_view_zoom_in(view);
+}
+
+
+static void
+ppg_window_zoom_instrument_out_activate (GtkAction *action,
+                                         PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	PpgSessionView *session_view;
+	PpgInstrumentView *view;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	session_view = PPG_SESSION_VIEW(priv->session_view);
+	view = ppg_session_view_get_selected_item(session_view);
+	ppg_instrument_view_zoom_out(view);
+}
+
+
+static void
 ppg_window_quit_activate (GtkAction *action,
                           PpgWindow *window)
 {
