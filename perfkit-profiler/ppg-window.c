@@ -22,6 +22,7 @@
 #include "ppg-about-dialog.h"
 #include "ppg-actions.h"
 #include "ppg-add-instrument-dialog.h"
+#include "ppg-log.h"
 #include "ppg-menu-tool-item.h"
 #include "ppg-prefs-dialog.h"
 #include "ppg-runtime.h"
@@ -348,6 +349,45 @@ ppg_window_get_action (PpgWindow   *window,
 
 
 /**
+ * ppg_window_action_set:
+ * @window: (in): A #PpgWindow.
+ * @name: (in): The #GtkAction<!-- -->'s name.
+ * @first_property: (in): The name of the first property to set.
+ *
+ * Set properties on a given #GtkAction. The arguments of this function behave
+ * identically to g_object_set().
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+void
+ppg_window_action_set (PpgWindow *window,
+                       const gchar *name,
+                       const gchar *first_property,
+                       ...)
+{
+	PpgWindowPrivate *priv;
+	GObject *object;
+	va_list args;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(name != NULL);
+	g_return_if_fail(first_property != NULL);
+
+	priv = window->priv;
+
+	if (!(object = (GObject *)ppg_window_get_action(window, name))) {
+		CRITICAL(Window, "No action named %s", name);
+		return;
+	}
+
+	va_start(args, first_property);
+	g_object_set_valist(object, first_property, args);
+	va_end(args);
+}
+
+
+/**
  * ppg_window_finalize:
  * @object: (in): A #PpgWindow.
  *
@@ -496,6 +536,41 @@ ppg_window_init (PpgWindow *window)
 	                 "/target-popup", &target_menu,
 	                 "/target-popup/target-existing", &target_existing,
 	                 NULL);
+
+	ppg_window_action_set(window, "stop",
+	                      "active", TRUE,
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window,
+	                      "pause", "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "restart",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "cut",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "copy",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "paste",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "configure-instrument",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "next-instrument",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "previous-instrument",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "zoom-in-instrument",
+	                      "sensitive", FALSE,
+	                      NULL);
+	ppg_window_action_set(window, "zoom-out-instrument",
+	                      "sensitive", FALSE,
+	                      NULL);
 
 	vbox = g_object_new(GTK_TYPE_VBOX,
 	                    "visible", TRUE,
