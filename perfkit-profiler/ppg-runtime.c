@@ -19,6 +19,8 @@
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
 
+#include "icons/perfkit.h"
+
 #include "ppg-actions.h"
 #include "ppg-color.h"
 #include "ppg-instruments.h"
@@ -27,6 +29,7 @@
 #include "ppg-private.h"
 #include "ppg-prefs.h"
 #include "ppg-runtime.h"
+#include "ppg-util.h"
 #include "ppg-welcome-dialog.h"
 #include "ppg-window.h"
 
@@ -73,7 +76,7 @@ ppg_runtime_init (gint    *argc,
 	ppg_paths_init();
 	ppg_prefs_init();
 	ppg_color_init();
-	gtk_window_set_default_icon_name("clock");
+	gtk_window_set_default_icon(LOAD_INLINE_PIXBUF(perfkit_pixbuf));
 	gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(),
 	                                  ppg_paths_get_icon_dir());
 	ppg_instruments_init();

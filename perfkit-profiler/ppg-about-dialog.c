@@ -78,8 +78,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	gtk_container_add(GTK_CONTAINER(content), hbox);
 
 	image = g_object_new(GTK_TYPE_IMAGE,
-	                     "icon-size", GTK_ICON_SIZE_DIALOG,
-	                     "icon-name", "clock",
+	                     "pixbuf", LOAD_INLINE_PIXBUF(perfkit_pixbuf),
 	                     "visible", TRUE,
 	                     "xalign", 0.5f,
 	                     "yalign", 0.0f,

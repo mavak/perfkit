@@ -5,6 +5,7 @@ all: $(ICONS)
 	@mv tmp-$*.h $*.h
 
 ICONS =
+ICONS += perfkit.h
 ICONS += plugin.h
 ICONS += pointer.h
 ICONS += selection.h
