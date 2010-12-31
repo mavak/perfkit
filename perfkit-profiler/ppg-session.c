@@ -78,73 +78,6 @@ static guint       signals[LAST_SIGNAL] = { 0 };
 
 
 /**
- * ppg_session_clock_sync:
- * @session: (in): A #PpgSession.
- * @clock_: (in): A #PpgClockSource.
- *
- * Notify a synchronization of the clock.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_clock_sync (PpgSession     *session,
-                        PpgClockSource *clock_)
-{
-	g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_ELAPSED]);
-}
-
-
-/**
- * ppg_session_set_connection:
- * @session: (in): A #PpgSession.
- * @connection: (in): A #PkConnection.
- *
- * Set the connection for the session. This may only be called once
- * for a given session.
- *
- * Returns: None.
- * Side effects: None.
- */
-static void
-ppg_session_set_connection (PpgSession   *session,
-                            PkConnection *connection)
-{
-	PpgSessionPrivate *priv;
-	PpgClockSource *clock_;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-	g_return_if_fail(session->priv->connection == NULL);
-
-	priv = session->priv;
-
-	priv->connection = g_object_ref(connection);
-	clock_ = g_object_new(PPG_TYPE_CLOCK_SOURCE,
-	                      "connection", connection,
-	                      NULL);
-	g_signal_connect_swapped(clock_, "clock-sync",
-	                         G_CALLBACK(ppg_session_clock_sync),
-	                         session);
-	priv->clock = g_object_ref_sink(clock_);
-}
-
-
-static void
-ppg_session_set_pid (PpgSession *session,
-                     GPid        pid)
-{
-	PpgSessionPrivate *priv;
-
-	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
-
-	priv->channel.pid = pid;
-	g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_PID]);
-}
-
-
-/**
  * ppg_session_set_state:
  * @session: (in): A #PpgSession.
  * @state: (in): A #PpgSessionState.
@@ -170,6 +103,131 @@ ppg_session_set_state (PpgSession      *session,
 		priv->state = state;
 		g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_STATE]);
 	}
+}
+
+
+/**
+ * ppg_session_clock_sync:
+ * @session: (in): A #PpgSession.
+ * @clock_: (in): A #PpgClockSource.
+ *
+ * Notify a synchronization of the clock.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_session_clock_sync (PpgSession     *session,
+                        PpgClockSource *clock_)
+{
+	g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_ELAPSED]);
+}
+
+
+static void
+ppg_session_report_error (PpgSession   *session,
+                          const GError *error)
+{
+	ENTRY;
+	EXIT;
+}
+
+
+static void
+ppg_session_set_connected (PpgSession *session)
+{
+	PpgSessionPrivate *priv;
+	PpgClockSource *clock_;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	clock_ = g_object_new(PPG_TYPE_CLOCK_SOURCE,
+	                      "connection", priv->connection,
+	                      NULL);
+	g_signal_connect_swapped(clock_, "clock-sync",
+	                         G_CALLBACK(ppg_session_clock_sync),
+	                         session);
+	priv->clock = g_object_ref_sink(clock_);
+	ppg_session_set_state(session, PPG_SESSION_READY);
+}
+
+
+static void
+ppg_session_connect_cb (GObject      *object,
+                        GAsyncResult *result,
+                        gpointer      user_data)
+{
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	ENTRY;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	if (!pk_connection_connect_finish(connection, result, &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+	ppg_session_set_connected(session);
+
+  failure:
+	g_object_unref(session);
+	EXIT;
+}
+
+
+/**
+ * ppg_session_set_connection:
+ * @session: (in): A #PpgSession.
+ * @connection: (in): A #PkConnection.
+ *
+ * Set the connection for the session. This may only be called once
+ * for a given session.
+ *
+ * Returns: None.
+ * Side effects: None.
+ */
+static void
+ppg_session_set_connection (PpgSession   *session,
+                            PkConnection *connection)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+	g_return_if_fail(session->priv->connection == NULL);
+
+	priv = session->priv;
+
+	priv->connection = g_object_ref(connection);
+
+	if (pk_connection_is_connected(connection)) {
+		ppg_session_set_connected(session);
+	} else {
+		pk_connection_connect_async(connection, NULL,
+		                            ppg_session_connect_cb,
+		                            g_object_ref(session));
+	}
+}
+
+
+static void
+ppg_session_set_pid (PpgSession *session,
+                     GPid        pid)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	priv->channel.pid = pid;
+	g_object_notify_by_pspec(G_OBJECT(session), pspecs[PROP_PID]);
 }
 
 
