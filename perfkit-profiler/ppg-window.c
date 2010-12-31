@@ -39,11 +39,9 @@
 struct _PpgWindowPrivate
 {
 	PpgSession     *session;
-
 	GtkActionGroup *actions;
-
 	gchar          *uri;
-
+	gboolean        state_frozen;
 	GtkWidget      *menubar;
 	GtkWidget      *session_view;
 	GtkWidget      *target_tool_item;
@@ -314,6 +312,96 @@ ppg_window_count (void)
 
 
 static void
+ppg_window_freeze_state (PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	window->priv->state_frozen = TRUE;
+}
+
+
+static void
+ppg_window_thaw_state (PpgWindow *window)
+{
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	window->priv->state_frozen = FALSE;
+}
+
+
+static void
+ppg_window_session_notify_state (PpgWindow  *window,
+                                 GParamSpec *pspec,
+                                 PpgSession *session)
+{
+	PpgWindowPrivate *priv;
+	PpgSessionState state;
+	gboolean insensitive = FALSE;
+	gboolean pause_active = FALSE;
+	gboolean pause_sensitive = FALSE;
+	gboolean run_active = FALSE;
+	gboolean run_sensitive = FALSE;
+	gboolean stop_active = FALSE;
+	gboolean stop_sensitive = FALSE;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = window->priv;
+
+	state = ppg_session_get_state(session);
+	ppg_window_freeze_state(window);
+
+	switch (state) {
+	case PPG_SESSION_INITIAL:
+		insensitive = TRUE;
+		stop_active = TRUE;
+		break;
+	case PPG_SESSION_READY:
+		stop_active = TRUE;
+		run_sensitive = TRUE;
+		break;
+	case PPG_SESSION_STARTED:
+		run_active = TRUE;
+		run_sensitive = FALSE;
+		pause_sensitive = TRUE;
+		stop_sensitive = TRUE;
+		break;
+	case PPG_SESSION_STOPPED:
+		stop_active = TRUE;
+		run_sensitive = TRUE;
+		break;
+	case PPG_SESSION_MUTED:
+		pause_active = TRUE;
+		pause_sensitive = TRUE;
+		run_active = TRUE;
+		stop_sensitive = TRUE;
+		break;
+	case PPG_SESSION_FAILED:
+		stop_active = TRUE;
+		break;
+	default:
+		g_assert_not_reached();
+		return;
+	}
+
+	ppg_window_action_set(window, "stop",
+	                      "active", stop_active,
+	                      "sensitive", stop_sensitive,
+	                      NULL);
+	ppg_window_action_set(window, "pause",
+	                      "active", pause_active,
+	                      "sensitive", pause_sensitive,
+	                      NULL);
+	ppg_window_action_set(window, "run",
+	                      "active", run_active,
+	                      "sensitive", run_sensitive,
+	                      NULL);
+
+	gtk_widget_set_sensitive(GTK_WIDGET(window), !insensitive);
+	ppg_window_thaw_state(window);
+}
+
+
+static void
 ppg_window_set_uri (PpgWindow   *window,
                     const gchar *uri)
 {
@@ -336,6 +424,10 @@ ppg_window_set_uri (PpgWindow   *window,
 	g_object_set(priv->session_view,
 	             "session", priv->session,
 	             NULL);
+	g_signal_connect_swapped(priv->session, "notify::state",
+	                         G_CALLBACK(ppg_window_session_notify_state),
+	                         window);
+	g_object_notify(G_OBJECT(priv->session), "state");
 }
 
 

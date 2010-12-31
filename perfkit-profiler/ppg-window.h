@@ -48,8 +48,12 @@ struct _PpgWindowClass
 	GtkWindowClass parent_class;
 };
 
-guint ppg_window_count    (void);
-GType ppg_window_get_type (void) G_GNUC_CONST;
+void  ppg_window_action_set (PpgWindow   *window,
+                             const gchar *action,
+                             const gchar *first_property,
+                             ...);
+guint ppg_window_count      (void);
+GType ppg_window_get_type   (void) G_GNUC_CONST;
 
 G_END_DECLS
 
