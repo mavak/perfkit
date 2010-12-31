@@ -508,6 +508,7 @@ ppg_session_view_instrument_added (PpgSessionView *view,
                                    PpgInstrument  *instrument)
 {
 	PpgSessionViewPrivate *priv;
+	GtkAllocation a;
 	GooCanvasItem *inst_view;
 	GtkStyle *style;
 
@@ -538,6 +539,13 @@ ppg_session_view_instrument_added (PpgSessionView *view,
 	                         G_CALLBACK(ppg_session_view_instrument_notify_height),
 	                         view);
 	g_ptr_array_add(priv->instrument_views, inst_view);
+
+	/*
+	 * Let the view know what its width should be.
+	 */
+	gtk_widget_get_allocation(GTK_WIDGET(priv->canvas), &a);
+	g_object_set(inst_view, "width", (gdouble)a.width, NULL);
+	g_object_notify(G_OBJECT(inst_view), "width");
 }
 
 
