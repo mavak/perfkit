@@ -21,6 +21,7 @@
 
 #include "ppg-color.h"
 #include "ppg-cpu-instrument.h"
+#include "ppg-log.h"
 #include "ppg-renderer-line.h"
 #include "ppg-util.h"
 #include "ppg-visualizer-simple.h"
@@ -137,6 +138,8 @@ ppg_cpu_instrument_combined_cb (PpgVisualizerEntry  *entry,
 	gpointer key;
 	gpointer value;
 
+	ENTRY;
+
 	g_return_val_if_fail(PPG_IS_CPU_INSTRUMENT(instrument), NULL);
 
 	priv = instrument->priv;
@@ -173,7 +176,7 @@ ppg_cpu_instrument_combined_cb (PpgVisualizerEntry  *entry,
 		ppg_color_iter_next(&color);
 	}
 
-	return PPG_VISUALIZER(visualizer);
+	RETURN(PPG_VISUALIZER(visualizer));
 }
 
 
