@@ -47,6 +47,7 @@ enum
 	PROP_0,
 
 	PROP_ARGS,
+	PROP_CHANNEL,
 	PROP_CONNECTION,
 	PROP_ELAPSED,
 	PROP_ENV,
@@ -134,6 +135,34 @@ ppg_session_report_error (PpgSession   *session,
 
 
 static void
+ppg_session_add_channel_cb (GObject      *object,
+                            GAsyncResult *result,
+                            gpointer      user_data)
+{
+	PpgSessionPrivate *priv;
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	if (!pk_connection_manager_add_channel_finish(connection, result,
+	                                              &priv->channel.channel,
+	                                              &error)) {
+		ppg_session_report_error(session, error);
+		ppg_session_set_state(session, PPG_SESSION_FAILED);
+		g_clear_error(&error);
+		return;
+	}
+
+	ppg_session_set_state(session, PPG_SESSION_READY);
+}
+
+
+static void
 ppg_session_set_connected (PpgSession *session)
 {
 	PpgSessionPrivate *priv;
@@ -143,6 +172,9 @@ ppg_session_set_connected (PpgSession *session)
 
 	priv = session->priv;
 
+	/*
+	 * Setup clock-sync source.
+	 */
 	clock_ = g_object_new(PPG_TYPE_CLOCK_SOURCE,
 	                      "connection", priv->connection,
 	                      NULL);
@@ -150,7 +182,13 @@ ppg_session_set_connected (PpgSession *session)
 	                         G_CALLBACK(ppg_session_clock_sync),
 	                         session);
 	priv->clock = g_object_ref_sink(clock_);
-	ppg_session_set_state(session, PPG_SESSION_READY);
+
+	/*
+	 * Create a channel for our session.
+	 */
+	pk_connection_manager_add_channel_async(priv->connection, NULL,
+	                                        ppg_session_add_channel_cb,
+	                                        session);
 }
 
 
@@ -467,12 +505,14 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                       G_PARAM_READWRITE);
 	g_object_class_install_property(object_class, PROP_ARGS, pspecs[PROP_ARGS]);
 
-	pspecs[PROP_ENV] = g_param_spec_boxed("env",
-	                                      "Env",
-	                                      "The targets environment",
-	                                      G_TYPE_STRV,
-	                                      G_PARAM_READWRITE);
-	g_object_class_install_property(object_class, PROP_ENV, pspecs[PROP_ENV]);
+	pspecs[PROP_CHANNEL] = g_param_spec_int("channel",
+	                                        "Channel",
+	                                        "The channel for the session",
+	                                        0,
+	                                        G_MAXINT,
+	                                        0,
+	                                        G_PARAM_READABLE);
+	g_object_class_install_property(object_class, PROP_CHANNEL, pspecs[PROP_CHANNEL]);
 
 	pspecs[PROP_CONNECTION] = g_param_spec_object("connection",
 	                                              "Connection",
@@ -480,6 +520,13 @@ ppg_session_class_init (PpgSessionClass *klass)
 	                                              PK_TYPE_CONNECTION,
 	                                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 	g_object_class_install_property(object_class, PROP_CONNECTION, pspecs[PROP_CONNECTION]);
+
+	pspecs[PROP_ENV] = g_param_spec_boxed("env",
+	                                      "Env",
+	                                      "The targets environment",
+	                                      G_TYPE_STRV,
+	                                      G_PARAM_READWRITE);
+	g_object_class_install_property(object_class, PROP_ENV, pspecs[PROP_ENV]);
 
 	/**
 	 * PpgSession:elapsed:
@@ -580,5 +627,6 @@ ppg_session_state_get_type (void)
 		type_id = g_enum_register_static("PpgSessionState", values);
 		g_once_init_leave(&initialized, TRUE);
 	}
+
 	return type_id;
 }
