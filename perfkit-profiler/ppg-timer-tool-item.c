@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ppg-log.h"
 #include "ppg-session.h"
 #include "ppg-timer-tool-item.h"
 
@@ -179,6 +180,7 @@ ppg_timer_tool_item_size_allocate (GtkWidget     *widget,
 
 	gtk_widget_get_allocation(priv->drawing, &a);
 	gtk_widget_size_allocate(priv->offscreen, &a);
+	gtk_widget_queue_draw(priv->offscreen);
 }
 
 
@@ -200,6 +202,18 @@ ppg_timer_tool_item_set_session (PpgTimerToolItem *item,
 	g_signal_connect_swapped(session, "notify::state",
 	                         G_CALLBACK(ppg_timer_tool_item_notify_state),
 	                         item);
+}
+
+static gboolean
+ppg_timer_tool_item_offscreen_damage (PpgTimerToolItem *item,
+                                      GdkEventExpose   *expose,
+                                      GtkWidget        *offscreen)
+{
+	g_return_val_if_fail(PPG_IS_TIMER_TOOL_ITEM(item), FALSE);
+	gtk_widget_queue_draw_area(item->priv->drawing,
+	                           expose->area.x, expose->area.y,
+	                           expose->area.width, expose->area.height);
+	return FALSE;
 }
 
 /**
@@ -314,7 +328,7 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	priv->drawing = g_object_new(GTK_TYPE_DRAWING_AREA,
 	                             "height-request", 32,
 	                             "visible", TRUE,
-	                             "width-request", 250,
+	                             "width-request", 180,
 	                             NULL);
 	gtk_container_add(GTK_CONTAINER(hbox), priv->drawing);
 
@@ -331,15 +345,20 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	priv->offscreen = g_object_new(GTK_TYPE_OFFSCREEN_WINDOW,
 	                               "height-request", 32,
 	                               "visible", TRUE,
-	                               "width-request", 250,
+	                               "width-request", 180,
 	                               NULL);
+	g_signal_connect_swapped(priv->offscreen, "damage-event",
+	                         G_CALLBACK(ppg_timer_tool_item_offscreen_damage),
+	                         item);
+
 	priv->button = g_object_new(GTK_TYPE_BUTTON,
+	                            "height-request", 32,
 	                            "visible", TRUE,
 	                            NULL);
 	gtk_container_add(GTK_CONTAINER(priv->offscreen), priv->button);
 
 	attrs = pango_attr_list_new();
-	pango_attr_list_insert(attrs, pango_attr_size_new(16 * PANGO_SCALE));
+	pango_attr_list_insert(attrs, pango_attr_size_new(12 * PANGO_SCALE));
 	pango_attr_list_insert(attrs, pango_attr_family_new("Monospace"));
 	pango_attr_list_insert(attrs, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
 	priv->label = g_object_new(GTK_TYPE_LABEL,
@@ -350,8 +369,6 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	                           "visible", TRUE,
 	                           "xalign", 0.5f,
 	                           "yalign", 0.5f,
-	                           "xpad", 12,
-	                           "ypad", 6,
 	                           NULL);
 	gtk_container_add(GTK_CONTAINER(priv->button), priv->label);
 	pango_attr_list_unref(attrs);
