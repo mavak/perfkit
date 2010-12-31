@@ -660,7 +660,9 @@ ppg_spawn_process_dialog_init (PpgSpawnProcessDialog *dialog)
 	             "border-width", 6,
 	             "default-width", 350,
 	             "default-height", 400,
+#if !GTK_CHECK_VERSION(2, 91, 0)
 	             "has-separator", FALSE,
+#endif
 	             "title", _("Spawn a new process"),
 	             NULL);
 
