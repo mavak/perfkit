@@ -102,9 +102,24 @@ static void
 ppg_instrument_set_session (PpgInstrument *instrument,
                             PpgSession    *session)
 {
+	PpgInstrumentPrivate *priv;
+	GError *error = NULL;
+
 	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
 	g_return_if_fail(PPG_IS_SESSION(session));
-	instrument->priv->session = g_object_ref(session);
+
+	priv = instrument->priv;
+
+	priv->session = g_object_ref(session);
+
+	if (PPG_INSTRUMENT_GET_CLASS(instrument)->load) {
+		if (!PPG_INSTRUMENT_GET_CLASS(instrument)->load(instrument,
+		                                                session,
+		                                                &error)) {
+			CRITICAL(Instrument, "%s", error->message);
+			g_clear_error(&error);
+		}
+	}
 }
 
 
