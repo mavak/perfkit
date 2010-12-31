@@ -304,6 +304,40 @@ ppg_window_target_spawn_activate (GtkAction *action,
 }
 
 
+static void
+ppg_window_run_activate (GtkAction *action,
+                         PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(GTK_IS_ACTION(action));
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	if (!priv->state_frozen) {
+		ppg_session_start(priv->session);
+	}
+}
+
+
+static void
+ppg_window_stop_activate (GtkAction *action,
+                          PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(GTK_IS_ACTION(action));
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	if (!priv->state_frozen) {
+		ppg_session_stop(priv->session);
+	}
+}
+
+
 guint
 ppg_window_count (void)
 {

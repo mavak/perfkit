@@ -39,6 +39,8 @@ DEFINE_ACTION_CALLBACK(next_instrument);
 DEFINE_ACTION_CALLBACK(prefs);
 DEFINE_ACTION_CALLBACK(prev_instrument);
 DEFINE_ACTION_CALLBACK(quit);
+DEFINE_ACTION_CALLBACK(run);
+DEFINE_ACTION_CALLBACK(stop);
 DEFINE_ACTION_CALLBACK(target_spawn);
 DEFINE_ACTION_CALLBACK(zoom_in);
 DEFINE_ACTION_CALLBACK(zoom_instrument_in);
@@ -231,9 +233,21 @@ static GtkActionEntry ppg_window_action_entries[] = {
 };
 
 static GtkToggleActionEntry ppg_window_toggle_action_entries[] = {
-	{ "stop", GTK_STOCK_MEDIA_STOP, N_("_Stop"), "<control>e", N_("Stop the current profiling session"), NULL },
+	{ "stop",
+	  GTK_STOCK_MEDIA_STOP,
+	  N_("_Stop"),
+	  "<control>e",
+	  N_("Stop the current profiling session"),
+	  ACTION_CALLBACK(stop) },
+
 	{ "pause", GTK_STOCK_MEDIA_PAUSE, N_("_Pause"), "<control>z", N_("Pause the current profiling session"), NULL },
-	{ "run", "media-playback-start", N_("_Run"), "<control>b", N_("Run the current profiling session"), NULL },
+
+	{ "run",
+	  "media-playback-start",
+	  N_("_Run"),
+	  "<control>b",
+	  N_("Run the current profiling session"),
+	  ACTION_CALLBACK(run) },
 
 	{ "fullscreen",
 	  GTK_STOCK_FULLSCREEN,

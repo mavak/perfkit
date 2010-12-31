@@ -269,6 +269,32 @@ ppg_session_set_pid (PpgSession *session,
 }
 
 
+static void
+ppg_session_start_cb (GObject      *object,
+                      GAsyncResult *result,
+                      gpointer      user_data)
+{
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GTimeVal tv;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	if (!pk_connection_channel_start_finish(connection, result, &tv, &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+	ppg_session_set_state(session, PPG_SESSION_STARTED);
+
+  failure:
+	g_object_unref(session);
+}
+
+
 /**
  * ppg_session_start:
  * @session: (in): A #PpgSession.
@@ -282,15 +308,84 @@ void
 ppg_session_start (PpgSession *session)
 {
 	PpgSessionPrivate *priv;
-	GTimeVal tv = { 0 };
 
 	g_return_if_fail(PPG_IS_SESSION(session));
 
 	priv = session->priv;
-	/*
-	 * TODO: Get start time from connection.
-	 */
-	ppg_clock_source_start(priv->clock, &tv);
+
+	switch (priv->state) {
+	case PPG_SESSION_INITIAL:
+	case PPG_SESSION_READY:
+	case PPG_SESSION_STOPPED:
+		pk_connection_channel_start_async(priv->connection,
+		                                  priv->channel.channel,
+		                                  NULL,
+		                                  ppg_session_start_cb,
+		                                  g_object_ref(session));
+		break;
+	case PPG_SESSION_FAILED:
+	case PPG_SESSION_MUTED:
+	case PPG_SESSION_STARTED:
+		break;
+	default:
+		g_assert_not_reached();
+		return;
+	}
+}
+
+
+static void
+ppg_session_stop_cb (GObject      *object,
+                     GAsyncResult *result,
+                     gpointer      user_data)
+{
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	if (!pk_connection_channel_stop_finish(connection, result, &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+	ppg_session_set_state(session, PPG_SESSION_STOPPED);
+
+  failure:
+	g_object_unref(session);
+}
+
+
+void
+ppg_session_stop (PpgSession *session)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	switch (priv->state) {
+	case PPG_SESSION_INITIAL:
+	case PPG_SESSION_READY:
+		break;
+	case PPG_SESSION_FAILED:
+	case PPG_SESSION_MUTED:
+	case PPG_SESSION_STARTED:
+	case PPG_SESSION_STOPPED:
+		pk_connection_channel_stop_async(priv->connection,
+		                                 priv->channel.channel,
+		                                 NULL,
+		                                 ppg_session_stop_cb,
+		                                 g_object_ref(session));
+		break;
+	default:
+		g_assert_not_reached();
+		return;
+	}
 }
 
 
