@@ -387,6 +387,16 @@ ppg_window_action_set (PpgWindow *window,
 }
 
 
+static void
+ppg_window_realize (GtkWidget *widget)
+{
+	GdkGeometry geom = { 640, 300 };
+	GTK_WIDGET_CLASS(ppg_window_parent_class)->realize(widget);
+	gtk_window_set_geometry_hints(GTK_WINDOW(widget), widget,
+	                              &geom, GDK_HINT_MIN_SIZE);
+}
+
+
 /**
  * ppg_window_finalize:
  * @object: (in): A #PpgWindow.
@@ -474,12 +484,16 @@ static void
 ppg_window_class_init (PpgWindowClass *klass)
 {
 	GObjectClass *object_class;
+	GtkWidgetClass *widget_class;
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_window_finalize;
 	object_class->get_property = ppg_window_get_property;
 	object_class->set_property = ppg_window_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgWindowPrivate));
+
+	widget_class = GTK_WIDGET_CLASS(klass);
+	widget_class->realize = ppg_window_realize;
 
 	g_object_class_install_property(object_class,
 	                                PROP_URI,
