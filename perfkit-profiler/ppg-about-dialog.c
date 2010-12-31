@@ -18,12 +18,52 @@
 
 #include <glib/gi18n.h>
 
+#include "icons/perfkit.h"
+
 #include "ppg-about-dialog.h"
 #include "ppg-util.h"
 
-
 G_DEFINE_TYPE(PpgAboutDialog, ppg_about_dialog, GTK_TYPE_WINDOW)
 
+static gboolean
+ppg_about_dialog_bg_draw (GtkWidget *widget,
+                          cairo_t   *cr,
+                          gpointer   user_data)
+{
+	GtkStyle *style;
+	GtkStateType state;
+	GtkAllocation a;
+
+	if (gtk_widget_is_drawable(widget)) {
+		state = gtk_widget_get_state(widget);
+		style = gtk_widget_get_style(widget);
+		gtk_widget_get_allocation(widget, &a);
+		cairo_rectangle(cr, 0, 0, a.width, a.height);
+		gdk_cairo_set_source_color(cr, &style->light[state]);
+		cairo_set_source_rgb(cr, 1, 1, 1);
+		cairo_fill(cr);
+	}
+
+	return FALSE;
+}
+
+#if !GTK_CHECK_VERSION(2, 91, 0)
+static void
+ppg_about_dialog_bg_expose_event (GtkWidget      *widget,
+                                  GdkEventExpose *expose,
+                                  gpointer        user_data)
+{
+	cairo_t *cr;
+
+	if (gtk_widget_is_drawable(widget)) {
+		cr = gdk_cairo_create(expose->window);
+		gdk_cairo_rectangle(cr, &expose->area);
+		cairo_clip(cr);
+		ppg_about_dialog_bg_draw(widget, cr, user_data);
+		cairo_destroy(cr);
+	}
+}
+#endif
 
 static void
 ppg_about_dialog_class_init (PpgAboutDialogClass *klass)
@@ -99,6 +139,15 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	gtk_container_add_with_properties(GTK_CONTAINER(box), frame_,
 	                                  "expand", FALSE,
 	                                  NULL);
+#if GTK_CHECK_VERSION(2, 91, 0)
+	g_signal_connect(frame_, "draw",
+	                 G_CALLBACK(ppg_about_dialog_bg_draw),
+	                 NULL);
+#else
+	g_signal_connect(frame_, "expose-event",
+	                 G_CALLBACK(ppg_about_dialog_bg_expose_event),
+	                 NULL);
+#endif
 
 	vbox = g_object_new(GTK_TYPE_VBOX,
 	                    "border-width", 12,
