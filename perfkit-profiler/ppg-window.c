@@ -387,6 +387,27 @@ ppg_window_action_set (PpgWindow *window,
 }
 
 
+static gboolean
+ppg_window_delete_event (GtkWidget   *widget,
+                         GdkEventAny *event)
+{
+	PpgWindow *window = (PpgWindow *)widget;
+
+	g_return_val_if_fail(PPG_IS_WINDOW(window), FALSE);
+
+	/*
+	 * If we can close this window, then decrement our active instances
+	 * count and attempt to quit the application.
+	 */
+	if (ppg_window_check_close(window)) {
+		n_windows--;
+		ppg_runtime_try_quit();
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
 static void
 ppg_window_realize (GtkWidget *widget)
 {
@@ -493,6 +514,7 @@ ppg_window_class_init (PpgWindowClass *klass)
 	g_type_class_add_private(object_class, sizeof(PpgWindowPrivate));
 
 	widget_class = GTK_WIDGET_CLASS(klass);
+	widget_class->delete_event = ppg_window_delete_event;
 	widget_class->realize = ppg_window_realize;
 
 	g_object_class_install_property(object_class,
@@ -534,6 +556,8 @@ ppg_window_init (PpgWindow *window)
 	window->priv = G_TYPE_INSTANCE_GET_PRIVATE(window, PPG_TYPE_WINDOW,
 	                                           PpgWindowPrivate);
 	priv = window->priv;
+
+	n_windows++;
 
 	g_object_set(window,
 	             "title", _(PRODUCT_NAME),
