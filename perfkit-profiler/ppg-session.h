@@ -19,7 +19,7 @@
 #ifndef PPG_SESSION_H
 #define PPG_SESSION_H
 
-#include <glib-object.h>
+#include <perfkit/perfkit.h>
 
 G_BEGIN_DECLS
 
@@ -71,6 +71,7 @@ PpgSessionState ppg_session_get_state      (PpgSession     *session);
 gboolean        ppg_session_load           (PpgSession     *session,
                                             const gchar    *filename,
                                             GError        **error);
+PkModel*        ppg_session_create_model   (PpgSession     *session);
 
 G_END_DECLS
 

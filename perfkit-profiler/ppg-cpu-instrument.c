@@ -207,7 +207,10 @@ get_model (PpgCpuInstrument *instrument,
 
 	if (!(model = g_hash_table_lookup(priv->combined.models, &cpu))) {
 		session = ppg_instrument_get_session(PPG_INSTRUMENT(instrument));
-		model = g_object_new(PK_TYPE_MODEL_MEMORY, NULL);
+		g_assert(session);
+
+		model = ppg_session_create_model(session);
+		g_assert(model);
 
 		/*
 		 * Prepare the model for the various values.
@@ -225,6 +228,9 @@ get_model (PpgCpuInstrument *instrument,
 		 */
 		pk_model_insert_manifest(model, manifest);
 
+		/*
+		 * Store model in hash table using the CPU id as they key.
+		 */
 		key = g_new(gint, 1);
 		*key = cpu;
 		g_hash_table_insert(priv->combined.models, key, model);

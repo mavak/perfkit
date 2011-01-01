@@ -32,12 +32,13 @@ struct _PpgSessionPrivate
 	PpgClockSource  *clock;
 
 	struct {
-		gchar **args;
-		gint    channel;
-		gchar **env;
-		GPid    pid;
-		gchar  *target;
-		gchar  *working_dir;
+		gchar   **args;
+		gint      channel;
+		gchar   **env;
+		GPid      pid;
+		gchar    *target;
+		gchar    *working_dir;
+		GTimeVal  start_tv;
 	} channel;
 };
 
@@ -274,15 +275,19 @@ ppg_session_start_cb (GObject      *object,
                       GAsyncResult *result,
                       gpointer      user_data)
 {
+	PpgSessionPrivate *priv;
 	PkConnection *connection = (PkConnection *)object;
 	PpgSession *session = (PpgSession *)user_data;
-	GTimeVal tv;
 	GError *error = NULL;
 
 	g_return_if_fail(PK_IS_CONNECTION(connection));
 	g_return_if_fail(PPG_IS_SESSION(session));
 
-	if (!pk_connection_channel_start_finish(connection, result, &tv, &error)) {
+	priv = session->priv;
+
+	if (!pk_connection_channel_start_finish(connection, result,
+	                                        &priv->channel.start_tv,
+	                                        &error)) {
 		ppg_session_report_error(session, error);
 		g_clear_error(&error);
 		GOTO(failure);
@@ -429,6 +434,25 @@ ppg_session_add_instrument (PpgSession    *session,
                             PpgInstrument *instrument)
 {
 	g_signal_emit(session, signals[INSTRUMENT_ADDED], 0, instrument);
+}
+
+
+PkModel*
+ppg_session_create_model (PpgSession *session)
+{
+	PpgSessionPrivate *priv;
+	PkModel *model;
+
+	g_return_val_if_fail(PPG_IS_SESSION(session), NULL);
+
+	priv = session->priv;
+
+	/*
+	 * TODO: Eventually, use an mmap'able data model.
+	 */
+	model = g_object_new(PK_TYPE_MODEL_MEMORY, NULL);
+
+	return model;
 }
 
 
@@ -694,11 +718,8 @@ ppg_session_class_init (PpgSessionClass *klass)
 static void
 ppg_session_init (PpgSession *session)
 {
-	PpgSessionPrivate *priv;
-
-	priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
-	                                   PpgSessionPrivate);
-	session->priv = priv;
+	session->priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
+	                                            PpgSessionPrivate);
 
 	ppg_session_set_state(session, PPG_SESSION_INITIAL);
 }
