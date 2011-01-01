@@ -294,6 +294,7 @@ ppg_session_start_cb (GObject      *object,
 	}
 
 	ppg_session_set_state(session, PPG_SESSION_STARTED);
+	ppg_clock_source_start(priv->clock, &priv->channel.start_tv);
 
   failure:
 	g_object_unref(session);
@@ -434,6 +435,14 @@ ppg_session_add_instrument (PpgSession    *session,
                             PpgInstrument *instrument)
 {
 	g_signal_emit(session, signals[INSTRUMENT_ADDED], 0, instrument);
+}
+
+
+gdouble
+ppg_session_get_started_at (PpgSession *session)
+{
+	g_return_val_if_fail(PPG_IS_SESSION(session), 0.0);
+	return ppg_get_time(&session->priv->channel.start_tv);
 }
 
 

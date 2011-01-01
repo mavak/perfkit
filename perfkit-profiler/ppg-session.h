@@ -67,6 +67,7 @@ void            ppg_session_stop           (PpgSession     *session);
 void            ppg_session_mute           (PpgSession     *session);
 void            ppg_session_unmute         (PpgSession     *session);
 gdouble         ppg_session_get_elapsed    (PpgSession     *session);
+gdouble         ppg_session_get_started_at (PpgSession     *session);
 PpgSessionState ppg_session_get_state      (PpgSession     *session);
 gboolean        ppg_session_load           (PpgSession     *session,
                                             const gchar    *filename,

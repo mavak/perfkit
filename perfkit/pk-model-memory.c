@@ -369,22 +369,41 @@ subtract (const GValue *x,
 	switch (x->g_type) {
 	case G_TYPE_DOUBLE:
 		xd = g_value_get_double(x);
-		yd = g_value_get_double(y);
 		break;
 	case G_TYPE_INT:
 		xd = g_value_get_int(x);
-		yd = g_value_get_int(y);
 		break;
 	case G_TYPE_INT64:
 		xd = g_value_get_int64(x);
-		yd = g_value_get_int64(y);
 		break;
 	case G_TYPE_UINT:
 		xd = g_value_get_uint(x);
-		yd = g_value_get_uint(y);
 		break;
 	case G_TYPE_UINT64:
 		xd = g_value_get_uint64(x);
+		break;
+	default:
+		/*
+		 * TODO: Add types.
+		 */
+		g_assert_not_reached();
+		return;
+	}
+
+	switch (y->g_type) {
+	case G_TYPE_DOUBLE:
+		yd = g_value_get_double(y);
+		break;
+	case G_TYPE_INT:
+		yd = g_value_get_int(y);
+		break;
+	case G_TYPE_INT64:
+		yd = g_value_get_int64(y);
+		break;
+	case G_TYPE_UINT:
+		yd = g_value_get_uint(y);
+		break;
+	case G_TYPE_UINT64:
 		yd = g_value_get_uint64(y);
 		break;
 	default:

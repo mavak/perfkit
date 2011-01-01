@@ -111,7 +111,10 @@ ppg_visualizer_task_notify_state (PpgVisualizer *visualizer,
 
 		cr = cairo_create(priv->surface);
 		cairo_set_source_surface(cr, surface, 0.0, 0.0);
-		CAIRO_ASSERT_OK(cr);
+		if (cairo_status(cr) != 0) {
+			cairo_destroy(cr);
+			GOTO(failure);
+		}
 
 		/*
 		 * Clip the range of the draw.
@@ -136,6 +139,7 @@ ppg_visualizer_task_notify_state (PpgVisualizer *visualizer,
 		goo_canvas_item_request_update(GOO_CANVAS_ITEM(visualizer));
 	}
 
+  failure:
 	/*
 	 * Release our surface that was allocated for the draw request.
 	 */

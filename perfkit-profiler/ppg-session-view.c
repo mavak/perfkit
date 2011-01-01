@@ -1426,6 +1426,7 @@ ppg_session_view_hadj_value_changed (PpgSessionView *view,
 {
 	PpgSessionViewPrivate *priv;
 	PpgInstrumentView *inst_view;
+	gdouble start_;
 	gdouble begin;
 	gdouble end;
 	gdouble page_size;
@@ -1453,9 +1454,12 @@ ppg_session_view_hadj_value_changed (PpgSessionView *view,
 	/*
 	 * Update the PpgInstrumentViews to show the given time range.
 	 */
+	start_ = ppg_session_get_started_at(priv->session);
 	for (i = 0; i < priv->instrument_views->len; i++) {
 		inst_view = g_ptr_array_index(priv->instrument_views, i);
-		ppg_instrument_view_set_time(inst_view, begin, end);
+		ppg_instrument_view_set_time(inst_view,
+		                             start_ + begin,
+		                             start_ + end);
 	}
 
 	/*
@@ -1791,6 +1795,7 @@ ppg_session_view_notify_elapsed (PpgSessionView *view,
 	/*
 	 * TODO: Update the visible region if necessary.
 	 */
+	gtk_adjustment_value_changed(priv->hadj);
 }
 
 

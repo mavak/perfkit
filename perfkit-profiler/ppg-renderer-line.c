@@ -127,8 +127,11 @@ ppg_renderer_line_render (PpgRendererLine *line,
 	             "width", &width,
 	             NULL);
 
+	if (begin_time == end_time) {
+		EXIT;
+	}
+
 	g_assert(surface);
-	g_assert(begin_time != end_time);
 	g_assert(width > 0.0);
 	g_assert(height > 0.0);
 
