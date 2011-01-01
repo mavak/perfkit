@@ -63,6 +63,7 @@ void    ppg_cairo_add_color_stop   (cairo_pattern_t *pattern,
                                     const GdkColor  *color);
 gchar*  ppg_format_time            (gdouble          time_);
 guint   ppg_get_num_cpus           (void) G_GNUC_CONST;
+gdouble ppg_get_time               (GTimeVal *tv);
 gdouble ppg_get_current_time       (void);
 const gchar*  ppg_util_uname             (void);
 gsize         ppg_util_get_total_memory  (void);

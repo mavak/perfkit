@@ -366,3 +366,20 @@ ppg_get_num_cpus (void)
 	return 1;
 #endif
 }
+
+
+gdouble
+ppg_get_time (GTimeVal *tv)
+{
+	return tv->tv_sec + (tv->tv_usec / (gdouble)G_USEC_PER_SEC);
+}
+
+
+gdouble
+ppg_get_current_time (void)
+{
+	GTimeVal tv;
+
+	g_get_current_time(&tv);
+	return tv.tv_sec + (tv.tv_usec / (gdouble)G_USEC_PER_SEC);
+}
