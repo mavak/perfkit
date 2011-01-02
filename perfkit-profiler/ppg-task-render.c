@@ -27,8 +27,8 @@ G_DEFINE_TYPE(PpgTaskRender, ppg_task_render, PPG_TYPE_TASK)
 
 
 /*
- * Until pixman is fixed, the max threads we can do here is really
- * just one. Otherwise craziness happens. Ugh.
+ * XXX: Until pixman is fixed, the max threads we can do here is really
+ *      just the Xorg thread. Otherwise craziness happens. Ugh.
  */
 #define MAX_THREADS 1
 
@@ -104,6 +104,7 @@ ppg_task_render_run (PpgTask *task)
  * Returns: A qsort() style return value.
  * Side effects: None.
  */
+#if MAX_THREADS > 1
 static gint
 ppg_task_render_compare (gconstpointer a,
                          gconstpointer b,
@@ -114,6 +115,19 @@ ppg_task_render_compare (gconstpointer a,
 
 	return taskb->priv->sequence - taska->priv->sequence;
 }
+#endif
+
+
+#if MAX_THREADS == 1
+static gboolean
+ppg_task_render_timeout (gpointer data)
+{
+	PpgTask *task = (PpgTask *)data;
+	ppg_task_run(task);
+	g_object_unref(task);
+	return FALSE;
+}
+#endif
 
 
 /**
@@ -128,9 +142,13 @@ ppg_task_render_compare (gconstpointer a,
 static void
 ppg_task_render_schedule (PpgTask *task)
 {
+#if MAX_THREADS == 1
+	g_timeout_add(0, ppg_task_render_timeout, g_object_ref_sink(task));
+#else
 	g_async_queue_push_sorted(task_queue, g_object_ref_sink(task),
 	                          ppg_task_render_compare,
 	                          NULL);
+#endif
 }
 
 
