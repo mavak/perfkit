@@ -76,6 +76,7 @@ static GThread     *task_threads[MAX_THREADS] = { NULL };
  * Globals.
  */
 static guint signals[LAST_SIGNAL] = { 0 };
+static guint render_handler = 0;
 
 
 /**
@@ -104,7 +105,6 @@ ppg_task_render_run (PpgTask *task)
  * Returns: A qsort() style return value.
  * Side effects: None.
  */
-#if MAX_THREADS > 1
 static gint
 ppg_task_render_compare (gconstpointer a,
                          gconstpointer b,
@@ -115,16 +115,19 @@ ppg_task_render_compare (gconstpointer a,
 
 	return taskb->priv->sequence - taska->priv->sequence;
 }
-#endif
 
 
 #if MAX_THREADS == 1
 static gboolean
 ppg_task_render_timeout (gpointer data)
 {
-	PpgTask *task = (PpgTask *)data;
-	ppg_task_run(task);
-	g_object_unref(task);
+	PpgTask *task;
+
+	while ((task = g_async_queue_try_pop(task_queue))) {
+		ppg_task_run(task);
+		g_object_unref(task);
+	}
+	render_handler = 0;
 	return FALSE;
 }
 #endif
@@ -142,12 +145,13 @@ ppg_task_render_timeout (gpointer data)
 static void
 ppg_task_render_schedule (PpgTask *task)
 {
-#if MAX_THREADS == 1
-	g_timeout_add(0, ppg_task_render_timeout, g_object_ref_sink(task));
-#else
 	g_async_queue_push_sorted(task_queue, g_object_ref_sink(task),
 	                          ppg_task_render_compare,
 	                          NULL);
+#if MAX_THREADS == 1
+	if (!render_handler) {
+		g_timeout_add(0, ppg_task_render_timeout, NULL);
+	}
 #endif
 }
 
