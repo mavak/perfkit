@@ -369,8 +369,9 @@ ppg_spawn_process_dialog_set_session (PpgSpawnProcessDialog *dialog,
 	PpgSpawnProcessDialogPrivate *priv;
 	gchar **args;
 	gchar *args_str;
-	gchar *target;
 	gchar **env;
+	gchar *target;
+	gchar *working_dir;
 	gboolean active;
 
 	g_return_if_fail(PPG_IS_SPAWN_PROCESS_DIALOG(dialog));
@@ -383,6 +384,7 @@ ppg_spawn_process_dialog_set_session (PpgSpawnProcessDialog *dialog,
 	             "args", &args,
 	             "env", &env,
 	             "target", &target,
+	             "working-dir", &working_dir,
 	             NULL);
 
 	if (target) {
@@ -400,6 +402,12 @@ ppg_spawn_process_dialog_set_session (PpgSpawnProcessDialog *dialog,
 	if (env) {
 		ppg_spawn_process_dialog_load_env(dialog, env);
 		g_strfreev(env);
+	}
+
+	if (working_dir) {
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(priv->dir_button),
+		                              working_dir);
+		g_free(working_dir);
 	}
 
 	active = !GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(priv->session),
@@ -458,8 +466,8 @@ ppg_spawn_process_dialog_response (PpgSpawnProcessDialog *dialog,
 }
 
 static gboolean
-tree_view_key_press (GtkTreeView *tree_view,
-                     GdkEventKey *key,
+tree_view_key_press (GtkTreeView           *tree_view,
+                     GdkEventKey           *key,
                      PpgSpawnProcessDialog *dialog)
 {
 	PpgSpawnProcessDialogPrivate *priv;
@@ -490,7 +498,7 @@ tree_view_key_press (GtkTreeView *tree_view,
 }
 
 static void
-browse_clicked (GtkWidget *widget,
+browse_clicked (GtkWidget             *widget,
                 PpgSpawnProcessDialog *dialog)
 {
 	PpgSpawnProcessDialogPrivate *priv;
