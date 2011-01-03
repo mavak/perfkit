@@ -83,6 +83,7 @@ struct _PpgSessionViewPrivate
 enum
 {
 	PROP_0,
+	PROP_SELECTED_ITEM,
 	PROP_SESSION,
 	PROP_SHOW_DATA,
 	PROP_ZOOM,
@@ -339,6 +340,8 @@ ppg_session_view_set_selected_item (PpgSessionView    *view,
 			}
 		}
 	}
+
+	g_object_notify(G_OBJECT(view), "selected-item");
 }
 
 
@@ -1974,7 +1977,7 @@ ppg_session_view_finalize (GObject *object)
 
 
 /**
- * ppg_session_view_set_property:
+ * ppg_session_view_get_property:
  * @object: (in): A #GObject.
  * @prop_id: (in): The property identifier.
  * @value: (out): The given property.
@@ -1991,6 +1994,9 @@ ppg_session_view_get_property (GObject    *object,
 	PpgSessionView *view = PPG_SESSION_VIEW(object);
 
 	switch (prop_id) {
+	case PROP_SELECTED_ITEM:
+		g_value_set_object(value, view->priv->selected);
+		break;
 	case PROP_SHOW_DATA:
 		g_value_set_boolean(value, ppg_session_view_get_show_data(view));
 		break;
@@ -2021,6 +2027,9 @@ ppg_session_view_set_property (GObject      *object,
 	PpgSessionView *view = PPG_SESSION_VIEW(object);
 
 	switch (prop_id) {
+	case PROP_SELECTED_ITEM:
+		ppg_session_view_set_selected_item(view, g_value_get_object(value));
+		break;
 	case PROP_SESSION:
 		ppg_session_view_set_session(view, g_value_get_object(value));
 		break;
@@ -2058,6 +2067,14 @@ ppg_session_view_class_init (PpgSessionViewClass *klass)
 	widget_class = GTK_WIDGET_CLASS(klass);
 	widget_class->style_set = ppg_session_view_style_set;
 	widget_class->size_allocate = ppg_session_view_size_allocate;
+
+	g_object_class_install_property(object_class,
+	                                PROP_SELECTED_ITEM,
+	                                g_param_spec_object("selected-item",
+	                                                    "SelectedItem",
+	                                                    "The selected item",
+	                                                    PPG_TYPE_INSTRUMENT_VIEW,
+	                                                    G_PARAM_READWRITE));
 
 	g_object_class_install_property(object_class,
 	                                PROP_SESSION,
