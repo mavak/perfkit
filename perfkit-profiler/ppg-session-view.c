@@ -77,6 +77,7 @@ struct _PpgSessionViewPrivate
 	GooCanvasItem *bar;          /* Separator bar between column/data */
 	GooCanvasItem *top_shadow;   /* Shadow at top of canvas */
 	GooCanvasItem *selected;     /* Currently selected PpgInstrumentView */
+	GooCanvasItem *spinner;      /* Spinner widget canvas item */
 };
 
 
@@ -685,6 +686,31 @@ ppg_session_view_style_set (GtkWidget *widget,
 }
 
 
+static gboolean
+ppg_session_view_layout_spinner_timeout (gpointer data)
+{
+	PpgSessionViewPrivate *priv;
+	PpgSessionView *view = (PpgSessionView *)data;
+	GtkAllocation a;
+	gdouble height;
+	gdouble width;
+
+	g_return_val_if_fail(PPG_IS_SESSION_VIEW(view), FALSE);
+
+	priv = view->priv;
+
+	gtk_widget_get_allocation(priv->canvas, &a);
+	width = a.width;
+	height = a.height;
+	g_object_set(priv->spinner,
+	             "x", 200.0 + (width - 200.0) / 2.0,
+	             "y", height / 2.0,
+	             NULL);
+	g_object_unref(view);
+	return FALSE;
+}
+
+
 /**
  * ppg_session_view_size_allocate:
  * @view: (in): A #PpgSessionView.
@@ -772,11 +798,22 @@ ppg_session_view_size_allocate (GtkWidget     *widget,
 		g_object_set(priv->header_bg, "height", height, NULL);
 		g_object_set(priv->bar, "height", height, NULL);
 		g_object_set(priv->selection.item, "height", height, NULL);
+		g_object_set(priv->spinner,
+		             "y", height / 2.0,
+		             NULL);
 
 		/*
 		 * Update the vertical scroll adjustment.
 		 */
 		ppg_session_view_update_vadj(PPG_SESSION_VIEW(widget));
+	}
+
+	/*
+	 * Relayout the spinner widget if needed.
+	 */
+	if (!gtk_widget_is_sensitive(GTK_WIDGET(view))) {
+		g_timeout_add(0, ppg_session_view_layout_spinner_timeout,
+		              g_object_ref(view));
 	}
 }
 
@@ -1964,6 +2001,29 @@ ppg_session_view_dispose (GObject *object)
 }
 
 
+static void
+ppg_session_view_state_changed (GtkWidget    *widget,
+                                GtkStateType  state)
+{
+	PpgSessionViewPrivate *priv;
+	PpgSessionView *view = (PpgSessionView *)widget;
+	GtkWidget *child;
+
+	g_return_if_fail(PPG_IS_SESSION_VIEW(view));
+
+	priv = view->priv;
+
+	if (gtk_widget_is_sensitive(widget)) {
+		g_object_get(priv->spinner, "widget", &child, NULL);
+		g_object_set(priv->spinner,
+		             "visibility", GOO_CANVAS_ITEM_INVISIBLE,
+		             NULL);
+		gtk_spinner_stop(GTK_SPINNER(child));
+		g_object_unref(child);
+	}
+}
+
+
 /**
  * ppg_session_view_finalize:
  * @object: (in): A #PpgSessionView.
@@ -2074,6 +2134,7 @@ ppg_session_view_class_init (PpgSessionViewClass *klass)
 	widget_class = GTK_WIDGET_CLASS(klass);
 	widget_class->style_set = ppg_session_view_style_set;
 	widget_class->size_allocate = ppg_session_view_size_allocate;
+	widget_class->state_changed = ppg_session_view_state_changed;
 
 	g_object_class_install_property(object_class,
 	                                PROP_SELECTED_ITEM,
@@ -2131,6 +2192,7 @@ ppg_session_view_init (PpgSessionView *view)
 	GtkWidget *h;
 	GtkWidget *img;
 	GtkWidget *s;
+	GtkWidget *spinner;
 
 	priv = G_TYPE_INSTANCE_GET_PRIVATE(view, PPG_TYPE_SESSION_VIEW,
 	                                   PpgSessionViewPrivate);
@@ -2380,6 +2442,20 @@ ppg_session_view_init (PpgSessionView *view)
 	                                    "width", 200.0,
 	                                    "x", 300.0,
 	                                    NULL);
+
+	spinner = g_object_new(GTK_TYPE_SPINNER,
+	                       "visible", TRUE,
+	                       NULL);
+	gtk_spinner_start(GTK_SPINNER(spinner));
+	priv->spinner = g_object_new(GOO_TYPE_CANVAS_WIDGET,
+	                             "height", 100.0,
+	                             "anchor", GOO_CANVAS_ANCHOR_CENTER,
+	                             "parent", root,
+	                             "widget", spinner,
+	                             "width", 100.0,
+	                             "x", 100.0,
+	                             "y", 100.0,
+	                             NULL);
 
 	priv->vadj = g_object_new(GTK_TYPE_ADJUSTMENT,
 	                          "page-size", 1.0,
