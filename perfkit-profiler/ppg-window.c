@@ -538,6 +538,32 @@ ppg_window_action_set (PpgWindow *window,
 }
 
 
+static void
+ppg_window_notify_selected_item (PpgWindow      *window,
+                                 GParamSpec     *pspec,
+                                 PpgSessionView *session_view)
+{
+	PpgWindowPrivate *priv;
+	gboolean has_selected;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+
+	priv = window->priv;
+
+	has_selected = !!ppg_session_view_get_selected_item(session_view);
+
+	ppg_window_action_set(window, "configure-instrument",
+	                      "sensitive", has_selected,
+	                      NULL);
+	ppg_window_action_set(window, "zoom-in-instrument",
+	                      "sensitive", has_selected,
+	                      NULL);
+	ppg_window_action_set(window, "zoom-out-instrument",
+	                      "sensitive", has_selected,
+	                      NULL);
+}
+
+
 static gboolean
 ppg_window_delete_event (GtkWidget   *widget,
                          GdkEventAny *event)
@@ -802,4 +828,7 @@ ppg_window_init (PpgWindow *window)
 	g_object_bind_property(ppg_window_get_action(window, "show-data"),
 	                       "active", priv->session_view, "show_data",
 	                       G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
+	g_signal_connect_swapped(priv->session_view, "notify::selected-item",
+	                         G_CALLBACK(ppg_window_notify_selected_item),
+	                         window);
 }
