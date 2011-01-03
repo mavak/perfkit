@@ -174,7 +174,9 @@ ppg_settings_dialog_init (PpgSettingsDialog *dialog) /* IN */
 	             "border-width", 6,
 	             "default-width", 400,
 	             "default-height", 400,
+#if !GTK_CHECK_VERSION(2, 91, 0)
 	             "has-separator", FALSE,
+#endif
 	             "title", _("Profiler Settings"),
 	             NULL);
 
