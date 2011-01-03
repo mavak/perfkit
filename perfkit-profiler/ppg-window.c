@@ -333,8 +333,10 @@ ppg_window_stop_activate (GtkAction *action,
 
 	priv = window->priv;
 
-	if (!priv->state_frozen) {
-		ppg_session_stop(priv->session);
+	if (priv->session) {
+		if (!priv->state_frozen) {
+			ppg_session_stop(priv->session);
+		}
 	}
 }
 
