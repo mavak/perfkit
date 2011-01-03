@@ -271,6 +271,54 @@ ppg_session_set_pid (PpgSession *session,
 
 
 static void
+ppg_session_set_args_cb (GObject      *object,
+                         GAsyncResult *result,
+                         gpointer      user_data)
+{
+	PpgSessionPrivate *priv;
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	if (!pk_connection_channel_set_args_finish(connection, result, &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+  failure:
+	g_object_unref(session);
+}
+
+
+static void
+ppg_session_set_args (PpgSession  *session,
+                      gchar      **args)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	g_strfreev(priv->channel.args);
+	priv->channel.args = g_strdupv(args);
+	pk_connection_channel_set_args_async(priv->connection,
+	                                     priv->channel.channel,
+	                                     (const gchar **)args,
+	                                     NULL,
+	                                     ppg_session_set_args_cb,
+	                                     g_object_ref(session));
+	g_object_notify(G_OBJECT(session), "args");
+}
+
+
+static void
 ppg_session_start_cb (GObject      *object,
                       GAsyncResult *result,
                       gpointer      user_data)
@@ -586,6 +634,8 @@ ppg_session_set_property (GObject      *object,
 
 	switch (prop_id) {
 	case PROP_ARGS:
+		ppg_session_set_args(session, g_value_get_boxed(value));
+		break;
 	case PROP_ENV:
 	case PROP_TARGET:
 	case PROP_WORKING_DIR:
