@@ -521,6 +521,13 @@ ppg_session_view_instrument_added (PpgSessionView *view,
 	priv = view->priv;
 
 	/*
+	 * Enable the items in the tool palette.
+	 */
+	g_object_set(priv->pointer_tool, "sensitive", TRUE, NULL);
+	g_object_set(priv->time_tool, "sensitive", TRUE, NULL);
+	g_object_set(priv->zoom_tool, "sensitive", TRUE, NULL);
+
+	/*
 	 * Create a PpgInstrumentView to visualize the instrument and set the
 	 * GtkStyle to that of the PpgSessionView.
 	 */
@@ -2192,6 +2199,7 @@ ppg_session_view_init (PpgSessionView *view)
 	                                  "child", img,
 	                                  "draw-indicator", FALSE,
 	                                  "relief", GTK_RELIEF_NONE,
+	                                  "sensitive", FALSE,
 	                                  "tooltip-markup", _("Row selection tool: <b>P</b>"),
 	                                  "visible", TRUE,
 	                                  VEXPAND(FALSE)
@@ -2214,6 +2222,7 @@ ppg_session_view_init (PpgSessionView *view)
 	                               "draw-indicator", FALSE,
 	                               "group", priv->pointer_tool,
 	                               "relief", GTK_RELIEF_NONE,
+	                               "sensitive", FALSE,
 	                               "tooltip-markup", _("Range selection tool: <b>R</b>"),
 	                               "visible", TRUE,
 	                               VEXPAND(FALSE)
@@ -2237,6 +2246,7 @@ ppg_session_view_init (PpgSessionView *view)
 	                               "draw-indicator", FALSE,
 	                               "group", priv->pointer_tool,
 	                               "relief", GTK_RELIEF_NONE,
+	                               "sensitive", FALSE,
 	                               "tooltip-markup", _("Zoom tool: <b>Z</b>"),
 	                               "visible", TRUE,
 	                               VEXPAND(FALSE)
