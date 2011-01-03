@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 
 DEFINE_ACTION_CALLBACK(about);
 DEFINE_ACTION_CALLBACK(add_instrument);
+DEFINE_ACTION_CALLBACK(configure_instrument);
 DEFINE_ACTION_CALLBACK(fullscreen);
 DEFINE_ACTION_CALLBACK(move_forward);
 DEFINE_ACTION_CALLBACK(move_backward);
@@ -131,7 +132,7 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  N_("_Configure"),
 	  NULL,
 	  N_("Configure the selected instrument"),
-	  NULL },
+	  ACTION_CALLBACK(configure_instrument) },
 
 	{ "visualizers",
 	  NULL,

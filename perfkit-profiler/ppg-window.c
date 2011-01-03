@@ -22,6 +22,7 @@
 #include "ppg-about-dialog.h"
 #include "ppg-actions.h"
 #include "ppg-add-instrument-dialog.h"
+#include "ppg-configure-instrument-dialog.h"
 #include "ppg-log.h"
 #include "ppg-menu-tool-item.h"
 #include "ppg-prefs-dialog.h"
@@ -335,6 +336,37 @@ ppg_window_stop_activate (GtkAction *action,
 	if (!priv->state_frozen) {
 		ppg_session_stop(priv->session);
 	}
+}
+
+
+static void
+ppg_window_configure_instrument_activate (GtkAction *action,
+                                          PpgWindow *window)
+{
+	PpgWindowPrivate *priv;
+	PpgInstrumentView *view;
+	PpgInstrument *instrument;
+	PpgSessionView *session_view;
+	GtkWidget *dialog;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(GTK_IS_ACTION(action));
+
+	priv = window->priv;
+
+	session_view = PPG_SESSION_VIEW(priv->session_view);
+	if (!(view = ppg_session_view_get_selected_item(session_view))) {
+		g_assert_not_reached();
+		return;
+	}
+	instrument = ppg_instrument_view_get_instrument(view);
+	dialog = g_object_new(PPG_TYPE_CONFIGURE_INSTRUMENT_DIALOG,
+	                      "instrument", instrument,
+	                      "session", priv->session,
+	                      "transient-for", window,
+	                      NULL);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
 
 
