@@ -490,6 +490,25 @@ ppg_window_instrument_added (PpgWindow     *window,
 
 
 static void
+ppg_window_notify_target (PpgWindow  *window,
+                          GParamSpec *pspec,
+                          PpgSession *session)
+{
+	PpgWindowPrivate *priv;
+	gchar *target;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = window->priv;
+
+	g_object_get(session, "target", &target, NULL);
+	g_object_set(priv->target_tool_item, "label", target, NULL);
+	g_free(target);
+}
+
+
+static void
 ppg_window_set_uri (PpgWindow   *window,
                     const gchar *uri)
 {
@@ -511,6 +530,9 @@ ppg_window_set_uri (PpgWindow   *window,
 	                             NULL);
 	g_signal_connect_swapped(priv->session, "instrument-added",
 	                         G_CALLBACK(ppg_window_instrument_added),
+	                         window);
+	g_signal_connect_swapped(priv->session, "notify::target",
+	                         G_CALLBACK(ppg_window_notify_target),
 	                         window);
 	g_object_set(priv->session_view,
 	             "session", priv->session,
