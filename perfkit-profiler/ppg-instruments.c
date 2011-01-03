@@ -24,6 +24,7 @@
 #include "ppg-cpu-instrument.h"
 #include "ppg-instrument.h"
 #include "ppg-instruments.h"
+#include "ppg-memory-instrument.h"
 #include "ppg-util.h"
 
 #define GET_ICON_NAMED(n) \
@@ -51,10 +52,8 @@ ppg_instruments_init (void)
 	factories = g_array_new(FALSE, FALSE, sizeof(PpgInstrumentFactory));
 	default_pixbuf = LOAD_INLINE_PIXBUF(plugin_pixbuf);
 
-	/*
 	ppg_instruments_register("perfkit-memory", _("Memory"), "gnome-dev-memory",
 	                         PPG_TYPE_MEMORY_INSTRUMENT);
-	                         */
 	ppg_instruments_register("perfkit-cpu", _("CPU"), NULL,
 	                         PPG_TYPE_CPU_INSTRUMENT);
 	/*
