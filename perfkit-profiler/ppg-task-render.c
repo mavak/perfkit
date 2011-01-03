@@ -69,7 +69,9 @@ enum
 
 
 static GAsyncQueue *task_queue = NULL;
-static GThread     *task_threads[MAX_THREADS] = { NULL };
+#if MAX_THREADS > 1
+static GThread *task_threads[MAX_THREADS] = { NULL };
+#endif
 
 
 /*
@@ -165,6 +167,7 @@ ppg_task_render_schedule (PpgTask *task)
  * Returns: %NULL.
  * Side effects: None.
  */
+#if MAX_THREADS > 1
 static gpointer
 ppg_task_render_thread (gpointer data)
 {
@@ -175,9 +178,9 @@ ppg_task_render_thread (gpointer data)
 		ppg_task_run(task);
 		g_object_unref(task);
 	}
-
 	return NULL;
 }
+#endif
 
 
 /**
@@ -313,8 +316,10 @@ ppg_task_render_class_init (PpgTaskRenderClass *klass)
 {
 	GObjectClass *object_class;
 	PpgTaskClass *task_class;
+#if MAX_THREADS > 1
 	guint n_threads;
 	gint i;
+#endif
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_task_render_finalize;
@@ -422,15 +427,19 @@ ppg_task_render_class_init (PpgTaskRenderClass *klass)
 	                               G_TYPE_NONE,
 	                               0);
 
-	/*
-	 * Create rendering threads.
-	 */
 	task_queue = g_async_queue_new();
+
+#if MAX_THREADS > 1
+	/*
+	 * Create rendering threads if we are not using the main loop for
+	 * rendering.
+	 */
 	n_threads = MIN(ppg_get_num_cpus(), MAX_THREADS);
 	for (i = 0; i < n_threads; i++) {
 		task_threads[i] = g_thread_create(ppg_task_render_thread,
 		                                  task_queue, TRUE, NULL);
 	}
+#endif
 }
 
 
