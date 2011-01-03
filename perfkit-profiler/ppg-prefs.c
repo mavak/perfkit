@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gdk/gdk.h>
 #include <glib/gi18n.h>
 
 #include "ppg-prefs.h"
@@ -74,3 +75,23 @@ ppg_prefs_get_project_settings (void)
     }
 
 STR_PREF(default_dir, DEFAULT_DIR)
+
+void
+ppg_prefs_get_window_size (gint *width,
+                           gint *height)
+{
+	GdkScreen *screen = gdk_screen_get_default();
+
+	/*
+	 * TODO: We might want to consider tracking the last size of the window
+	 *       and storing it. Although, there is plenty of information on
+	 *       why that is wrong to be found on the interwebs.
+	 */
+
+	if (width) {
+		*width = gdk_screen_get_width(screen) * 0.75;
+	}
+	if (height) {
+		*height = gdk_screen_get_height(screen) * 0.75;
+	}
+}

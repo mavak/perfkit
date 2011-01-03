@@ -25,6 +25,7 @@
 #include "ppg-configure-instrument-dialog.h"
 #include "ppg-log.h"
 #include "ppg-menu-tool-item.h"
+#include "ppg-prefs.h"
 #include "ppg-prefs-dialog.h"
 #include "ppg-runtime.h"
 #include "ppg-session.h"
@@ -807,6 +808,8 @@ ppg_window_init (PpgWindow *window)
 	GtkWidget *mb_visualizers;
 	GtkWidget *target_menu;
 	GtkWidget *target_existing;
+	gint width;
+	gint height;
 
 	window->priv = G_TYPE_INSTANCE_GET_PRIVATE(window, PPG_TYPE_WINDOW,
 	                                           PpgWindowPrivate);
@@ -814,10 +817,12 @@ ppg_window_init (PpgWindow *window)
 
 	n_windows++;
 
+	ppg_prefs_get_window_size(&width, &height);
+
 	g_object_set(window,
 	             "title", _(PRODUCT_NAME),
-	             "default-width", 800,
-	             "default-height", 494,
+	             "default-width", width,
+	             "default-height", height,
 	             "window-position", GTK_WIN_POS_CENTER,
 	             NULL);
 

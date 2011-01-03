@@ -26,6 +26,8 @@ G_BEGIN_DECLS
 GSettings* ppg_prefs_get_project_settings    (void);
 gchar*     ppg_prefs_get_project_default_dir (void);
 void       ppg_prefs_set_project_default_dir (const gchar *default_dir);
+void       ppg_prefs_get_window_size         (gint *width,
+                                              gint *height);
 
 G_END_DECLS
 
