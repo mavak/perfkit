@@ -41,6 +41,7 @@ DEFINE_ACTION_CALLBACK(prefs);
 DEFINE_ACTION_CALLBACK(prev_instrument);
 DEFINE_ACTION_CALLBACK(quit);
 DEFINE_ACTION_CALLBACK(run);
+DEFINE_ACTION_CALLBACK(settings);
 DEFINE_ACTION_CALLBACK(stop);
 DEFINE_ACTION_CALLBACK(target_spawn);
 DEFINE_ACTION_CALLBACK(zoom_in);
@@ -114,7 +115,7 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  N_("S_ettings"),
 	  "<control>d",
 	  N_("Adjust settings for the current profiling session"),
-	  NULL },
+	  ACTION_CALLBACK(settings) },
 
 	{ "instrument",
 	  NULL,
