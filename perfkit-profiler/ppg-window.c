@@ -436,6 +436,28 @@ ppg_window_session_notify_state (PpgWindow  *window,
 
 
 static void
+ppg_window_instrument_added (PpgWindow     *window,
+                             PpgInstrument *instrument,
+                             PpgSession    *session)
+{
+	PpgWindowPrivate *priv;
+
+	g_return_if_fail(PPG_IS_WINDOW(window));
+	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = window->priv;
+
+	ppg_window_action_set(window, "next-instrument",
+	                      "sensitive", TRUE,
+	                      NULL);
+	ppg_window_action_set(window, "previous-instrument",
+	                      "sensitive", TRUE,
+	                      NULL);
+}
+
+
+static void
 ppg_window_set_uri (PpgWindow   *window,
                     const gchar *uri)
 {
@@ -455,6 +477,9 @@ ppg_window_set_uri (PpgWindow   *window,
 	priv->session = g_object_new(PPG_TYPE_SESSION,
 	                             "connection", connection,
 	                             NULL);
+	g_signal_connect_swapped(priv->session, "instrument-added",
+	                         G_CALLBACK(ppg_window_instrument_added),
+	                         window);
 	g_object_set(priv->session_view,
 	             "session", priv->session,
 	             NULL);
