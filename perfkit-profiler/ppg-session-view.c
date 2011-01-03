@@ -699,14 +699,20 @@ ppg_session_view_layout_spinner_timeout (gpointer data)
 
 	priv = view->priv;
 
-	gtk_widget_get_allocation(priv->canvas, &a);
-	width = a.width;
-	height = a.height;
-	g_object_set(priv->spinner,
-	             "x", 200.0 + (width - 200.0) / 2.0,
-	             "y", height / 2.0,
-	             NULL);
-	g_object_unref(view);
+	/*
+	 * Make sure the widget hasn't been destroyed.
+	 */
+	if (gtk_widget_is_drawable(GTK_WIDGET(view))) {
+		gtk_widget_get_allocation(priv->canvas, &a);
+		width = a.width;
+		height = a.height;
+		g_object_set(priv->spinner,
+		             "x", 200.0 + (width - 200.0) / 2.0,
+		             "y", height / 2.0,
+		             NULL);
+		g_object_unref(view);
+	}
+
 	return FALSE;
 }
 
