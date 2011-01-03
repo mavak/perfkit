@@ -319,6 +319,152 @@ ppg_session_set_args (PpgSession  *session,
 
 
 static void
+ppg_session_set_env_cb (GObject      *object,
+                        GAsyncResult *result,
+                        gpointer      user_data)
+{
+	PpgSessionPrivate *priv;
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	if (!pk_connection_channel_set_env_finish(connection, result, &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+  failure:
+	g_object_unref(session);
+}
+
+
+static void
+ppg_session_set_env (PpgSession  *session,
+                      gchar      **env)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	g_strfreev(priv->channel.env);
+	priv->channel.env = g_strdupv(env);
+	pk_connection_channel_set_env_async(priv->connection,
+	                                    priv->channel.channel,
+	                                    (const gchar **)env,
+	                                    NULL,
+	                                    ppg_session_set_env_cb,
+	                                    g_object_ref(session));
+	g_object_notify(G_OBJECT(session), "env");
+}
+
+
+static void
+ppg_session_set_target_cb (GObject      *object,
+                           GAsyncResult *result,
+                           gpointer      user_data)
+{
+	PpgSessionPrivate *priv;
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	if (!pk_connection_channel_set_target_finish(connection, result, &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+  failure:
+	g_object_unref(session);
+}
+
+
+static void
+ppg_session_set_target (PpgSession  *session,
+                        const gchar *target)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	g_free(priv->channel.target);
+	priv->channel.target = g_strdup(target);
+	pk_connection_channel_set_target_async(priv->connection,
+	                                       priv->channel.channel,
+	                                       target,
+	                                       NULL,
+	                                       ppg_session_set_target_cb,
+	                                       g_object_ref(session));
+	g_object_notify(G_OBJECT(session), "target");
+}
+
+
+static void
+ppg_session_set_working_dir_cb (GObject      *object,
+                                GAsyncResult *result,
+                                gpointer      user_data)
+{
+	PpgSessionPrivate *priv;
+	PkConnection *connection = (PkConnection *)object;
+	PpgSession *session = (PpgSession *)user_data;
+	GError *error = NULL;
+
+	g_return_if_fail(PK_IS_CONNECTION(connection));
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	if (!pk_connection_channel_set_working_dir_finish(connection,
+	                                                  result,
+	                                                  &error)) {
+		ppg_session_report_error(session, error);
+		g_clear_error(&error);
+		GOTO(failure);
+	}
+
+  failure:
+	g_object_unref(session);
+}
+
+
+static void
+ppg_session_set_working_dir (PpgSession  *session,
+                             const gchar *working_dir)
+{
+	PpgSessionPrivate *priv;
+
+	g_return_if_fail(PPG_IS_SESSION(session));
+
+	priv = session->priv;
+
+	g_free(priv->channel.working_dir);
+	priv->channel.working_dir = g_strdup(working_dir);
+	pk_connection_channel_set_working_dir_async(priv->connection,
+	                                            priv->channel.channel,
+	                                            working_dir,
+	                                            NULL,
+	                                            ppg_session_set_working_dir_cb,
+	                                            g_object_ref(session));
+	g_object_notify(G_OBJECT(session), "working-dir");
+}
+
+
+static void
 ppg_session_start_cb (GObject      *object,
                       GAsyncResult *result,
                       gpointer      user_data)
@@ -637,11 +783,13 @@ ppg_session_set_property (GObject      *object,
 		ppg_session_set_args(session, g_value_get_boxed(value));
 		break;
 	case PROP_ENV:
+		ppg_session_set_env(session, g_value_get_boxed(value));
+		break;
 	case PROP_TARGET:
+		ppg_session_set_target(session, g_value_get_string(value));
+		break;
 	case PROP_WORKING_DIR:
-		/*
-		 * TODO: Make request to agents channel and store.
-		 */
+		ppg_session_set_working_dir(session, g_value_get_string(value));
 		break;
 	case PROP_CONNECTION:
 		ppg_session_set_connection(session, g_value_get_object(value));
