@@ -2455,7 +2455,11 @@ ppg_session_view_init (PpgSessionView *view)
 	gtk_spinner_start(GTK_SPINNER(spinner));
 	priv->spinner = g_object_new(GOO_TYPE_CANVAS_WIDGET,
 	                             "height", 100.0,
+#if GTK_CHECK_VERSION(2, 91, 0)
 	                             "anchor", GOO_CANVAS_ANCHOR_CENTER,
+#else
+                                     "anchor", GTK_ANCHOR_CENTER,
+#endif
 	                             "parent", root,
 	                             "widget", spinner,
 	                             "width", 100.0,
