@@ -1840,14 +1840,38 @@ ppg_session_view_notify_elapsed (PpgSessionView *view,
 {
 	PpgSessionViewPrivate *priv;
 	gdouble elapsed;
+	gdouble third_page;
+	gdouble page_size;
+	gdouble value;
 
 	priv = view->priv;
 
-	g_object_get(session, "elapsed", &elapsed, NULL);
-	gtk_adjustment_set_upper(priv->hadj, elapsed);
 	/*
-	 * TODO: Update the visible region if necessary.
+	 * Get the new elapsed time.
 	 */
+	elapsed = ppg_session_get_elapsed(session);
+
+	/*
+	 * Get required values from the adjustment to calculate our
+	 * new position.
+	 */
+	value = gtk_adjustment_get_value(priv->hadj);
+	page_size = gtk_adjustment_get_page_size(priv->hadj);
+	third_page = page_size / 3.0;
+
+	/*
+	 * Update the visible region if necessary.
+	 */
+	if (G_UNLIKELY((value + page_size) < elapsed)) {
+		value = elapsed - third_page;
+		gtk_adjustment_set_value(priv->hadj, value);
+	}
+
+	/*
+	 * Update the upper region so that renderers are told to render
+	 * the new time range.
+	 */
+	gtk_adjustment_set_upper(priv->hadj, elapsed + (2.0 * third_page));
 	gtk_adjustment_value_changed(priv->hadj);
 }
 
