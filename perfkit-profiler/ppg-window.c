@@ -493,9 +493,9 @@ ppg_window_session_notify_state (PpgWindow  *window,
 
 
 static void
-ppg_window_instrument_added (PpgWindow     *window,
-                             PpgInstrument *instrument,
-                             PpgSession    *session)
+ppg_window_session_instrument_added (PpgWindow     *window,
+                                     PpgInstrument *instrument,
+                                     PpgSession    *session)
 {
 	PpgWindowPrivate *priv;
 
@@ -515,9 +515,9 @@ ppg_window_instrument_added (PpgWindow     *window,
 
 
 static void
-ppg_window_notify_target (PpgWindow  *window,
-                          GParamSpec *pspec,
-                          PpgSession *session)
+ppg_window_session_notify_target (PpgWindow  *window,
+                                  GParamSpec *pspec,
+                                  PpgSession *session)
 {
 	PpgWindowPrivate *priv;
 	gchar *target;
@@ -554,17 +554,20 @@ ppg_window_set_uri (PpgWindow   *window,
 	                             "connection", connection,
 	                             NULL);
 	g_signal_connect_swapped(priv->session, "instrument-added",
-	                         G_CALLBACK(ppg_window_instrument_added),
+	                         G_CALLBACK(ppg_window_session_instrument_added),
 	                         window);
 	g_signal_connect_swapped(priv->session, "notify::target",
-	                         G_CALLBACK(ppg_window_notify_target),
+	                         G_CALLBACK(ppg_window_session_notify_target),
+	                         window);
+	g_signal_connect_swapped(priv->session, "notify::state",
+	                         G_CALLBACK(ppg_window_session_notify_state),
 	                         window);
 	g_object_set(priv->session_view,
 	             "session", priv->session,
 	             NULL);
-	g_signal_connect_swapped(priv->session, "notify::state",
-	                         G_CALLBACK(ppg_window_session_notify_state),
-	                         window);
+	g_object_set(priv->timer_tool_item,
+	             "session", priv->session,
+	             NULL);
 	g_object_notify(G_OBJECT(priv->session), "state");
 }
 
