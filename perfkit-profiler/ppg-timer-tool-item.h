@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PPG_TIMER_TOOL_ITEM_H__
-#define __PPG_TIMER_TOOL_ITEM_H__
+#ifndef PPG_TIMER_TOOL_ITEM_H
+#define PPG_TIMER_TOOL_ITEM_H
 
 #include <gtk/gtk.h>
 
@@ -52,4 +52,4 @@ GType ppg_timer_tool_item_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 
-#endif /* __PPG_TIMER_TOOL_ITEM_H__ */
+#endif /* PPG_TIMER_TOOL_ITEM_H */
