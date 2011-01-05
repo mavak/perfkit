@@ -80,7 +80,13 @@ void
 ppg_prefs_get_window_size (gint *width,
                            gint *height)
 {
-	GdkScreen *screen = gdk_screen_get_default();
+	GdkRectangle geom;
+	GdkScreen *screen;
+	gint monitor;
+
+	screen = gdk_screen_get_default();
+	monitor = gdk_screen_get_primary_monitor(screen);
+	gdk_screen_get_monitor_geometry(screen, monitor, &geom);
 
 	/*
 	 * TODO: We might want to consider tracking the last size of the window
@@ -89,9 +95,9 @@ ppg_prefs_get_window_size (gint *width,
 	 */
 
 	if (width) {
-		*width = gdk_screen_get_width(screen) * 0.75;
+		*width = geom.width * 0.75;
 	}
 	if (height) {
-		*height = gdk_screen_get_height(screen) * 0.75;
+		*height = geom.height * 0.75;
 	}
 }
