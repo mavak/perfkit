@@ -356,7 +356,7 @@ ppg_task_render_class_init (PpgTaskRenderClass *klass)
 	                                g_param_spec_double("x",
 	                                                    "x",
 	                                                    "x",
-	                                                    0,
+	                                                    -G_MAXDOUBLE,
 	                                                    G_MAXDOUBLE,
 	                                                    0,
 	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
@@ -366,7 +366,7 @@ ppg_task_render_class_init (PpgTaskRenderClass *klass)
 	                                g_param_spec_double("y",
 	                                                    "y",
 	                                                    "y",
-	                                                    0,
+	                                                    -G_MAXDOUBLE,
 	                                                    G_MAXDOUBLE,
 	                                                    0,
 	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
