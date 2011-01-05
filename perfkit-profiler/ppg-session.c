@@ -553,6 +553,7 @@ ppg_session_stop_cb (GObject      *object,
 	}
 
 	ppg_session_set_state(session, PPG_SESSION_STOPPED);
+	ppg_clock_source_stop(session->priv->clock);
 
   failure:
 	g_object_unref(session);

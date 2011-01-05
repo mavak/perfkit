@@ -54,6 +54,7 @@ void    ppg_clock_source_set_interval   (PpgClockSource *source,
                                          guint            msec);
 void    ppg_clock_source_start          (PpgClockSource *source,
                                          const GTimeVal *tv);
+void    ppg_clock_source_stop           (PpgClockSource *source);
 void    ppg_clock_source_unfreeze       (PpgClockSource *source);
 gdouble ppg_clock_source_get_elapsed    (PpgClockSource *source);
 

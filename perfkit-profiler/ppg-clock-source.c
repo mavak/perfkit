@@ -18,6 +18,7 @@
 
 #include "ppg-clock-source.h"
 #include "ppg-log.h"
+#include "ppg-util.h"
 
 
 G_DEFINE_TYPE(PpgClockSource, ppg_clock_source, G_TYPE_INITIALLY_UNOWNED)
@@ -132,8 +133,7 @@ ppg_clock_source_set_frozen (PpgClockSource *source,
 	if (frozen != priv->frozen) {
 		if (frozen) {
 			if (priv->handler) {
-				g_source_remove(priv->handler);
-				priv->handler = 0;
+				ppg_clear_source(&priv->handler);
 			}
 		} else {
 			if (priv->started && !priv->handler) {
@@ -173,6 +173,22 @@ ppg_clock_source_start (PpgClockSource *source,
 		 *       synchronizer.
 		 */
 	}
+}
+
+
+void
+ppg_clock_source_stop (PpgClockSource *source)
+{
+	PpgClockSourcePrivate *priv;
+
+	g_return_if_fail(PPG_IS_CLOCK_SOURCE(source));
+
+	priv = source->priv;
+
+	if (priv->timer) {
+		g_timer_stop(priv->timer);
+	}
+	ppg_clear_source(&priv->handler);
 }
 
 
