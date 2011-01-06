@@ -134,9 +134,9 @@ ppg_timer_tool_item_notify_elapsed (PpgSession       *session,
 
 
 static void
-ppg_timer_tool_item_notify_state (PpgSession       *session,
+ppg_timer_tool_item_notify_state (PpgTimerToolItem *item,
                                   GParamSpec       *pspec,
-                                  PpgTimerToolItem *item)
+                                  PpgSession       *session)
 {
 	PpgTimerToolItemPrivate *priv;
 	GdkColor color;
