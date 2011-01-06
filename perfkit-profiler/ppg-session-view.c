@@ -1677,7 +1677,6 @@ ppg_session_view_zadj_value_changed (PpgSessionView *view,
 		 * Update the page size for the horizontal scroller.
 		 */
 		gtk_adjustment_set_page_size(priv->hadj, upper - lower);
-		gtk_adjustment_value_changed(priv->hadj);
 
 		/*
 		 * Update each of the instrument views to show the proper time.
