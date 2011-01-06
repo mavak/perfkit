@@ -114,15 +114,16 @@ ppg_timer_tool_item_format (gchar *formatted,
 
 
 static void
-ppg_timer_tool_item_notify_elapsed (PpgSession       *session,
+ppg_timer_tool_item_notify_elapsed (PpgTimerToolItem *item,
                                     GParamSpec       *pspec,
-                                    PpgTimerToolItem *item)
+                                    PpgSession       *session)
 {
 	PpgTimerToolItemPrivate *priv;
 	gchar formatted[MAX_TIMER_CHARS + 1];
 	gdouble elapsed;
 
 	g_return_if_fail(PPG_IS_TIMER_TOOL_ITEM(item));
+	g_return_if_fail(PPG_IS_SESSION(session));
 
 	priv = item->priv;
 
@@ -197,11 +198,9 @@ ppg_timer_tool_item_set_session (PpgTimerToolItem *item,
 
 	priv = item->priv;
 	priv->session = session;
-
-	g_signal_connect(session,
-	                 "notify::elapsed",
-	                 G_CALLBACK(ppg_timer_tool_item_notify_elapsed),
-	                 item);
+	g_signal_connect_swapped(session, "notify::elapsed",
+	                         G_CALLBACK(ppg_timer_tool_item_notify_elapsed),
+	                         item);
 	g_signal_connect_swapped(session, "notify::state",
 	                         G_CALLBACK(ppg_timer_tool_item_notify_state),
 	                         item);
