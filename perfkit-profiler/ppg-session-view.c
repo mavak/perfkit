@@ -1651,6 +1651,7 @@ ppg_session_view_zadj_value_changed (PpgSessionView *view,
 	PpgInstrumentView *inst_view;
 	GtkAllocation a;
 	gdouble lower;
+	gdouble start_;
 	gdouble upper;
 	gint i;
 
@@ -1676,13 +1677,17 @@ ppg_session_view_zadj_value_changed (PpgSessionView *view,
 		 * Update the page size for the horizontal scroller.
 		 */
 		gtk_adjustment_set_page_size(priv->hadj, upper - lower);
+		gtk_adjustment_value_changed(priv->hadj);
 
 		/*
 		 * Update each of the instrument views to show the proper time.
 		 */
+		start_ = ppg_session_get_started_at(priv->session);
 		for (i = 0; i < priv->instrument_views->len; i++) {
 			inst_view = g_ptr_array_index(priv->instrument_views, i);
-			ppg_instrument_view_set_time(inst_view, lower, upper);
+			ppg_instrument_view_set_time(inst_view,
+			                             start_ + lower,
+			                             start_ + upper);
 		}
 
 		/*
