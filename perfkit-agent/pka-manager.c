@@ -102,7 +102,7 @@ pka_manager_load_plugins (const gchar *plugins_dir) /* IN */
 			DEBUG(Plugin, "Skipping non-plugin: %s", name);
 			continue;
 		}
-		INFO(Manager, "Discovered plugin: %s", name);
+		INFO(Manager, "Discovered potential plugin: %s", name);
 		path = g_build_filename(plugins_dir, name, NULL);
 		plugin = pka_plugin_new();
 		if (!pka_plugin_load_from_file(plugin, path, &error)) {
