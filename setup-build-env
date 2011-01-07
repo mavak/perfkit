@@ -4,7 +4,7 @@
 # Sets up the build environment for perfkit
 #
 
-targets=" \
+ubuntu_targets=" \
    build-essential \
    git-core \
    gnome-common \
@@ -23,8 +23,25 @@ targets=" \
    valgrind \
    "
 
-# install required packages
-sudo apt-get install $targets
+fedora_targets=" \
+   autoconf \
+   libtool \
+   glib2-devel \
+   dbus-glib-devel \
+   gtk2-devel \
+   goocanvas-devel \
+   readline-devel \
+   avahi-gobject-devel \
+   valgrind \
+   "
+# install required packages if possible
+if hash sudo 2>/dev/null; then
+  if hash apt-get 2>/dev/null; then
+    sudo apt-get install $ubuntu_targets
+  elif hash yum 2>/dev/null; then
+    sudo yum install $fedora_targets
+  fi
+fi
 
 # build perfkit
 ./autogen.sh --enable-silent-rules
