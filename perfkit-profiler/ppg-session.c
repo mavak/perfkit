@@ -735,6 +735,9 @@ ppg_session_get_property (GObject    *object,
 	case PROP_ARGS:
 		g_value_set_boxed(value, session->priv->channel.args);
 		break;
+	case PROP_CHANNEL:
+		g_value_set_int(value, session->priv->channel.channel);
+		break;
 	case PROP_CONNECTION:
 		g_value_set_object(value, session->priv->connection);
 		break;
@@ -928,7 +931,7 @@ ppg_session_init (PpgSession *session)
 {
 	session->priv = G_TYPE_INSTANCE_GET_PRIVATE(session, PPG_TYPE_SESSION,
 	                                            PpgSessionPrivate);
-
+	session->priv->channel.channel = -1;
 	ppg_session_set_state(session, PPG_SESSION_INITIAL);
 }
 
