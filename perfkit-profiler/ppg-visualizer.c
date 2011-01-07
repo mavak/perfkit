@@ -285,7 +285,7 @@ ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
 
 	if (!priv->frozen) {
 		if (!priv->draw_handler) {
-			priv->draw_handler = g_timeout_add(0, ppg_visualizer_draw_timeout,
+			priv->draw_handler = g_timeout_add(500, ppg_visualizer_draw_timeout,
 			                                   visualizer);
 			priv->draw_begin_time = begin_time;
 			priv->draw_end_time = end_time;
