@@ -114,8 +114,10 @@ pka_source_simple_new_full (PkaSourceSimpleFunc  callback,       /* IN */
 	source = g_object_new(PKA_TYPE_SOURCE_SIMPLE, NULL);
 	pka_source_simple_set_sample_callback(PKA_SOURCE_SIMPLE(source),
 	                                      callback, user_data, notify);
-	pka_source_simple_set_spawn_callback(PKA_SOURCE_SIMPLE(source),
-	                                     spawn_callback, user_data, NULL);
+	if (spawn_callback) {
+		pka_source_simple_set_spawn_callback(PKA_SOURCE_SIMPLE(source),
+		                                     spawn_callback, user_data, NULL);
+	}
 	RETURN(source);
 }
 
