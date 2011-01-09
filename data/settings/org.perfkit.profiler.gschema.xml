@@ -1,4 +1,5 @@
 <schemalist>
+
   <schema id="org.perfkit.profiler.project" path="/projects/" gettext-domain="perfkit">
 
     <key name="default-dir" type="s">
@@ -10,4 +11,28 @@
     </key>
 
   </schema>
+
+  <schema id="org.perfkit.profiler.window" path="/window/" gettext-domain="perfkit">
+
+    <key name="redraws-per-second" type="i">
+      <default>2</default>
+      <range min="1" max="60"/>
+      <summary>Maximum number of redraws per second</summary>
+      <description>
+        The maximum number of redraws per second allowed by visualizers
+        in the profiler interface.
+      </description>
+    </key>
+
+    <key name="horiz-autoscroll" type="b">
+      <default>true</default>
+      <summary>Autoscroll the horizontal axis while recording</summary>
+      <description>
+        Should the horizontal axis (time) be scrolled as data is recorded
+        so that the current moment is always visible.
+      </description>
+    </key>
+
+  </schema>
+
 </schemalist>

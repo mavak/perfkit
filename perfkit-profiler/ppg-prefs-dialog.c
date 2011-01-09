@@ -89,12 +89,17 @@ ppg_prefs_dialog_add_group (GtkWidget *box,
 }
 
 static GtkWidget*
-ppg_prefs_dialog_create_project_page (PpgPrefsDialog *dialog)
+ppg_prefs_dialog_create_window_page (PpgPrefsDialog *dialog)
 {
-	GtkWidget *vbox;
-	GtkWidget *project_button;
+	GSettings *settings;
+	GtkWidget *adj;
+	GtkWidget *b;
+	GtkWidget *group;
+	GtkWidget *hbox;
 	GtkWidget *l;
-	gchar *project_dir;
+	GtkWidget *vbox;
+
+	settings = ppg_prefs_get_window_settings();
 
 	vbox = g_object_new(GTK_TYPE_VBOX,
 	                    "border-width", 12,
@@ -102,14 +107,113 @@ ppg_prefs_dialog_create_project_page (PpgPrefsDialog *dialog)
 	                    "visible", TRUE,
 	                    NULL);
 
-	project_dir = ppg_prefs_get_project_default_dir();
+	group = g_object_new(GTK_TYPE_VBOX,
+	                     "spacing", 6,
+	                     "visible", TRUE,
+	                     NULL);
+
+	b = g_object_new(GTK_TYPE_CHECK_BUTTON,
+	                 "visible", TRUE,
+	                 "label", _("Scroll on incoming data"),
+	                 "tooltip-text", _("Upon receiving incoming data, the "
+	                                   "visualizers will scroll to show the "
+	                                   "new data."),
+	                 NULL);
+	g_settings_bind(settings, "horiz-autoscroll",
+	                b, "active",
+	                G_SETTINGS_BIND_DEFAULT);
+	gtk_container_add_with_properties(GTK_CONTAINER(group), b,
+	                                  "expand", FALSE,
+	                                  NULL);
+
+	hbox = g_object_new(GTK_TYPE_HBOX,
+	                    "spacing", 6,
+	                    "visible", TRUE,
+	                    NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(group), hbox,
+	                                  "expand", FALSE,
+	                                  NULL);
+	l = g_object_new(GTK_TYPE_LABEL,
+	                 "label", _("Updates per second"),
+	                 "visible", TRUE,
+	                 "xalign", 0.0f,
+	                 NULL);
+	gtk_container_add_with_properties(GTK_CONTAINER(hbox), l,
+	                                  "expand", FALSE,
+	                                  NULL);
+	adj = g_object_new(GTK_TYPE_ADJUSTMENT,
+	                   "lower", 1.0,
+	                   "upper", 60.0,
+	                   "step-increment", 1.0,
+	                   NULL);
+	b = g_object_new(GTK_TYPE_SPIN_BUTTON,
+	                 "adjustment", adj,
+	                 "visible", TRUE,
+	                 "value", 2.0,
+	                 NULL);
+	g_settings_bind(settings, "redraws-per-second",
+	                adj, "value",
+	                G_SETTINGS_BIND_DEFAULT);
+	gtk_container_add_with_properties(GTK_CONTAINER(hbox), b,
+	                                  "expand", FALSE,
+	                                  NULL);
+
+	l = g_object_new(GTK_TYPE_LABEL,
+	                 "label", _("<b>Visualizers</b>"),
+	                 "visible", TRUE,
+	                 "use-markup", TRUE,
+	                 "xalign", 0.0f,
+	                 NULL);
+	ppg_prefs_dialog_add_group(vbox, l, group);
+
+	return vbox;
+}
+
+static GtkWidget*
+ppg_prefs_dialog_create_plugin_page (PpgPrefsDialog *dialog)
+{
+	GtkWidget *vbox;
+
+	vbox = g_object_new(GTK_TYPE_VBOX,
+	                    "border-width", 12,
+	                    "spacing", 6,
+	                    "visible", TRUE,
+	                    NULL);
+
+	return vbox;
+}
+
+static GtkWidget*
+ppg_prefs_dialog_create_project_page (PpgPrefsDialog *dialog)
+{
+	GSettings *settings;
+	GtkWidget *vbox;
+	GtkWidget *project_button;
+	GtkWidget *l;
+	gchar *default_dir;
+	gchar *tmp;
+
+	vbox = g_object_new(GTK_TYPE_VBOX,
+	                    "border-width", 12,
+	                    "spacing", 6,
+	                    "visible", TRUE,
+	                    NULL);
+
 	project_button = g_object_new(GTK_TYPE_FILE_CHOOSER_BUTTON,
 	                              "action", GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
 	                              "title", _("Default Project Directory"),
 	                              "visible", TRUE,
 	                              NULL);
-	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(project_button), project_dir);
-	g_free(project_dir);
+	settings = ppg_prefs_get_project_settings();
+	default_dir = g_settings_get_string(settings, "default-dir");
+	if (!g_path_is_absolute(default_dir)) {
+		tmp = g_build_filename(g_get_home_dir(), default_dir, NULL);
+		g_free(default_dir);
+		default_dir = tmp;
+	}
+	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(project_button),
+	                              default_dir);
+	g_free(default_dir);
 
 	l = g_object_new(GTK_TYPE_LABEL,
 	                 "label", _("<b>Default _Directory</b>"),
@@ -203,12 +307,27 @@ ppg_prefs_dialog_init (PpgPrefsDialog *dialog) /* IN */
 	                              "border-width", 6,
 	                              "visible", TRUE,
 	                              NULL);
-	gtk_container_add(GTK_CONTAINER(content_area), priv->notebook);
+	gtk_container_add_with_properties(GTK_CONTAINER(content_area),
+	                                  priv->notebook,
+	                                  "expand", TRUE,
+	                                  NULL);
+
+	page = ppg_prefs_dialog_create_window_page(dialog);
+	gtk_container_add_with_properties(GTK_CONTAINER(priv->notebook), page,
+	                                  "position", 0,
+	                                  "tab-label", _("View"),
+	                                  NULL);
 
 	page = ppg_prefs_dialog_create_project_page(dialog);
 	gtk_container_add_with_properties(GTK_CONTAINER(priv->notebook), page,
-	                                  "position", 0,
-	                                  "tab-label", _("Projects"),
+	                                  "position", 1,
+	                                  "tab-label", _("Project"),
+	                                  NULL);
+
+	page = ppg_prefs_dialog_create_plugin_page(dialog);
+	gtk_container_add_with_properties(GTK_CONTAINER(priv->notebook), page,
+	                                  "position", 2,
+	                                  "tab-label", _("Plugins"),
 	                                  NULL);
 
 	gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CLOSE,

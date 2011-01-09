@@ -20,12 +20,14 @@
 #include <glib/gi18n.h>
 
 #include "ppg-prefs.h"
+#include "ppg-util.h"
 
-#define PROJECT_SCHEMA             "org.perfkit.profiler.project"
-#define PROJECT_SCHEMA_DEFAULT_DIR "default-dir"
+#define PROJECT_SCHEMA  "org.perfkit.profiler.project"
+#define WINDOW_SCHEMA   "org.perfkit.profiler.window"
 
 static GSettings    *project_settings = NULL;
-static GOptionEntry  entries[]        = {
+static GSettings    *window_settings = NULL;
+static GOptionEntry  entries[] = {
 	{ NULL }
 };
 
@@ -44,14 +46,15 @@ gboolean
 ppg_prefs_init (void)
 {
 	project_settings = g_settings_new(PROJECT_SCHEMA);
+	window_settings = g_settings_new(WINDOW_SCHEMA);
 	return TRUE;
 }
 
 void
 ppg_prefs_shutdown (void)
 {
-	g_object_unref(project_settings);
-	project_settings = NULL;
+	ppg_clear_object(&project_settings);
+	ppg_clear_object(&window_settings);
 }
 
 GSettings*
@@ -60,21 +63,11 @@ ppg_prefs_get_project_settings (void)
 	return project_settings;
 }
 
-#define STR_PREF(_n, _N)                                                     \
-	                                                                         \
-    gchar *                                                                  \
-    ppg_prefs_get_project_##_n (void)                                        \
-    {                                                                        \
-	    return g_settings_get_string(project_settings, PROJECT_SCHEMA_##_N); \
-    }                                                                        \
-	                                                                         \
-    void                                                                     \
-    ppg_prefs_set_project_##_n (const gchar *str)                            \
-    {                                                                        \
-	    g_settings_set_string(project_settings, PROJECT_SCHEMA_##_N, str);   \
-    }
-
-STR_PREF(default_dir, DEFAULT_DIR)
+GSettings*
+ppg_prefs_get_window_settings (void)
+{
+	return window_settings;
+}
 
 void
 ppg_prefs_get_window_size (gint *width,
