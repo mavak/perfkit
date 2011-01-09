@@ -34,6 +34,7 @@ libprofiler_la_SOURCES += ppg-log.c
 libprofiler_la_SOURCES += $(builddir)/ppg-marshal.c
 libprofiler_la_SOURCES += ppg-memory-instrument.c
 libprofiler_la_SOURCES += ppg-menu-tool-item.c
+libprofiler_la_SOURCES += ppg-monitor.c
 libprofiler_la_SOURCES += ppg-paths.c
 libprofiler_la_SOURCES += ppg-prefs.c
 libprofiler_la_SOURCES += ppg-prefs-dialog.c

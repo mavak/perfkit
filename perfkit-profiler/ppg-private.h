@@ -32,6 +32,7 @@ void          ppg_instruments_shutdown   (void);
 void          ppg_log_init               (gboolean       stdout_,
                                           const gchar   *filename);
 void          ppg_log_shutdown           (void);
+void          ppg_monitor_init           (void);
 void          ppg_paths_init             (void);
 void          ppg_paths_shutdown         (void);
 GOptionGroup* ppg_prefs_get_option_group (void);

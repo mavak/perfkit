@@ -36,6 +36,7 @@ DEFINE_ACTION_CALLBACK(configure_instrument);
 DEFINE_ACTION_CALLBACK(fullscreen);
 DEFINE_ACTION_CALLBACK(move_forward);
 DEFINE_ACTION_CALLBACK(move_backward);
+DEFINE_ACTION_CALLBACK(monitor_cpu);
 DEFINE_ACTION_CALLBACK(next_instrument);
 DEFINE_ACTION_CALLBACK(prefs);
 DEFINE_ACTION_CALLBACK(prev_instrument);
@@ -164,10 +165,31 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	{ "target-none", NULL, N_("No target"), NULL, NULL, NULL },
 
 	{ "tools", NULL, N_("_Tools") },
-	{ "monitor", NULL, N_("Monitor") },
-	{ "monitor-cpu", NULL, N_("CPU Usage"), NULL, NULL, NULL },
-	{ "monitor-mem", NULL, N_("Memory Usage"), NULL, NULL, NULL },
-	{ "monitor-net", NULL, N_("Network Usage"), NULL, NULL, NULL },
+
+	{ "monitor",
+	  NULL,
+	  N_("Monitor") },
+
+	{ "monitor-cpu",
+	  NULL,
+	  N_("CPU Usage"),
+	  NULL,
+	  NULL,
+	  ACTION_CALLBACK(monitor_cpu) },
+
+	{ "monitor-mem",
+	  NULL,
+	  N_("Memory Usage"),
+	  NULL,
+	  NULL,
+	  NULL },
+
+	{ "monitor-net",
+	  NULL,
+	  N_("Network Usage"),
+	  NULL,
+	  NULL,
+	  NULL },
 
 	{ "view",
 	  NULL,

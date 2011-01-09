@@ -25,8 +25,11 @@
 #include "ppg-configure-instrument-dialog.h"
 #include "ppg-log.h"
 #include "ppg-menu-tool-item.h"
+#include "ppg-monitor.h"
 #include "ppg-prefs.h"
 #include "ppg-prefs-dialog.h"
+#include "ppg-renderer-line.h"
+#include "ppg-rt-graph.h"
 #include "ppg-runtime.h"
 #include "ppg-session.h"
 #include "ppg-session-view.h"
@@ -41,6 +44,7 @@
 
 struct _PpgWindowPrivate
 {
+	PkConnection   *connection;
 	PpgSession     *session;
 	GtkActionGroup *actions;
 	gchar          *uri;
@@ -395,6 +399,33 @@ ppg_window_configure_instrument_activate (GtkAction *action,
 }
 
 
+static void
+ppg_window_monitor_cpu_activate (GtkAction *action,
+                                 PpgWindow *parent)
+{
+	PpgWindowPrivate *priv;
+	GtkWidget *graph;
+	GtkWidget *window;
+
+	g_return_if_fail(GTK_IS_ACTION(action));
+	g_return_if_fail(PPG_IS_WINDOW(parent));
+
+	priv = parent->priv;
+
+	window = g_object_new(GTK_TYPE_WINDOW,
+	                      "border-width", 12,
+	                      "default-height", 225,
+	                      "default-width", 400,
+	                      "title", _("CPU Usage"),
+	                      "transient-for", parent,
+	                      NULL);
+	graph = ppg_monitor_cpu_new(priv->connection);
+	gtk_container_add(GTK_CONTAINER(window), graph);
+	gtk_window_present(GTK_WINDOW(window));
+	ppg_rt_graph_start(PPG_RT_GRAPH(graph));
+}
+
+
 guint
 ppg_window_count (void)
 {
@@ -538,20 +569,19 @@ ppg_window_set_uri (PpgWindow   *window,
                     const gchar *uri)
 {
 	PpgWindowPrivate *priv;
-	PkConnection *connection;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 
 	priv = window->priv;
 
-	if (!(connection = pk_connection_new_from_uri(uri))) {
+	if (!(priv->connection = pk_connection_new_from_uri(uri))) {
 		g_critical("Invalid perfkit uri: %s", uri);
 		return;
 	}
 
 	priv->uri = g_strdup(uri);
 	priv->session = g_object_new(PPG_TYPE_SESSION,
-	                             "connection", connection,
+	                             "connection", priv->connection,
 	                             NULL);
 	g_signal_connect_swapped(priv->session, "instrument-added",
 	                         G_CALLBACK(ppg_window_session_instrument_added),

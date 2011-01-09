@@ -148,6 +148,8 @@ ppg_rt_graph_start (PpgRtGraph *graph)
 	priv->end_time = priv->begin_time + time_span;
 	ppg_rt_graph_render_background(graph);
 	ppg_rt_graph_render_foreground(graph, 0.0, 0.0);
+
+	gtk_widget_queue_resize(GTK_WIDGET(graph));
 }
 
 
@@ -899,6 +901,9 @@ ppg_rt_graph_size_allocate (GtkWidget     *widget,
 	 * Get our window to create our suraces and such.
 	 */
 	window = gtk_widget_get_window(widget);
+	if (!window) {
+		return;
+	}
 
 	/*
 	 * Cleanup after previous cairo surfaces.

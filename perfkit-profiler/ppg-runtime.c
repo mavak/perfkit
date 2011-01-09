@@ -73,6 +73,7 @@ ppg_runtime_init (gint    *argc,
 	}
 
 	ppg_log_init(use_stdount, log_filename);
+	ppg_monitor_init();
 	ppg_paths_init();
 	ppg_prefs_init();
 	ppg_color_init();
