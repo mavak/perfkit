@@ -27,6 +27,7 @@
 #include "ppg-instrument-menu.h"
 #include "ppg-instrument-view.h"
 #include "ppg-log.h"
+#include "ppg-prefs.h"
 #include "ppg-ruler.h"
 #include "ppg-session-view.h"
 #include "ppg-util.h"
@@ -1843,6 +1844,7 @@ ppg_session_view_notify_elapsed (PpgSessionView *view,
                                  PpgSession     *session)
 {
 	PpgSessionViewPrivate *priv;
+	GSettings *settings;
 	gdouble elapsed;
 	gdouble third_page;
 	gdouble page_size;
@@ -1867,8 +1869,11 @@ ppg_session_view_notify_elapsed (PpgSessionView *view,
 	 * Update the visible region if necessary.
 	 */
 	if (G_UNLIKELY((value + page_size) < elapsed)) {
-		value = elapsed - third_page;
-		gtk_adjustment_set_value(priv->hadj, value);
+		settings = ppg_prefs_get_window_settings();
+		if (g_settings_get_boolean(settings, "horiz-autoscroll")) {
+			value = elapsed - third_page;
+			gtk_adjustment_set_value(priv->hadj, value);
+		}
 	}
 
 	/*
