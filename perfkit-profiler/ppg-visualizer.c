@@ -17,6 +17,7 @@
  */
 
 #include "ppg-log.h"
+#include "ppg-prefs.h"
 #include "ppg-task-render.h"
 #include "ppg-util.h"
 #include "ppg-visualizer.h"
@@ -38,6 +39,7 @@ struct _PpgVisualizerPrivate
 	gdouble          natural_height;
 	gboolean         frozen;
 	gboolean         important;
+	guint            frame_limit;
 	guint            draw_handler;
 	guint            resize_handler;
 };
@@ -49,6 +51,7 @@ enum
 
 	PROP_BEGIN_TIME,
 	PROP_END_TIME,
+	PROP_FRAME_LIMIT,
 	PROP_IS_IMPORTANT,
 	PROP_NAME,
 	PROP_NATURAL_HEIGHT,
@@ -268,6 +271,7 @@ ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
                                      gdouble        end_time)
 {
 	PpgVisualizerPrivate *priv;
+	guint msec;
 
 	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
 	g_return_if_fail(begin_time >= 0.0);
@@ -285,7 +289,9 @@ ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
 
 	if (!priv->frozen) {
 		if (!priv->draw_handler) {
-			priv->draw_handler = g_timeout_add(500, ppg_visualizer_draw_timeout,
+			msec = 1000 / priv->frame_limit;
+			priv->draw_handler = g_timeout_add(msec,
+			                                   ppg_visualizer_draw_timeout,
 			                                   visualizer);
 			priv->draw_begin_time = begin_time;
 			priv->draw_end_time = end_time;
@@ -764,6 +770,9 @@ ppg_visualizer_set_property (GObject      *object,
 	case PROP_END_TIME:
 		ppg_visualizer_set_end_time(visualizer, g_value_get_double(value));
 		break;
+	case PROP_FRAME_LIMIT:
+		visualizer->priv->frame_limit = g_value_get_int(value);
+		break;
 	case PROP_IS_IMPORTANT:
 		ppg_visualizer_set_is_important(visualizer, g_value_get_boolean(value));
 		break;
@@ -855,6 +864,16 @@ ppg_visualizer_class_init (PpgVisualizerClass *klass)
 	                                                    "title",
 	                                                    NULL,
 	                                                    G_PARAM_READWRITE));
+
+	g_object_class_install_property(object_class,
+	                                PROP_FRAME_LIMIT,
+	                                g_param_spec_int("frame-limit",
+	                                                 "frame-limit",
+	                                                 "frame-limit",
+	                                                 1,
+	                                                 G_MAXINT,
+	                                                 2,
+	                                                 G_PARAM_WRITABLE));
 }
 
 
@@ -870,11 +889,18 @@ ppg_visualizer_class_init (PpgVisualizerClass *klass)
 static void
 ppg_visualizer_init (PpgVisualizer *visualizer)
 {
+	GSettings *settings;
+
 	visualizer->priv = G_TYPE_INSTANCE_GET_PRIVATE(visualizer,
 	                                               PPG_TYPE_VISUALIZER,
 	                                               PpgVisualizerPrivate);
 
 	visualizer->priv->natural_height = 25.0;
+
+	settings = ppg_prefs_get_window_settings();
+	g_settings_bind(settings, "redraws-per-second",
+	                visualizer, "frame-limit",
+	                G_SETTINGS_BIND_GET);
 
 	g_signal_connect(visualizer, "notify::width",
 	                 G_CALLBACK(ppg_visualizer_queue_resize), NULL);
