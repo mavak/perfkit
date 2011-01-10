@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <math.h>
+
 #include "ppg-log.h"
 #include "ppg-prefs.h"
 #include "ppg-task-render.h"
@@ -119,6 +121,15 @@ ppg_visualizer_task_notify_state (PpgVisualizer *visualizer,
 		span = priv->end_time - priv->begin_time;
 		g_object_get(visualizer, "width", &total_width, NULL);
 		x = (begin_time - priv->begin_time) / span * total_width;
+
+		/*
+		 * Only draw what we can do on integer aligned offsets.
+		 *
+		 * TODO: We need to make sure we render extra area to prevent
+		 *       a striping effect.
+		 */
+		width -= ceil(x) - x;
+		x = ceil(x);
 
 		cr = cairo_create(priv->surface);
 		cairo_set_source_surface(cr, surface, x, y);
