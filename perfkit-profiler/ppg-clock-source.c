@@ -364,5 +364,5 @@ ppg_clock_source_init (PpgClockSource *source)
 {
 	source->priv = G_TYPE_INSTANCE_GET_PRIVATE(source, PPG_TYPE_CLOCK_SOURCE,
 	                                           PpgClockSourcePrivate);
-	source->priv->interval = 133;
+	source->priv->interval = 250;
 }
