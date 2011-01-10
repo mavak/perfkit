@@ -55,7 +55,8 @@ ppg_visualizer_simple_invalidate (PpgVisualizerSimple *simple,
                                   PpgRenderer         *renderer)
 {
 	PpgVisualizer *visualizer = (PpgVisualizer *)simple;
-	ppg_visualizer_queue_draw_time_span(visualizer, begin_time, end_time);
+	ppg_visualizer_queue_draw_time_span(visualizer, begin_time, end_time,
+	                                    FALSE);
 }
 
 

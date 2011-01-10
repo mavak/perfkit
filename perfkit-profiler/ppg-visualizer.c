@@ -80,10 +80,13 @@ ppg_visualizer_task_notify_state (PpgVisualizer *visualizer,
 	cairo_surface_t *surface;
 	PpgTaskState state;
 	cairo_t *cr;
+	gdouble begin_time;
+	gdouble height;
+	gdouble total_width;
+	gdouble span;
+	gdouble width;
 	gdouble x;
 	gdouble y;
-	gdouble width;
-	gdouble height;
 
 	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
 	g_return_if_fail(PPG_IS_TASK(task));
@@ -106,14 +109,19 @@ ppg_visualizer_task_notify_state (PpgVisualizer *visualizer,
 
 	if (state == PPG_TASK_SUCCESS) {
 		g_object_get(task,
+		             "begin-time", &begin_time,
 		             "height", &height,
 		             "width", &width,
 		             "x", &x,
 		             "y", &y,
 		             NULL);
 
+		span = priv->end_time - priv->begin_time;
+		g_object_get(visualizer, "width", &total_width, NULL);
+		x = (begin_time - priv->begin_time) / span * total_width;
+
 		cr = cairo_create(priv->surface);
-		cairo_set_source_surface(cr, surface, 0.0, 0.0);
+		cairo_set_source_surface(cr, surface, x, y);
 		if (cairo_status(cr) != 0) {
 			cairo_destroy(cr);
 			GOTO(failure);
@@ -176,7 +184,6 @@ ppg_visualizer_draw_timeout (gpointer data)
 	gdouble span;
 	gdouble width;
 	gdouble x;
-	gdouble y = 0.0;
 
 	g_return_val_if_fail(PPG_IS_VISUALIZER(visualizer), FALSE);
 
@@ -228,20 +235,17 @@ ppg_visualizer_draw_timeout (gpointer data)
 	/*
 	 * Create the task to do the rendering.
 	 */
-	priv->task = PPG_VISUALIZER_GET_CLASS(visualizer)->draw(visualizer,
-	                                                        cairo_surface_reference(surface),
-	                                                        begin_time,
-	                                                        end_time,
-	                                                        x,
-	                                                        y,
-	                                                        width,
-	                                                        height);
+	priv->task = PPG_VISUALIZER_GET_CLASS(visualizer)->
+		draw(visualizer,
+	         cairo_surface_reference(surface),
+	         begin_time, end_time,
+	         0, 0, width, height);
 	g_signal_connect_swapped(priv->task, "notify::state",
 	                         G_CALLBACK(ppg_visualizer_task_notify_state),
 	                         visualizer);
 	ppg_task_schedule(priv->task);
 
-cleanup:
+  cleanup:
 	if (surface) {
 		cairo_surface_destroy(surface);
 	}
@@ -268,7 +272,8 @@ cleanup:
 void
 ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
                                      gdouble        begin_time,
-                                     gdouble        end_time)
+                                     gdouble        end_time,
+                                     gboolean       now)
 {
 	PpgVisualizerPrivate *priv;
 	guint msec;
@@ -288,13 +293,17 @@ ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
 	}
 
 	if (!priv->frozen) {
-		if (!priv->draw_handler) {
+		if (now) {
+			priv->draw_begin_time = begin_time;
+			priv->draw_end_time = end_time;
+			ppg_visualizer_draw_timeout(visualizer);
+		} else if (!priv->draw_handler) {
 			msec = 1000 / priv->frame_limit;
+			priv->draw_begin_time = begin_time;
+			priv->draw_end_time = end_time;
 			priv->draw_handler = g_timeout_add(msec,
 			                                   ppg_visualizer_draw_timeout,
 			                                   visualizer);
-			priv->draw_begin_time = begin_time;
-			priv->draw_end_time = end_time;
 		} else {
 			priv->draw_begin_time = MIN(priv->draw_begin_time, begin_time);
 			priv->draw_end_time = MAX(priv->draw_end_time, end_time);
@@ -316,7 +325,7 @@ void
 ppg_visualizer_queue_draw (PpgVisualizer *visualizer)
 {
 	g_return_if_fail(PPG_IS_VISUALIZER(visualizer));
-	ppg_visualizer_queue_draw_time_span(visualizer, 0.0, 0.0);
+	ppg_visualizer_queue_draw_time_span(visualizer, 0.0, 0.0, TRUE);
 }
 
 
@@ -425,7 +434,7 @@ ppg_visualizer_set_begin_time (PpgVisualizer *visualizer,
 
 
 /**
- * ppg_visualizer_func_name:
+ * ppg_visualizer_set_end_time:
  * @visualizer: (in): A #PpgVisualizer.
  * @end_time: (in): A #gdouble containing the new end time.
  *
@@ -492,9 +501,11 @@ ppg_visualizer_set_time (PpgVisualizer *visualizer,
 
 	priv = visualizer->priv;
 
-	priv->begin_time = begin_time;
-	priv->end_time = end_time;
-	ppg_visualizer_queue_draw(visualizer);
+	if ((priv->begin_time != begin_time) || (priv->end_time != end_time)) {
+		priv->begin_time = begin_time;
+		priv->end_time = end_time;
+		ppg_visualizer_queue_draw(visualizer);
+	}
 }
 
 

@@ -82,7 +82,8 @@ GType         ppg_visualizer_get_type             (void) G_GNUC_CONST;
 void          ppg_visualizer_queue_draw           (PpgVisualizer *visualizer);
 void          ppg_visualizer_queue_draw_time_span (PpgVisualizer *visualizer,
                                                    gdouble        begin_time,
-                                                   gdouble        end_time);
+                                                   gdouble        end_time,
+                                                   gboolean       now);
 void          ppg_visualizer_set_begin_time       (PpgVisualizer *visualizer,
                                                    gdouble        begin_time);
 void          ppg_visualizer_set_end_time         (PpgVisualizer *visualizer,
