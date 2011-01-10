@@ -100,6 +100,9 @@ ppg_renderer_line_render (PpgRendererLine *line,
 	gdouble end_time;
 	gdouble first_x;
 	gdouble height;
+	gdouble last_time;
+	gdouble last_x;
+	gdouble last_y;
 	gdouble value;
 	gdouble width;
 	gdouble x;
@@ -163,12 +166,26 @@ ppg_renderer_line_render (PpgRendererLine *line,
 		                                begin_time, end_time,
 		                                aggregate_time)) {
 			first_x = get_x_for_time(x_ratio, x, begin_time, iter.time);
-			do {
+			last_x = first_x;
+			last_time = iter.time;
+			value = pk_model_get_double(item->model, &iter, item->key);
+			last_y = get_y_for_range(y_ratio, y2, begin_value, value);
+			cairo_move_to(cr, last_x, last_y);
+			while (pk_model_iter_next(item->model, &iter)) {
 				value = pk_model_get_double(item->model, &iter, item->key);
 				point.x = get_x_for_time(x_ratio, x, begin_time, iter.time);
 				point.y = get_y_for_range(y_ratio, y2, begin_value, value);
-				cairo_line_to(cr, point.x, point.y);
-			} while (pk_model_iter_next(item->model, &iter));
+				cairo_curve_to(cr,
+				               last_x + ((point.x - last_x) / 2.0),
+				               last_y,
+				               last_x + ((point.x - last_x) / 2.0),
+				               point.y,
+				               point.x,
+				               point.y);
+				last_x = point.x;
+				last_y = point.y;
+				last_time = iter.time;
+			}
 
 			/*
 			 * Stroke or fill the path of data points.
