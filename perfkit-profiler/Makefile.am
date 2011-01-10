@@ -74,6 +74,10 @@ libprofiler_la_CPPFLAGS += -I$(top_srcdir)/cut-n-paste
 libprofiler_la_CPPFLAGS += -DPRODUCT_NAME="\"Perfkit Profiler\""
 libprofiler_la_CPPFLAGS += -DG_LOG_DOMAIN=\""Profiler"\"
 
+libprofiler_la_DEPENDENCIES =
+libprofiler_la_DEPENDENCIES += ppg-marshal.c
+libprofiler_la_DEPENDENCIES += ppg-marshal.h
+
 libprofiler_la_LIBADD =
 if HAVE_AVAHI
 libprofiler_la_LIBADD += $(AVAHI_LIBS)
