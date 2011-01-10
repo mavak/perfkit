@@ -3,6 +3,9 @@ include $(top_srcdir)/Makefile.inc
 bin_PROGRAMS =
 bin_PROGRAMS += perfkit-shell
 
+bin_SCRIPTS =
+bin_SCRIPTS += perfkit-support
+
 #
 # perfkit-shell
 #

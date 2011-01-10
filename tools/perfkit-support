@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2011 Christian Hergert <chris@dronelabs.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+perfkit-support is a script to collect various statistics about the
+host system to aid support technicians in troubleshooting problems.
+"""
+
+import os
+import socket
+import sys
+import tempfile
+
+def b(*args):
+    return os.path.join(*args)
+
+class Support(object):
+    tempDir = None
+    supportDir = None
+    hostFile = None
+
+    def __init__(self):
+        self.tempDir = tempfile.mkdtemp()
+        self.supportDir = b(self.tempDir, 'perfkit-support')
+        os.mkdir(self.supportDir)
+        self.hostFile = file(b(self.supportDir, 'host.txt'), 'w+')
+
+    def cleanup(self):
+        if self.hostFile:
+            self.hostFile.close()
+            os.unlink(self.hostFile.name)
+        if self.supportDir:
+            os.rmdir(self.supportDir)
+        if self.tempDir:
+            os.rmdir(self.tempDir)
+
+    def compress(self):
+        path = b(tempfile.gettempdir(), 'perfkit-support.tar.gz')
+        cmd = "tar -czf '%s' -C '%s' 'perfkit-support'" % (
+            path, self.tempDir)
+        os.system(cmd)
+        print
+        print 'Send the following file to your perfkit support technician.'
+        print '  %s' % path
+
+    def run(self):
+        print 'perfkit-support [%d]' % os.getpid()
+        print '  Temp directory:', self.supportDir
+        print
+
+        self.genHostFile()
+        self.compress()
+
+    def genHostFile(self):
+        name = self.hostFile.name
+        def append(cmd):
+            os.system("echo '%s' >> %s\n" % (cmd, name))
+            os.system("%s >> '%s'" % (cmd, name))
+            os.system("echo >> '%s'" % name)
+        append("hostname")
+        append("date -R")
+        append("uname -a")
+        append("uptime")
+        append("free")
+        append("ps aux")
+        append("cat /proc/meminfo")
+        append("cat /proc/cpuinfo")
+        append("mount")
+        append("df -h")
+        append("who")
+        append("netstat -nlp")
+        append("ifconfig -a")
+        append("route -n")
+        append("cat /proc/devices")
+        append("cat /proc/modules")
+        if os.path.exists('/etc/redhat-release'):
+            append("rpm -qa")
+        elif os.path.exists('/etc/debian_version'):
+            append("dpkg --list")
+        append("dmesg")
+
+if __name__ == '__main__':
+    support = Support()
+    try:
+        support.run()
+    except Exception, ex:
+        print ex
+    support.cleanup()
