@@ -367,6 +367,7 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	                           "attributes", attrs,
 	                           "label", "00:00:00.00",
 	                           "selectable", TRUE,
+	                           "single-line-mode", TRUE,
 	                           "use-markup", FALSE,
 	                           "visible", TRUE,
 	                           "xalign", 0.5f,
