@@ -23,6 +23,7 @@
 #include "ppg-actions.h"
 #include "ppg-add-instrument-dialog.h"
 #include "ppg-configure-instrument-dialog.h"
+#include "ppg-hud-window.h"
 #include "ppg-log.h"
 #include "ppg-menu-tool-item.h"
 #include "ppg-monitor.h"

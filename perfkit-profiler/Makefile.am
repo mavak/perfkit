@@ -26,6 +26,7 @@ libprofiler_la_SOURCES += ppg-discover-dialog.c
 endif
 libprofiler_la_SOURCES += ppg-frame-source.c
 libprofiler_la_SOURCES += ppg-header.c
+libprofiler_la_SOURCES += ppg-hud-window.c
 libprofiler_la_SOURCES += ppg-instrument.c
 libprofiler_la_SOURCES += ppg-instrument-menu.c
 libprofiler_la_SOURCES += ppg-instrument-view.c
@@ -102,6 +103,7 @@ INST_H_FILES += ppg-discover-dialog.h
 endif
 INST_H_FILES += ppg-frame-source.h
 INST_H_FILES += ppg-header.h
+INST_H_FILES += ppg-hud-window.h
 INST_H_FILES += ppg-instrument.h
 INST_H_FILES += ppg-instrument-menu.h
 INST_H_FILES += ppg-instrument-view.h
