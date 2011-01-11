@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 
 DEFINE_ACTION_CALLBACK(about);
 DEFINE_ACTION_CALLBACK(add_instrument);
+DEFINE_ACTION_CALLBACK(close);
 DEFINE_ACTION_CALLBACK(configure_instrument);
 DEFINE_ACTION_CALLBACK(fullscreen);
 DEFINE_ACTION_CALLBACK(move_forward);
@@ -74,7 +75,7 @@ static GtkActionEntry ppg_window_action_entries[] = {
 	  N_("_Close Window"),
 	  NULL,
 	  NULL,
-	  NULL },
+	  ACTION_CALLBACK(close) },
 
 	{ "edit",
 	  NULL,

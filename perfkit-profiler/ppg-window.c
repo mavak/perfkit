@@ -66,7 +66,7 @@ enum
 };
 
 
-static guint n_windows = 0;
+static guint gWindowCount = 0;
 
 
 G_DEFINE_TYPE(PpgWindow, ppg_window, GTK_TYPE_WINDOW)
@@ -254,6 +254,19 @@ ppg_window_quit_activate (GtkAction *action,
 
 
 static void
+ppg_window_close_activate (GtkAction *action,
+                           PpgWindow *window)
+{
+	if (!ppg_window_check_close(window)) {
+		return;
+	}
+	gtk_widget_destroy(GTK_WIDGET(window));
+	gWindowCount--;
+	ppg_runtime_try_quit();
+}
+
+
+static void
 ppg_window_fullscreen_activate (GtkAction *action,
                                 PpgWindow *window)
 {
@@ -430,7 +443,7 @@ ppg_window_monitor_cpu_activate (GtkAction *action,
 guint
 ppg_window_count (void)
 {
-	return n_windows;
+	return gWindowCount;
 }
 
 
@@ -690,7 +703,7 @@ ppg_window_delete_event (GtkWidget   *widget,
 	 * count and attempt to quit the application.
 	 */
 	if (ppg_window_check_close(window)) {
-		n_windows--;
+		gWindowCount--;
 		ppg_runtime_try_quit();
 		return FALSE;
 	}
@@ -849,7 +862,7 @@ ppg_window_init (PpgWindow *window)
 	                                           PpgWindowPrivate);
 	priv = window->priv;
 
-	n_windows++;
+	gWindowCount++;
 
 	ppg_prefs_get_window_size(&width, &height);
 
