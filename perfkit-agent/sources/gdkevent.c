@@ -129,8 +129,11 @@ gdkevent_modify_spawn_info (PkaSource     *source,
 	g_return_val_if_fail(GDKEVENT_IS_SOURCE(gdkevent), FALSE);
 
 	priv = gdkevent->priv;
+
 	pka_spawn_info_set_env(spawn_info, "GDKEVENT_SOCKET", priv->socket);
-	pka_spawn_info_set_env(spawn_info, "GTK_MODULES", "gdkevent-module");
+	pka_spawn_info_set_env(spawn_info, "GTK_MODULES",
+	                       "gdkevent2-module,gdkevent3-module");
+
 	RETURN(TRUE);
 }
 

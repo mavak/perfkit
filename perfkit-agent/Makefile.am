@@ -16,11 +16,14 @@ sources_LTLIBRARIES += netdev.la
 sources_LTLIBRARIES += sched.la
 sourcesdir = $(libdir)/perfkit-agent/plugins
 
-modules_LTLIBRARIES = libgdkevent-module.la
 if HAVE_GTK3
-modulesdir = $(libdir)/gtk-3.0/modules
-else
-modulesdir = $(libdir)/gtk-2.0/modules
+gtk3modules_LTLIBRARIES = libgdkevent3-module.la
+gtk3modulesdir = $(libdir)/gtk-3.0/modules
+endif
+
+if HAVE_GTK2
+gtk2modules_LTLIBRARIES = libgdkevent2-module.la
+gtk2modulesdir = $(libdir)/gtk-2.0/modules
 endif
 
 headerdir = $(prefix)/include/perfkit-1.0/perfkit-agent
@@ -221,18 +224,35 @@ gdkevent_la_LDFLAGS += -module
 gdkevent_la_LDFLAGS += $(GIO_LIBS)
 gdkevent_la_LDFLAGS += $(GTK_LIBS)
 
-libgdkevent_module_la_SOURCES =
-libgdkevent_module_la_SOURCES += sources/gdkevent-module.c
+if HAVE_GTK2
+libgdkevent2_module_la_SOURCES =
+libgdkevent2_module_la_SOURCES += sources/gdkevent-module.c
 
-libgdkevent_module_la_CPPFLAGS =
-libgdkevent_module_la_CPPFLAGS += $(INCLUDE_CFLAGS)
-libgdkevent_module_la_CPPFLAGS += $(GIO_CFLAGS)
-libgdkevent_module_la_CPPFLAGS += $(GTK_CFLAGS)
+libgdkevent2_module_la_CPPFLAGS =
+libgdkevent2_module_la_CPPFLAGS += $(INCLUDE_CFLAGS)
+libgdkevent2_module_la_CPPFLAGS += $(GIO_CFLAGS)
+libgdkevent2_module_la_CPPFLAGS += $(GTK2_CFLAGS)
 
-libgdkevent_module_la_LIBADD =
-libgdkevent_module_la_LIBADD += $(INCLUDE_LIBS)
-libgdkevent_module_la_LIBADD += $(GIO_LIBS)
-libgdkevent_module_la_LIBADD += $(GTK_LIBS)
+libgdkevent2_module_la_LIBADD =
+libgdkevent2_module_la_LIBADD += $(INCLUDE_LIBS)
+libgdkevent2_module_la_LIBADD += $(GIO_LIBS)
+libgdkevent2_module_la_LIBADD += $(GTK2_LIBS)
+endif
+
+if HAVE_GTK3
+libgdkevent3_module_la_SOURCES =
+libgdkevent3_module_la_SOURCES += sources/gdkevent-module.c
+
+libgdkevent3_module_la_CPPFLAGS =
+libgdkevent3_module_la_CPPFLAGS += $(INCLUDE_CFLAGS)
+libgdkevent3_module_la_CPPFLAGS += $(GIO_CFLAGS)
+libgdkevent3_module_la_CPPFLAGS += $(GTK3_CFLAGS)
+
+libgdkevent3_module_la_LIBADD =
+libgdkevent3_module_la_LIBADD += $(INCLUDE_LIBS)
+libgdkevent3_module_la_LIBADD += $(GIO_LIBS)
+libgdkevent3_module_la_LIBADD += $(GTK3_LIBS)
+endif
 
 #
 # developement helpers

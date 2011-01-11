@@ -66,16 +66,20 @@ PKG_CHECK_MODULES(GOBJECT,   [gobject-2.0      >= 2.26
 
 
 dnl ************************************************************************
-dnl Gtk+ 3.0 Support
+dnl Gtk+ Support
 dnl ************************************************************************
+have_gtk2=no
 have_gtk3=no
-PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 2.91], [have_gtk3=yes],
-                  [PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.20])])
+PKG_CHECK_MODULES(GTK2, [gtk+-2.0 >= 2.20], [have_gtk2=yes], [have_gtk2=no])
+PKG_CHECK_MODULES(GTK3, [gtk+-3.0 >= 2.91], [have_gtk3=yes], [have_gtk3=no])
 if test "x$have_gtk3" = "xyes"; then
+	PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 2.91])
 	PKG_CHECK_MODULES(GOOCANVAS, [goocanvas-2.0 >= 1.90.2])
 else
+	PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.20])
 	PKG_CHECK_MODULES(GOOCANVAS, [goocanvas >= 0.15])
 fi
+AM_CONDITIONAL(HAVE_GTK2, test "x$have_gtk2" = "xyes")
 AM_CONDITIONAL(HAVE_GTK3, test "x$have_gtk3" = "xyes")
 
 
@@ -205,6 +209,7 @@ echo "  Enable Test Suite..........: ${enable_glibtest}"
 echo ""
 echo "Optional features"
 echo ""
+echo "  Gtk+ 2.0 Support...........: ${have_gtk2}"
 echo "  Gtk+ 3.0 Support...........: ${have_gtk3}"
 echo "  Avahi Support..............: ${have_avahi}"
 echo ""
