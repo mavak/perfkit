@@ -321,7 +321,6 @@ ppg_ruler_draw_arrow (PpgRuler *ruler)
 	GdkColor base_light;
 	GdkColor base_dark;
 	GdkColor hl_light;
-	GdkColor hl_dark;
 	cairo_t *cr;
 	gint half;
 	gint line_width;
@@ -351,7 +350,6 @@ ppg_ruler_draw_arrow (PpgRuler *ruler)
 	base_light = style->light[GTK_STATE_SELECTED];
 	base_dark = style->dark[GTK_STATE_SELECTED];
 	hl_light = style->light[GTK_STATE_SELECTED];
-	hl_dark = style->mid[GTK_STATE_SELECTED];
 
 	top = middle - half + line_width + 0.5;
 	bottom = middle + half - line_width + 0.5;
@@ -734,7 +732,6 @@ ppg_ruler_get_preferred_height (GtkWidget *widget,
                                 gint      *natural_height)
 {
 	PpgRuler *ruler = (PpgRuler *)widget;
-	PpgRulerPrivate *priv;
 	GdkWindow *window;
 	PangoLayout *layout;
 	cairo_t *cr;
@@ -742,8 +739,6 @@ ppg_ruler_get_preferred_height (GtkWidget *widget,
 	gint height;
 
 	g_return_if_fail(PPG_IS_RULER(ruler));
-
-	priv = ruler->priv;
 
 	*min_height = *natural_height = 0;
 

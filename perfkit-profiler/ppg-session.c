@@ -275,15 +275,12 @@ ppg_session_set_args_cb (GObject      *object,
                          GAsyncResult *result,
                          gpointer      user_data)
 {
-	PpgSessionPrivate *priv;
 	PkConnection *connection = (PkConnection *)object;
 	PpgSession *session = (PpgSession *)user_data;
 	GError *error = NULL;
 
 	g_return_if_fail(PK_IS_CONNECTION(connection));
 	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
 
 	if (!pk_connection_channel_set_args_finish(connection, result, &error)) {
 		ppg_session_report_error(session, error);
@@ -323,15 +320,12 @@ ppg_session_set_env_cb (GObject      *object,
                         GAsyncResult *result,
                         gpointer      user_data)
 {
-	PpgSessionPrivate *priv;
 	PkConnection *connection = (PkConnection *)object;
 	PpgSession *session = (PpgSession *)user_data;
 	GError *error = NULL;
 
 	g_return_if_fail(PK_IS_CONNECTION(connection));
 	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
 
 	if (!pk_connection_channel_set_env_finish(connection, result, &error)) {
 		ppg_session_report_error(session, error);
@@ -371,15 +365,12 @@ ppg_session_set_target_cb (GObject      *object,
                            GAsyncResult *result,
                            gpointer      user_data)
 {
-	PpgSessionPrivate *priv;
 	PkConnection *connection = (PkConnection *)object;
 	PpgSession *session = (PpgSession *)user_data;
 	GError *error = NULL;
 
 	g_return_if_fail(PK_IS_CONNECTION(connection));
 	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
 
 	if (!pk_connection_channel_set_target_finish(connection, result, &error)) {
 		ppg_session_report_error(session, error);
@@ -419,15 +410,12 @@ ppg_session_set_working_dir_cb (GObject      *object,
                                 GAsyncResult *result,
                                 gpointer      user_data)
 {
-	PpgSessionPrivate *priv;
 	PkConnection *connection = (PkConnection *)object;
 	PpgSession *session = (PpgSession *)user_data;
 	GError *error = NULL;
 
 	g_return_if_fail(PK_IS_CONNECTION(connection));
 	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = session->priv;
 
 	if (!pk_connection_channel_set_working_dir_finish(connection,
 	                                                  result,
@@ -644,12 +632,9 @@ ppg_session_get_started_at (PpgSession *session)
 PkModel*
 ppg_session_create_model (PpgSession *session)
 {
-	PpgSessionPrivate *priv;
 	PkModel *model;
 
 	g_return_val_if_fail(PPG_IS_SESSION(session), NULL);
-
-	priv = session->priv;
 
 	/*
 	 * TODO: Eventually, use an mmap'able data model.

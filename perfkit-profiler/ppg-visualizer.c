@@ -187,8 +187,6 @@ ppg_visualizer_draw_timeout (gpointer data)
 	PpgVisualizerPrivate *priv;
 	cairo_surface_t *surface = NULL;
 	gpointer instance;
-	GooCanvas *canvas;
-	GdkWindow *window;
 	gdouble begin_time;
 	gdouble end_time;
 	gdouble height;
@@ -238,8 +236,6 @@ ppg_visualizer_draw_timeout (gpointer data)
 	/*
 	 * Create a surface for the rendering.
 	 */
-	canvas = goo_canvas_item_get_canvas(GOO_CANVAS_ITEM(visualizer));
-	window = gtk_widget_get_window(GTK_WIDGET(canvas));
 	surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
 	                                     width, height);
 

@@ -122,14 +122,12 @@ void
 pka_source_queue_started (PkaSource    *source,     /* IN */
                           PkaSpawnInfo *spawn_info) /* IN */
 {
-	PkaSourcePrivate *priv;
 	gpointer *state;
 
 	g_return_if_fail(PKA_IS_SOURCE(source));
 	g_return_if_fail(spawn_info != NULL);
 
 	ENTRY;
-	priv = source->priv;
 	state = g_new0(gpointer, 2);
 	state[0] = g_object_ref(source);
 	state[1] = pka_spawn_info_copy(spawn_info);

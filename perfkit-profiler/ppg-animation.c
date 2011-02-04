@@ -343,16 +343,12 @@ ppg_animation_get_value_at_offset (PpgAnimation *animation,
                                    Tween        *tween,
                                    GValue       *value)
 {
-	PpgAnimationPrivate *priv;
-
 	g_return_if_fail(PPG_IS_ANIMATION(animation));
 	g_return_if_fail(offset >= 0.0);
 	g_return_if_fail(offset <= 1.0);
 	g_return_if_fail(tween != NULL);
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(value->g_type == tween->pspec->value_type);
-
-	priv = animation->priv;
 
 	if (value->g_type < LAST_FUNDAMENTAL) {
 		/*

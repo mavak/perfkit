@@ -119,13 +119,11 @@ pkg_source_page_sample_cb (PkManifest *manifest,  /* IN */
                            PkSample   *sample,    /* IN */
                            gpointer    user_data) /* IN */
 {
-	PkgSourcePagePrivate *priv;
 	PkgSourcePage *page = user_data;
 
 	g_return_if_fail(PKG_IS_SOURCE_PAGE(page));
 
 	ENTRY;
-	priv = page->priv;
 	DEBUG(SourcePage, "Received a new sample");
 	EXIT;
 }

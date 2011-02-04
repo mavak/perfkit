@@ -2239,7 +2239,6 @@ pka_listener_manager_add_subscription_finish (PkaListener    *listener,     /* I
                                               gint           *subscription, /* OUT */
                                               GError        **error)        /* OUT */
 {
-	ManagerAddSubscriptionCall *call;
 	PkaSubscription *real_subscription = NULL;
 	gboolean ret = FALSE;
 
@@ -2248,7 +2247,6 @@ pka_listener_manager_add_subscription_finish (PkaListener    *listener,     /* I
 	g_return_val_if_fail(subscription != NULL, FALSE);
 
 	ENTRY;
-	call = GET_RESULT_POINTER(ManagerAddSubscriptionCall, result);
 	if ((ret = pka_manager_add_subscription(DEFAULT_CONTEXT,
 	                                        &real_subscription,
 	                                        error))) {
@@ -2539,7 +2537,6 @@ pka_listener_manager_get_sources_finish (PkaListener    *listener,    /* IN */
                                          gsize          *sources_len, /* OUT */
                                          GError        **error)       /* OUT */
 {
-	ManagerGetSourcesCall *call;
 	GList *list = NULL;
 	GList *iter = NULL;
 	gboolean ret = FALSE;
@@ -2550,7 +2547,6 @@ pka_listener_manager_get_sources_finish (PkaListener    *listener,    /* IN */
 	g_return_val_if_fail(sources != NULL, FALSE);
 
 	ENTRY;
-	call = GET_RESULT_POINTER(ManagerGetSourcesCall, result);
 	if (!pka_manager_get_sources(DEFAULT_CONTEXT, &list, error)) {
 		GOTO(failed);
 	}

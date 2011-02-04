@@ -91,7 +91,6 @@ ppg_add_instrument_dialog_item_activated (GtkWidget *icon_view,
                                           PpgAddInstrumentDialog *dialog)
 {
 	PpgAddInstrumentDialogPrivate *priv;
-	PpgInstrument *instrument;
 	GtkTreeModel *model;
 	GtkTreeIter iter;
 	gchar *name;
@@ -106,7 +105,7 @@ ppg_add_instrument_dialog_item_activated (GtkWidget *icon_view,
 	gtk_tree_model_get(model, &iter,
 	                   PPG_INSTRUMENTS_STORE_COLUMN_NAME, &name,
 	                   -1);
-	instrument = ppg_instruments_create(priv->session, name);
+	ppg_instruments_create(priv->session, name);
 	g_free(name);
 }
 

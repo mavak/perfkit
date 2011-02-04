@@ -626,11 +626,8 @@ pka_source_simple_unmuted (PkaSource *source) /* In */
 static void
 pka_source_simple_reset (PkaSource *source) /* IN */
 {
-	PkaSourceSimplePrivate *priv;
-
 	g_return_if_fail(PKA_IS_SOURCE_SIMPLE(source));
 
-	priv = PKA_SOURCE_SIMPLE(source)->priv;
 	/*
 	 * TODO: Allow simple sources to have a callback func for reset.
 	 */

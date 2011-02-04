@@ -404,16 +404,15 @@ pk_connection_dbus_handle_handler_message (DBusConnection *connection, /* IN */
                                            DBusMessage    *message,    /* IN */
                                            gpointer        user_data)  /* IN */
 {
-	PkConnectionDBusPrivate *priv;
 	DBusHandlerResult ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	DBusMessage *reply = NULL;
 	gint subscription = 0;
 	GError *error = NULL;
 
+	ENTRY;
+
 	g_return_val_if_fail(PK_IS_CONNECTION_DBUS(user_data), ret);
 
-	ENTRY;
-	priv = PK_CONNECTION_DBUS(user_data)->priv;
 	if (!dbus_message_has_interface(message, "org.perfkit.Agent.Handler")) {
 	    GOTO(not_handler_msg);
 	}

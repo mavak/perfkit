@@ -468,7 +468,6 @@ ppg_window_session_notify_state (PpgWindow  *window,
                                  GParamSpec *pspec,
                                  PpgSession *session)
 {
-	PpgWindowPrivate *priv;
 	PpgSessionState state;
 	gboolean insensitive = FALSE;
 	gboolean pause_active = FALSE;
@@ -480,8 +479,6 @@ ppg_window_session_notify_state (PpgWindow  *window,
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = window->priv;
 
 	state = ppg_session_get_state(session);
 	ppg_window_freeze_state(window);
@@ -542,13 +539,9 @@ ppg_window_session_instrument_added (PpgWindow     *window,
                                      PpgInstrument *instrument,
                                      PpgSession    *session)
 {
-	PpgWindowPrivate *priv;
-
 	g_return_if_fail(PPG_IS_WINDOW(window));
 	g_return_if_fail(PPG_IS_INSTRUMENT(instrument));
 	g_return_if_fail(PPG_IS_SESSION(session));
-
-	priv = window->priv;
 
 	ppg_window_action_set(window, "next-instrument",
 	                      "sensitive", TRUE,
@@ -643,15 +636,12 @@ ppg_window_action_set (PpgWindow *window,
                        const gchar *first_property,
                        ...)
 {
-	PpgWindowPrivate *priv;
 	GObject *object;
 	va_list args;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
 	g_return_if_fail(name != NULL);
 	g_return_if_fail(first_property != NULL);
-
-	priv = window->priv;
 
 	if (!(object = (GObject *)ppg_window_get_action(window, name))) {
 		CRITICAL(Window, "No action named %s", name);
@@ -669,12 +659,9 @@ ppg_window_notify_selected_item (PpgWindow      *window,
                                  GParamSpec     *pspec,
                                  PpgSessionView *session_view)
 {
-	PpgWindowPrivate *priv;
 	gboolean has_selected;
 
 	g_return_if_fail(PPG_IS_WINDOW(window));
-
-	priv = window->priv;
 
 	has_selected = !!ppg_session_view_get_selected_item(session_view);
 

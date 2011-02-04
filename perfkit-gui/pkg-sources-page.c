@@ -202,7 +202,6 @@ pkg_sources_page_get_sources_cb (PkConnection *connection, /* IN */
                                  GAsyncResult *result,     /* IN */
                                  gpointer      user_data)  /* IN */
 {
-	PkgSourcesPagePrivate *priv;
 	PkgSourcesPage *page = user_data;
 	gint *sources = NULL;
 	gsize sources_len = 0;
@@ -212,7 +211,6 @@ pkg_sources_page_get_sources_cb (PkConnection *connection, /* IN */
 	g_return_if_fail(PKG_IS_SOURCES_PAGE(page));
 
 	ENTRY;
-	priv = page->priv;
 	if (!pk_connection_manager_get_sources_finish(connection, result, &sources, &sources_len, &error)) {
 		/* TODO: Show error */
 		g_error_free(error);
@@ -270,12 +268,9 @@ pkg_sources_page_load (PkgPage *page) /* IN */
 static void
 pkg_sources_page_unload (PkgPage *page) /* IN */
 {
-	PkgSourcesPagePrivate *priv;
-
 	g_return_if_fail(PKG_IS_SOURCES_PAGE(page));
 
 	ENTRY;
-	priv = PKG_SOURCES_PAGE(page)->priv;
 	EXIT;
 }
 
@@ -304,7 +299,6 @@ pkg_sources_page_add_source_cb (PkConnection *connection, /* IN */
                                 GAsyncResult *result,     /* IN */
                                 gpointer      user_data)  /* IN */
 {
-	PkgSourcesPagePrivate *priv;
 	PkgSourcesPage *page = user_data;
 	GError *error = NULL;
 	gint id = 0;
@@ -312,7 +306,6 @@ pkg_sources_page_add_source_cb (PkConnection *connection, /* IN */
 	g_return_if_fail(PKG_IS_SOURCES_PAGE(page));
 
 	ENTRY;
-	priv = page->priv;
 	if (!pk_connection_manager_add_source_finish(
 				connection, result, &id, &error)) {
 		/* TODO: Show error */

@@ -138,14 +138,11 @@ local_process_foreach (void (*callback) (PpgProcessMenu*, GPid),
 static void
 ppg_process_menu_show (GtkWidget *widget)
 {
-	PpgProcessMenuPrivate *priv;
 	GtkWidgetClass *klass;
 	GList *list;
 	GList *iter;
 
 	g_return_if_fail(PPG_IS_PROCESS_MENU(widget));
-
-	priv = PPG_PROCESS_MENU(widget)->priv;
 
 	/*
 	 * Remove all existing children.

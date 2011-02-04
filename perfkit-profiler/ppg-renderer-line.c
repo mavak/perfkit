@@ -100,7 +100,6 @@ ppg_renderer_line_render (PpgRendererLine *line,
 	gdouble end_time;
 	gdouble first_x;
 	gdouble height;
-	gdouble last_time;
 	gdouble last_x;
 	gdouble last_y;
 	gdouble value;
@@ -167,7 +166,6 @@ ppg_renderer_line_render (PpgRendererLine *line,
 		                                aggregate_time)) {
 			first_x = get_x_for_time(x_ratio, x, begin_time, iter.time);
 			last_x = first_x;
-			last_time = iter.time;
 			value = pk_model_get_double(item->model, &iter, item->key);
 			last_y = get_y_for_range(y_ratio, y2, begin_value, value);
 			cairo_move_to(cr, last_x, last_y);
@@ -184,7 +182,6 @@ ppg_renderer_line_render (PpgRendererLine *line,
 				               point.y);
 				last_x = point.x;
 				last_y = point.y;
-				last_time = iter.time;
 			}
 
 			/*
@@ -217,15 +214,12 @@ ppg_renderer_line_draw (PpgRenderer     *renderer,
                         gdouble          width,
                         gdouble          height)
 {
-	PpgRendererLinePrivate *priv;
 	PpgRendererLine *line = (PpgRendererLine *)renderer;
 	PpgTask *task;
 
 	ENTRY;
 
 	g_return_val_if_fail(PPG_IS_RENDERER_LINE(line), NULL);
-
-	priv = line->priv;
 
 	task = g_object_new(PPG_TYPE_TASK_RENDER,
 	                    "begin-time", begin_time,
@@ -258,14 +252,11 @@ ppg_renderer_line_notify_end_time (PkModel    *model,
                                    GParamSpec *pspec,
                                    Line       *item)
 {
-	PpgRendererLinePrivate *priv;
 	gdouble last_end_time;
 
 	g_return_if_fail(PK_IS_MODEL(model));
 	g_return_if_fail(item != NULL);
 	g_return_if_fail(PPG_IS_RENDERER_LINE(item->renderer));
-
-	priv = item->renderer->priv;
 
 	last_end_time = item->end_time;
 	item->end_time = pk_model_get_end_time(model);

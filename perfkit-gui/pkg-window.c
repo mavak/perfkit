@@ -701,7 +701,6 @@ pkg_window_connection_manager_get_subscriptions_cb (GObject      *object,    /* 
                                                     gpointer      user_data) /* IN */
 {
 	PkConnection *connection;
-	PkgWindowPrivate *priv;
 	gint *subscriptions;
 	gsize subscriptions_len;
 	GError *error = NULL;
@@ -710,7 +709,6 @@ pkg_window_connection_manager_get_subscriptions_cb (GObject      *object,    /* 
 	g_return_if_fail(PKG_IS_WINDOW(user_data));
 
 	ENTRY;
-	priv = PKG_WINDOW(user_data)->priv;
 	connection = PK_CONNECTION(object);
 	if (!pk_connection_manager_get_subscriptions_finish(connection, result,
 	                                                    &subscriptions,
@@ -852,7 +850,6 @@ pkg_window_connection_manager_get_sources_cb (GObject      *object,    /* IN */
                                               gpointer      user_data) /* IN */
 {
 	PkConnection *connection;
-	PkgWindowPrivate *priv;
 	gint *sources;
 	gsize sources_len;
 	GError *error = NULL;
@@ -861,7 +858,6 @@ pkg_window_connection_manager_get_sources_cb (GObject      *object,    /* IN */
 	g_return_if_fail(PKG_IS_WINDOW(user_data));
 
 	ENTRY;
-	priv = PKG_WINDOW(user_data)->priv;
 	connection = PK_CONNECTION(object);
 	if (!pk_connection_manager_get_sources_finish(connection, result,
 	                                              &sources, &sources_len,
@@ -1336,7 +1332,6 @@ pkg_window_selection_changed (GtkTreeSelection *selection, /* IN */
                               gpointer          user_data) /* IN */
 {
 	PkgWindow *window;
-	PkgWindowPrivate *priv;
 	PkConnection *connection;
 	GtkTreeModel *model;
 	GtkTreeIter iter;
@@ -1346,7 +1341,6 @@ pkg_window_selection_changed (GtkTreeSelection *selection, /* IN */
 
 	ENTRY;
 	window = PKG_WINDOW(user_data);
-	priv = window->priv;
 	if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
 		gtk_tree_model_get(model, &iter,
 		                   COLUMN_TYPE, &row_type,

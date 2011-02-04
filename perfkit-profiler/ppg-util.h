@@ -88,44 +88,24 @@ PpgAnimation* g_object_animate_full (gpointer          object,
                                      const gchar      *first_property,
                                      ...) G_GNUC_NULL_TERMINATED;
 
-/**
- * ppg_clear_pointer:
- * @addr: (in): A pointer to the location of a pointer.
- * @destroy: (in): A function to free the location if needed.
- *
- * A helper function similar to g_clear_object() for freeing and
- * setting a location to %NULL. This allows for a configurable
- * free function.
- *
- * Returns: None.
- * Side effects: Pointer dereferenced is freed if non %NULL.
- */
-static inline void
-ppg_clear_pointer_ (gpointer       *addr,
-                    GDestroyNotify  destroy)
-{
-	gpointer real_addr;
 
-	g_return_if_fail(addr != NULL);
-
-	if ((real_addr = *addr)) {
-		*addr = NULL;
-		destroy(real_addr);
-	}
-}
-
-
-static inline void
-ppg_clear_source (guint *handler)
-{
-	if (*handler) {
-		g_source_remove(*handler);
-		*handler = 0;
-	}
-}
+#define ppg_clear_source(p) \
+G_STMT_START { \
+	guint real_handler; \
+	if ((real_handler = *(p))) { \
+		*(p) = 0; \
+		g_source_remove(real_handler); \
+	} \
+} G_STMT_END
 
 #define ppg_clear_pointer(p,d) \
-    ppg_clear_pointer_((gpointer *)(p), (GDestroyNotify)(d))
+G_STMT_START { \
+	gpointer real_addr; \
+	if ((real_addr = *(p))) { \
+		*(p) = NULL; \
+		d(real_addr); \
+	} \
+} G_STMT_END
 
 #define ppg_clear_object(p) ppg_clear_pointer((p), g_object_unref)
 

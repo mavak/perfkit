@@ -443,7 +443,6 @@ ppg_session_view_update_vadj (PpgSessionView *view)
 	PpgSessionViewPrivate *priv;
 	GooCanvasBounds bounds;
 	GtkAllocation alloc;
-	GooCanvasItem *root;
 	gdouble page_size;
 	gdouble upper;
 
@@ -464,7 +463,6 @@ ppg_session_view_update_vadj (PpgSessionView *view)
 	 * Adjust the upper bounds of the adjustment. This is the total height
 	 * of all the rows combined plus a little space.
 	 */
-	root = goo_canvas_get_root_item(GOO_CANVAS(priv->canvas));
 	goo_canvas_item_get_bounds(priv->all_content, &bounds);
 	upper = bounds.y2 - bounds.y1 - SHADOW_HEIGHT + (page_size / 2.0);
 	gtk_adjustment_set_upper(priv->vadj, upper);

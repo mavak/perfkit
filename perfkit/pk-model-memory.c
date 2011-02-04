@@ -271,7 +271,7 @@ set_iter (PkModelMemory *memory,
 }
 
 
-static inline void
+static void
 get_iter (PkModelMemory  *memory,
           PkModelIter    *iter,
           PkManifest    **manifest,
