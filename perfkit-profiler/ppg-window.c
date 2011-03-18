@@ -869,6 +869,9 @@ ppg_window_init (PpgWindow *window)
 	                 "/target-popup/target-existing", &target_existing,
 	                 NULL);
 
+	gtk_style_context_add_class(gtk_widget_get_style_context(priv->toolbar),
+	                            GTK_STYLE_CLASS_PRIMARY_TOOLBAR);
+
 	ppg_window_action_set(window, "stop",
 	                      "active", TRUE,
 	                      "sensitive", FALSE,
