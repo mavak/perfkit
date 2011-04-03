@@ -199,6 +199,7 @@ ppg_welcome_dialog_open_clicked (GtkWidget        *button,
 	load = g_object_new(GTK_TYPE_FILE_CHOOSER_DIALOG,
 	                    "action", GTK_FILE_CHOOSER_ACTION_OPEN,
 	                    "title", _("Open Session"),
+	                    "transient-for", dialog,
 	                    NULL);
 	filter = gtk_file_filter_new();
 	gtk_file_filter_set_name(filter, _("Perfkit Session (*.perfkit)"));
