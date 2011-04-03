@@ -143,9 +143,12 @@ pka_manager_load_all_plugins (void)
 	if (g_getenv("PERFKIT_PLUGINS_PATH")) {
 		paths = g_strsplit(g_getenv("PERFKIT_PLUGINS_PATH"), ":", 0);
 	} else {
-		paths = g_new0(gchar*, 2);
+		paths = g_new0(gchar*, 3);
 		paths[0] = g_build_filename(PACKAGE_LIB_DIR,
 		                            "perfkit-agent", "plugins",
+		                            NULL);
+		paths[1] = g_build_filename(PACKAGE_LIB_DIR,
+		                            "perfkit-agent", "listeners",
 		                            NULL);
 	}
 	for (i = 0; paths[i]; i++) {
