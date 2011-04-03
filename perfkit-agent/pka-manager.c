@@ -145,7 +145,7 @@ pka_manager_load_all_plugins (void)
 	} else {
 		paths = g_new0(gchar*, 2);
 		paths[0] = g_build_filename(PACKAGE_LIB_DIR,
-		                            "perfkit", "plugins",
+		                            "perfkit-agent", "plugins",
 		                            NULL);
 	}
 	for (i = 0; paths[i]; i++) {
