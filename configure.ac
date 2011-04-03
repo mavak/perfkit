@@ -33,6 +33,7 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 
 AM_PATH_GLIB_2_0
+GLIB_GSETTINGS
 
 # Initialize libtool
 LT_PREREQ([2.2])
