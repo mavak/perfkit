@@ -27,8 +27,6 @@ G_DEFINE_TYPE(PpgTimerToolItem, ppg_timer_tool_item, GTK_TYPE_TOOL_ITEM)
 struct _PpgTimerToolItemPrivate
 {
 	PpgSession *session;
-	GtkWidget  *drawing;
-	GtkWidget  *offscreen;
 	GtkWidget  *button;
 	GtkWidget  *label;
 };
@@ -38,53 +36,6 @@ enum
 	PROP_0,
 	PROP_SESSION,
 };
-
-
-static void
-ppg_timer_tool_item_draw (GtkWidget        *widget,
-                          cairo_t          *cr,
-                          PpgTimerToolItem *item)
-{
-	PpgTimerToolItemPrivate *priv;
-#if !GTK_CHECK_VERSION(2, 91, 0)
-	GtkOffscreenWindow *offscreen;
-	GtkAllocation a;
-	GdkPixmap *pixmap;
-#else
-#endif
-
-	g_return_if_fail(PPG_IS_TIMER_TOOL_ITEM(item));
-
-	priv = item->priv;
-
-#if GTK_CHECK_VERSION(2, 91, 0)
-	gtk_widget_draw(priv->button, cr);
-#else
-	gtk_widget_get_allocation(widget, &a);
-	offscreen = GTK_OFFSCREEN_WINDOW(priv->offscreen);
-	pixmap = gtk_offscreen_window_get_pixmap(offscreen);
-	gdk_cairo_set_source_pixmap(cr, pixmap, 0, 0);
-	cairo_rectangle(cr, 0, 0, a.width, a.height);
-	cairo_fill(cr);
-#endif
-}
-
-
-#if !GTK_CHECK_VERSION(2, 91, 0)
-static void
-ppg_timer_tool_item_expose_event (GtkWidget        *widget,
-                                  GdkEventExpose   *expose,
-                                  PpgTimerToolItem *item)
-{
-	cairo_t *cr;
-
-	cr = gdk_cairo_create(expose->window);
-	gdk_cairo_rectangle(cr, &expose->area);
-	cairo_clip(cr);
-	ppg_timer_tool_item_draw(widget, cr, item);
-	cairo_destroy(cr);
-}
-#endif
 
 
 static void
@@ -130,7 +81,6 @@ ppg_timer_tool_item_notify_elapsed (PpgTimerToolItem *item,
 	elapsed = ppg_session_get_elapsed(session);
 	ppg_timer_tool_item_format(formatted, sizeof formatted, elapsed);
 	gtk_label_set_label(GTK_LABEL(priv->label), formatted);
-	gtk_widget_queue_draw(GTK_WIDGET(priv->drawing));
 }
 
 
@@ -165,28 +115,7 @@ ppg_timer_tool_item_notify_state (PpgTimerToolItem *item,
 		g_assert_not_reached();
 		return;
 	}
-
-	gtk_widget_queue_draw(priv->drawing);
 }
-
-
-static void
-ppg_timer_tool_item_size_allocate (GtkWidget     *widget,
-                                   GtkAllocation *alloc)
-{
-	PpgTimerToolItemPrivate *priv;
-	GtkAllocation a;
-
-	GTK_WIDGET_CLASS(ppg_timer_tool_item_parent_class)->
-		size_allocate(widget, alloc);
-
-	priv = PPG_TIMER_TOOL_ITEM(widget)->priv;
-
-	gtk_widget_get_allocation(priv->drawing, &a);
-	gtk_widget_size_allocate(priv->offscreen, &a);
-	gtk_widget_queue_draw(priv->offscreen);
-}
-
 
 static void
 ppg_timer_tool_item_set_session (PpgTimerToolItem *item,
@@ -204,18 +133,6 @@ ppg_timer_tool_item_set_session (PpgTimerToolItem *item,
 	g_signal_connect_swapped(session, "notify::state",
 	                         G_CALLBACK(ppg_timer_tool_item_notify_state),
 	                         item);
-}
-
-static gboolean
-ppg_timer_tool_item_offscreen_damage (PpgTimerToolItem *item,
-                                      GdkEventExpose   *expose,
-                                      GtkWidget        *offscreen)
-{
-	g_return_val_if_fail(PPG_IS_TIMER_TOOL_ITEM(item), FALSE);
-	gtk_widget_queue_draw_area(item->priv->drawing,
-	                           expose->area.x, expose->area.y,
-	                           expose->area.width, expose->area.height);
-	return FALSE;
 }
 
 /**
@@ -273,15 +190,11 @@ static void
 ppg_timer_tool_item_class_init (PpgTimerToolItemClass *klass)
 {
 	GObjectClass *object_class;
-	GtkWidgetClass *widget_class;
 
 	object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = ppg_timer_tool_item_finalize;
 	object_class->set_property = ppg_timer_tool_item_set_property;
 	g_type_class_add_private(object_class, sizeof(PpgTimerToolItemPrivate));
-
-	widget_class = GTK_WIDGET_CLASS(klass);
-	widget_class->size_allocate = ppg_timer_tool_item_size_allocate;
 
 	g_object_class_install_property(object_class,
 	                                PROP_SESSION,
@@ -305,9 +218,10 @@ static void
 ppg_timer_tool_item_init (PpgTimerToolItem *item)
 {
 	PpgTimerToolItemPrivate *priv;
+	GtkStyleContext *style_context;
+	PangoAttrList *attrs;
 	GtkWidget *align;
 	GtkWidget *hbox;
-	PangoAttrList *attrs;
 
 	priv = G_TYPE_INSTANCE_GET_PRIVATE(item, PPG_TYPE_TIMER_TOOL_ITEM,
 	                                   PpgTimerToolItemPrivate);
@@ -327,37 +241,17 @@ ppg_timer_tool_item_init (PpgTimerToolItem *item)
 	                    NULL);
 	gtk_container_add(GTK_CONTAINER(align), hbox);
 
-	priv->drawing = g_object_new(GTK_TYPE_DRAWING_AREA,
-	                             "height-request", 32,
-	                             "visible", TRUE,
-	                             "width-request", 180,
-	                             NULL);
-	gtk_container_add(GTK_CONTAINER(hbox), priv->drawing);
-
-#if GTK_CHECK_VERSION(2, 91, 0)
-	g_signal_connect(priv->drawing, "draw",
-	                 G_CALLBACK(ppg_timer_tool_item_draw),
-	                 item);
-#else
-	g_signal_connect(priv->drawing, "expose-event",
-	                 G_CALLBACK(ppg_timer_tool_item_expose_event),
-	                 item);
-#endif
-
-	priv->offscreen = g_object_new(GTK_TYPE_OFFSCREEN_WINDOW,
-	                               "height-request", 32,
-	                               "visible", TRUE,
-	                               "width-request", 180,
-	                               NULL);
-	g_signal_connect_swapped(priv->offscreen, "damage-event",
-	                         G_CALLBACK(ppg_timer_tool_item_offscreen_damage),
-	                         item);
-
 	priv->button = g_object_new(GTK_TYPE_BUTTON,
 	                            "height-request", 32,
+	                            "sensitive", FALSE,
 	                            "visible", TRUE,
 	                            NULL);
-	gtk_container_add(GTK_CONTAINER(priv->offscreen), priv->button);
+	gtk_container_add_with_properties(GTK_CONTAINER(hbox), priv->button,
+	                                  "expand", FALSE,
+	                                  NULL);
+
+	style_context = gtk_widget_get_style_context(priv->button);
+	gtk_style_context_set_state(style_context, GTK_STATE_FLAG_NORMAL);
 
 	attrs = pango_attr_list_new();
 	pango_attr_list_insert(attrs, pango_attr_size_new(12 * PANGO_SCALE));
