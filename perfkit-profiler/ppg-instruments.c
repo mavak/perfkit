@@ -22,6 +22,7 @@
 #include "icons/plugin.h"
 
 #include "ppg-cpu-instrument.h"
+#include "ppg-gdk-instrument.h"
 #include "ppg-instrument.h"
 #include "ppg-instruments.h"
 #include "ppg-memory-instrument.h"
@@ -56,10 +57,8 @@ ppg_instruments_init (void)
 	                         PPG_TYPE_MEMORY_INSTRUMENT);
 	ppg_instruments_register("perfkit-cpu", _("CPU"), NULL,
 	                         PPG_TYPE_CPU_INSTRUMENT);
-	/*
 	ppg_instruments_register("perfkit-gtk", _("Gtk+"), NULL,
-	                         PPG_TYPE_GTK_INSTRUMENT);
-	                         */
+	                         PPG_TYPE_GDK_INSTRUMENT);
 	/*
 	ppg_instruments_register("perfkit-network",
 	                         _("Network"),

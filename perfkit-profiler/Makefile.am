@@ -25,6 +25,7 @@ if HAVE_AVAHI
 libprofiler_la_SOURCES += ppg-discover-dialog.c
 endif
 libprofiler_la_SOURCES += ppg-frame-source.c
+libprofiler_la_SOURCES += ppg-gdk-instrument.c
 libprofiler_la_SOURCES += ppg-header.c
 libprofiler_la_SOURCES += ppg-hud-window.c
 libprofiler_la_SOURCES += ppg-instrument.c
@@ -42,6 +43,7 @@ libprofiler_la_SOURCES += ppg-prefs-dialog.c
 libprofiler_la_SOURCES += ppg-process-menu.c
 libprofiler_la_SOURCES += ppg-renderer.c
 libprofiler_la_SOURCES += ppg-renderer-line.c
+libprofiler_la_SOURCES += ppg-renderer-event.c
 libprofiler_la_SOURCES += ppg-restart-task.c
 libprofiler_la_SOURCES += ppg-rt-graph.c
 libprofiler_la_SOURCES += ppg-ruler.c
@@ -102,6 +104,7 @@ if HAVE_AVAHI
 INST_H_FILES += ppg-discover-dialog.h
 endif
 INST_H_FILES += ppg-frame-source.h
+INST_H_FILES += ppg-gdk-instrument.h
 INST_H_FILES += ppg-header.h
 INST_H_FILES += ppg-hud-window.h
 INST_H_FILES += ppg-instrument.h
@@ -117,6 +120,7 @@ INST_H_FILES += ppg-prefs-dialog.h
 INST_H_FILES += ppg-process-menu.h
 INST_H_FILES += ppg-restart-task.h
 INST_H_FILES += ppg-renderer.h
+INST_H_FILES += ppg-renderer-event.h
 INST_H_FILES += ppg-renderer-line.h
 INST_H_FILES += ppg-rt-graph.h
 INST_H_FILES += ppg-ruler.h
