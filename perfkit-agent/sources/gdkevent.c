@@ -132,7 +132,7 @@ gdkevent_modify_spawn_info (PkaSource     *source,
 
 	pka_spawn_info_set_env(spawn_info, "GDKEVENT_SOCKET", priv->socket);
 	pka_spawn_info_set_env(spawn_info, "GTK_MODULES",
-	                       "gdkevent2-module,gdkevent3-module");
+	                       "gdkevent2-module:gdkevent3-module");
 
 	RETURN(TRUE);
 }
