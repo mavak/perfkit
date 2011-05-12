@@ -731,14 +731,13 @@ ppg_ruler_get_preferred_height (GtkWidget *widget,
                                 gint      *min_height,
                                 gint      *natural_height)
 {
-	PpgRuler *ruler = (PpgRuler *)widget;
 	GdkWindow *window;
 	PangoLayout *layout;
 	cairo_t *cr;
 	gint width;
 	gint height;
 
-	g_return_if_fail(PPG_IS_RULER(ruler));
+	g_return_if_fail(PPG_IS_RULER(widget));
 
 	*min_height = *natural_height = 0;
 

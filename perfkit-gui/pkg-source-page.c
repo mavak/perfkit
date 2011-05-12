@@ -119,10 +119,6 @@ pkg_source_page_sample_cb (PkManifest *manifest,  /* IN */
                            PkSample   *sample,    /* IN */
                            gpointer    user_data) /* IN */
 {
-	PkgSourcePage *page = user_data;
-
-	g_return_if_fail(PKG_IS_SOURCE_PAGE(page));
-
 	ENTRY;
 	DEBUG(SourcePage, "Received a new sample");
 	EXIT;
