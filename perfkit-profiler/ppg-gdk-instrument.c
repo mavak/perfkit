@@ -176,7 +176,7 @@ ppg_gdk_instrument_load (PpgInstrument  *instrument,
 	gboolean ret = FALSE;
 	gint channel;
 
-	g_return_if_fail(PPG_IS_GDK_INSTRUMENT(gdk));
+	g_return_val_if_fail(PPG_IS_GDK_INSTRUMENT(gdk), FALSE);
 
 	priv = gdk->priv;
 
