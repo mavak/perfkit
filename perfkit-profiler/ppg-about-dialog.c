@@ -300,7 +300,7 @@ ppg_about_dialog_init (PpgAboutDialog *dialog)
 	                                  "x-options", GTK_FILL,
 	                                  NULL);
 
-	str = g_format_size_for_display(ppg_util_get_total_memory());
+	str = g_format_size(ppg_util_get_total_memory());
 	l = g_object_new(GTK_TYPE_LABEL,
 	                 "label", str,
 	                 "selectable", TRUE,

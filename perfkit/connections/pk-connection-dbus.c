@@ -359,7 +359,7 @@ pk_connection_dbus_next_id (void)
 	static gint id_seq = 0;
 
 	ENTRY;
-	RETURN(g_atomic_int_exchange_and_add(&id_seq, 1));
+	RETURN(g_atomic_int_add(&id_seq, 1));
 }
 
 /**
@@ -377,7 +377,7 @@ pk_connection_dbus_next_handler_id (void)
 	static gint id_seq = 0;
 
 	ENTRY;
-	RETURN(g_atomic_int_exchange_and_add(&id_seq, 1));
+	RETURN(g_atomic_int_add(&id_seq, 1));
 }
 
 /**
@@ -9281,6 +9281,7 @@ pk_connection_dbus_finalize (GObject *object)
  * Returns: None.
  * Side effects: UNIX sockets are removed.
  */
+#if 0
 static void
 pk_connection_dbus_cleanup_sockets (void)
 {
@@ -9297,6 +9298,7 @@ pk_connection_dbus_cleanup_sockets (void)
 	g_slist_free(sockets);
 	sockets = NULL;
 }
+#endif
 
 /**
  * pk_connection_dbus_class_init:
@@ -9383,7 +9385,9 @@ pk_connection_dbus_class_init (PkConnectionDBusClass *klass)
 	OVERRIDE_VTABLE(subscription_unmute);
 	#undef ADD_RPC
 
+#if 0
 	g_atexit(pk_connection_dbus_cleanup_sockets);
+#endif
 }
 
 /**

@@ -1406,7 +1406,7 @@ pka_channel_init (PkaChannel *channel)
 
 	priv->sources = g_ptr_array_new();
 	priv->mutex = g_mutex_new();
-	priv->id = g_atomic_int_exchange_and_add(&id_seq, 1);
+	priv->id = g_atomic_int_add((gint *)&id_seq, 1);
 	priv->state = PKA_CHANNEL_READY;
 	priv->kill_pid = TRUE;
 	priv->working_dir = g_strdup(g_get_tmp_dir());

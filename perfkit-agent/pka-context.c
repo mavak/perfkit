@@ -81,7 +81,7 @@ pka_context_new (void)
 	ENTRY;
 	context = g_slice_new0(PkaContext);
 	context->ref_count = 1;
-	context->id = g_atomic_int_exchange_and_add((gint *)&context_seq, 1);
+	context->id = g_atomic_int_add((gint *)&context_seq, 1);
 	RETURN(context);
 }
 

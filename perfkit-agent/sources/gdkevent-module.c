@@ -218,6 +218,10 @@ gdkevent_dispatcher (GdkEvent *event,
 	                                         "Event");
 
 	switch (event->type) {
+   case GDK_TOUCH_BEGIN:
+   case GDK_TOUCH_END:
+   case GDK_TOUCH_UPDATE:
+   case GDK_TOUCH_CANCEL:
 	case GDK_NOTHING:
 		break;
 	case GDK_DELETE:

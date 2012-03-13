@@ -1,17 +1,17 @@
 /* ppg-session-view.c
  *
  * Copyright (C) 2010 Christian Hergert <chris@dronelabs.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -1434,6 +1434,7 @@ ppg_session_view_scroll_event (PpgSessionView *view,
 		return TRUE;
 	case GDK_SCROLL_LEFT:
 	case GDK_SCROLL_RIGHT:
+   case GDK_SCROLL_SMOOTH:
 	default:
 		break;
 	}
@@ -1762,7 +1763,7 @@ ppg_session_view_set_tool (PpgSessionView     *view,
 	 */
 	window = gtk_widget_get_window(priv->canvas);
 	gdk_window_set_cursor(window, cursor);
-	gdk_cursor_unref(cursor);
+	g_object_unref(cursor);
 
 	/*
 	 * Update tool buttons.

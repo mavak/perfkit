@@ -29,17 +29,20 @@
 static const gchar*
 pkg_path_get_data_dir (void)
 {
-	static gchar *data_dir = NULL;
+   static gsize initialized = FALSE;
+	static gchar *data_dir;
 	gchar *path;
 
-	if (g_once_init_enter((gsize *)&data_dir)) {
+   if (g_once_init_enter(&initialized)) {
 		if (g_getenv("PERFKIT_GUI_DATA_PATH")) {
 			path = g_strdup(g_getenv("PERFKIT_GUI_DATA_PATH"));
 		} else {
 			path = g_build_filename(PACKAGE_DATA_DIR, "perfkit", NULL);
 		}
-		g_once_init_leave((gsize *)&data_dir, (gsize)path);
-	}
+      data_dir = path;
+      g_once_init_leave(&initialized, TRUE);
+   }
+
 	return data_dir;
 }
 

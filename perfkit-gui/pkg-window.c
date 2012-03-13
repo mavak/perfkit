@@ -1426,7 +1426,7 @@ pkg_window_init (PkgWindow *window)
 	accel_group = gtk_accel_group_new();
 	gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
-	vbox = gtk_vbox_new(FALSE, 0);
+   vbox = g_object_new(GTK_TYPE_VBOX, NULL);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
 	gtk_widget_show(vbox);
 
@@ -1480,7 +1480,7 @@ pkg_window_init (PkgWindow *window)
 	ADD_MENU(help_menu, _("_Help"));
 	ADD_MENU_ITEM_STOCK(help_menu, GTK_STOCK_ABOUT, gtk_false);
 
-	hpaned = gtk_hpaned_new();
+   hpaned = g_object_new(GTK_TYPE_HPANED, NULL);
 	gtk_paned_set_position(GTK_PANED(hpaned), 275);
 	gtk_box_pack_start(GTK_BOX(vbox), hpaned, TRUE, TRUE, 0);
 	gtk_widget_show(hpaned);

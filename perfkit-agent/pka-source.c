@@ -932,7 +932,7 @@ pka_source_init (PkaSource *source) /* IN */
 	source->priv = G_TYPE_INSTANCE_GET_PRIVATE(source,
 	                                           PKA_TYPE_SOURCE,
 	                                           PkaSourcePrivate);
-	source->priv->id = g_atomic_int_exchange_and_add(&id_seq, 1);
+	source->priv->id = g_atomic_int_add(&id_seq, 1);
 	g_static_rw_lock_init(&source->priv->rw_lock);
 	/*
 	 * TODO:  We should consider doing a bit array for the list of which

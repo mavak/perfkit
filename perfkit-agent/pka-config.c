@@ -23,7 +23,6 @@
 
 #include <glib.h>
 #include <glib/gi18n.h>
-#include <glib/gthread.h>
 
 #include "pka-config.h"
 #include "pka-log.h"

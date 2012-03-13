@@ -118,7 +118,7 @@ pka_subscription_new (void)
 	subscription = g_slice_new0(PkaSubscription);
 	subscription->ref_count = 1;
 	g_static_rw_lock_init(&subscription->rw_lock);
-	subscription->id = g_atomic_int_exchange_and_add(&id_seq, 1);
+	subscription->id = g_atomic_int_add(&id_seq, 1);
 	subscription->state = PKA_SUBSCRIPTION_MUTED;
 	g_get_current_time(&subscription->created_at);
 	INITIALIZE_TREE(channels, g_object_unref);

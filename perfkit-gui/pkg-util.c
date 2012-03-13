@@ -97,14 +97,14 @@ pkg_util_dialog_warning (GtkWidget   *parent,       /* IN */
 	                       GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
 	                       NULL);
 	gtk_window_set_resizable(GTK_WINDOW(dialog), FALSE);
-	hbox = gtk_hbox_new(FALSE, 12);
+   hbox = g_object_new(GTK_TYPE_HBOX, "spacing", 12, NULL);
 	gtk_container_set_border_width(GTK_CONTAINER(hbox), 12);
 	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
 	                   hbox, TRUE, TRUE, 0);
 	warning = gtk_image_new_from_stock(GTK_STOCK_DIALOG_WARNING, GTK_ICON_SIZE_DIALOG);
 	gtk_misc_set_alignment(GTK_MISC(warning), .5, .0);
 	gtk_box_pack_start(GTK_BOX(hbox), warning, FALSE, TRUE, 0);
-	vbox = gtk_vbox_new(FALSE, 6);
+	vbox = g_object_new(GTK_TYPE_VBOX, "spacing", 6, NULL);
 	gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
 	markup = g_strdup_printf("<span weight=\"bold\">%s</span>",
 	                         primary);

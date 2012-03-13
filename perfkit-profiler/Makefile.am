@@ -165,6 +165,7 @@ perfkit_profiler_CPPFLAGS += -DG_LOG_DOMAIN=\""Profiler"\"
 
 perfkit_profiler_LDADD =
 perfkit_profiler_LDADD += libprofiler.la
+perfkit_profiler_LDADD += -lm
 
 perfkit_profiler_DEPENDENCIES =
 perfkit_profiler_DEPENDENCIES += libprofiler.la
